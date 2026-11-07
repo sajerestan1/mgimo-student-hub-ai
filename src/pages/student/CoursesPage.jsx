@@ -11,6 +11,7 @@ import {
   letterFor,
   weekdayName,
 } from '@/lib/studentWorkspace';
+import CourseMaterialsPanel from '@/components/student/CourseMaterialsPanel';
 
 export default function CoursesPage() {
   const credits = COURSES.reduce((total, course) => total + course.credits, 0);
@@ -28,6 +29,8 @@ export default function CoursesPage() {
           </Link>
         }
       />
+
+      <CourseMaterialsPanel />
 
       <div className="grid gap-4 md:grid-cols-2">
         {COURSES.map((course) => {

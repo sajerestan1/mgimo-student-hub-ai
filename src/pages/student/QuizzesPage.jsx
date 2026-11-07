@@ -1,6 +1,7 @@
 import PageTitle from '@/components/shell/PageTitle';
 import ProgressBar from '@/components/shell/ProgressBar';
 import StatusChip from '@/components/shell/StatusChip';
+import CourseQuizzesPanel from '@/components/student/CourseQuizzesPanel';
 import { upcomingAssessments, courseById, formatDate, daysUntil } from '@/lib/studentWorkspace';
 
 export default function QuizzesPage() {
@@ -12,6 +13,8 @@ export default function QuizzesPage() {
         description="Scheduled assessments for your courses, their format, and how far your preparation has progressed."
         meta={[`${upcomingAssessments.length} scheduled`, 'Next three weeks', 'Fall Semester 2026']}
       />
+
+      <CourseQuizzesPanel />
 
       <div className="card-surface divide-y divide-line overflow-hidden">
         {upcomingAssessments.map((assessment) => {

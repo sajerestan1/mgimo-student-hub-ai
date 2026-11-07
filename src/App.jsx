@@ -35,6 +35,16 @@ import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Mfa from '@/pages/Mfa';
+import ProfessorAssignmentsPage from '@/pages/professor/AssignmentsPage';
+import ProfessorAttendancePage from '@/pages/professor/AttendancePage';
+import ProfessorCoursesPage from '@/pages/professor/CoursesPage';
+import ProfessorGradingPage from '@/pages/professor/GradingPage';
+import ProfessorMaterialsPage from '@/pages/professor/MaterialsPage';
+import ProfessorQuizzesPage from '@/pages/professor/QuizzesPage';
+import ProfessorStudentPerformancePage from '@/pages/professor/StudentPerformancePage';
+import ProfessorDiscussionsPage from '@/pages/professor/DiscussionsPage';
+import ProfessorAiAssistant from '@/pages/professor/AiTeachingAssistant';
+import MyTeachingPage from '@/pages/professor/MyTeachingPage';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -177,6 +187,29 @@ const AuthenticatedApp = () => {
               </RoleRoute>
             }
           />
+          {/* Professor workspace: teaching pages owned by the professor role. */}
+          {[
+            [MODULE_PATHS.professor.teaching, MyTeachingPage],
+            [MODULE_PATHS.professor.courses, ProfessorCoursesPage],
+            [MODULE_PATHS.professor.materials, ProfessorMaterialsPage],
+            [MODULE_PATHS.professor.assignments, ProfessorAssignmentsPage],
+            [MODULE_PATHS.professor.quizzes, ProfessorQuizzesPage],
+            [MODULE_PATHS.professor.grading, ProfessorGradingPage],
+            [MODULE_PATHS.professor.attendance, ProfessorAttendancePage],
+            [MODULE_PATHS.professor.students, ProfessorStudentPerformancePage],
+            [MODULE_PATHS.professor.discussions, ProfessorDiscussionsPage],
+            [MODULE_PATHS.professor.ai, ProfessorAiAssistant],
+          ].map(([path, Component]) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <RoleRoute role="professor">
+                  <Component />
+                </RoleRoute>
+              }
+            />
+          ))}
           <Route
             path={MODULE_PATHS.dean.dashboard}
             element={

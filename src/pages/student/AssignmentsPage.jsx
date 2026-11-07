@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import PageTitle from '@/components/shell/PageTitle';
 import StatusChip from '@/components/shell/StatusChip';
+import CourseAssignmentsPanel from '@/components/student/CourseAssignmentsPanel';
 import { ASSIGNMENTS, openAssignments, gradedAssignments, formatDate, daysUntil, courseById } from '@/lib/studentWorkspace';
 
 const FILTERS = [
@@ -37,6 +38,8 @@ export default function AssignmentsPage() {
         description="Coursework for your enrolled courses, with the brief, the weighting and where each submission stands."
         meta={[`${openAssignments.length} open`, `${gradedAssignments.length} graded`, 'Fall Semester 2026']}
       />
+
+      <CourseAssignmentsPanel />
 
       <div className="mb-4 flex flex-wrap gap-1.5">
         {FILTERS.map((item) => (

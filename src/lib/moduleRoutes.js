@@ -49,16 +49,6 @@ export const MODULE_PATHS = {
 // Modules that are still design-stage placeholders. The student workspace is
 // fully routed below, so none of its paths appear here.
 export const MODULE_INFO = {
-  '/professor/teaching': { title: 'My Teaching' },
-  '/professor/courses': { title: 'Courses' },
-  '/professor/materials': { title: 'Course Materials' },
-  '/professor/assignments': { title: 'Assignments' },
-  '/professor/quizzes': { title: 'Quizzes' },
-  '/professor/grading': { title: 'Submissions & Grading' },
-  '/professor/attendance': { title: 'Attendance Management' },
-  '/professor/student-performance': { title: 'Student Performance' },
-  '/professor/discussions': { title: 'Discussions' },
-  '/professor/ai-assistant': { title: 'AI Teaching Assistant' },
   '/dean/faculties': { title: 'Faculties' },
   '/dean/departments': { title: 'Departments' },
   '/dean/programmes': { title: 'Academic Programmes' },
