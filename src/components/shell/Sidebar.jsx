@@ -1,10 +1,11 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   CalendarDays,
   ClipboardList,
   GraduationCap,
   BookOpen,
+  BookMarked,
   MonitorPlay,
   CalendarCheck,
   Megaphone,
@@ -27,10 +28,13 @@ import {
   MessagesSquare,
   TrendingUp,
   Radar,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { NAV_BY_ROLE, ACCOUNT_NAV } from '@/lib/workspaceNav';
+import { useAuth } from '@/lib/AuthContext';
+import { NAV_BY_ROLE } from '@/lib/workspaceNav';
 import { useWorkspace } from '@/lib/workspaceRole';
+import { STUDENT } from '@/lib/studentWorkspace';
 import BrandMark from './BrandMark';
 
 const ICONS = {
@@ -39,6 +43,7 @@ const ICONS = {
   ClipboardList,
   GraduationCap,
   BookOpen,
+  BookMarked,
   MonitorPlay,
   CalendarCheck,
   Megaphone,
@@ -58,6 +63,7 @@ const ICONS = {
   MessagesSquare,
   TrendingUp,
   Radar,
+  LogOut,
 };
 
 const initials = (name) =>
@@ -68,32 +74,46 @@ const initials = (name) =>
     .map((part) => part[0]?.toUpperCase())
     .join('');
 
+const itemClass = (isActive, collapsed) =>
+  cn(
+    'group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[12.5px] leading-5 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30',
+    collapsed && 'lg:justify-center lg:px-0',
+    isActive
+      ? 'bg-royal font-medium text-white shadow-[0_8px_18px_-10px_rgba(91,77,235,0.9)]'
+      : 'text-white/60 hover:bg-white/[0.06] hover:text-white'
+  );
+
 function NavItem({ item, collapsed }) {
   const Icon = ICONS[item.icon] || LayoutDashboard;
+  const { logout } = useAuth();
+
+  if (item.action === 'logout') {
+    return (
+      <button
+        type="button"
+        onClick={() => logout()}
+        title={collapsed ? item.label : undefined}
+        className={itemClass(false, collapsed)}
+      >
+        <Icon className="h-[15px] w-[15px] shrink-0 text-white/45 group-hover:text-white" strokeWidth={1.9} />
+        <span className={cn('truncate', collapsed && 'lg:hidden')}>{item.label}</span>
+      </button>
+    );
+  }
+
   return (
     <NavLink
       to={item.to}
       title={collapsed ? item.label : undefined}
-      className={({ isActive }) =>
-        cn(
-          'group relative flex items-center gap-2.5 rounded-lg py-[7px] pl-3 pr-2.5 text-[12.5px] leading-5 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30',
-          collapsed && 'lg:justify-center lg:pl-0 lg:pr-0',
-          isActive
-            ? 'bg-white/[0.09] font-medium text-white'
-            : 'text-white/55 hover:bg-white/[0.05] hover:text-white/90'
-        )
-      }
+      className={({ isActive }) => itemClass(isActive, collapsed)}
     >
       {({ isActive }) => (
         <>
-          <span
-            className={cn(
-              'absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-r-full bg-brand transition-opacity',
-              isActive ? 'opacity-100' : 'opacity-0'
-            )}
-          />
           <Icon
-            className={cn('h-[15px] w-[15px] shrink-0 transition-colors', isActive ? 'text-[#9FB6FF]' : 'text-white/45 group-hover:text-white/80')}
+            className={cn(
+              'h-[15px] w-[15px] shrink-0 transition-colors',
+              isActive ? 'text-white' : 'text-white/45 group-hover:text-white'
+            )}
             strokeWidth={1.9}
           />
           <span className={cn('truncate', collapsed && 'lg:hidden')}>{item.label}</span>
@@ -114,10 +134,11 @@ function NavItem({ item, collapsed }) {
 }
 
 function GroupLabel({ children, collapsed }) {
+  if (!children) return null;
   return (
     <p
       className={cn(
-        'px-3 pb-1.5 pt-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35',
+        'px-3 pb-1.5 pt-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/32',
         collapsed && 'lg:hidden'
       )}
     >
@@ -127,8 +148,10 @@ function GroupLabel({ children, collapsed }) {
 }
 
 export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollapse }) {
-  const { workspace, displayName } = useWorkspace();
+  const { workspace, displayName, user, preview } = useWorkspace();
   const groups = NAV_BY_ROLE[workspace.role] || NAV_BY_ROLE.student;
+  const isStudent = workspace.role === 'student';
+  const secondary = isStudent ? STUDENT.programme : workspace.title;
 
   return (
     <>
@@ -142,16 +165,16 @@ export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollap
       />
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-[264px] flex-col border-r border-white/[0.06] bg-[#0F1A31] text-white/70 transition-transform duration-200 ease-out lg:translate-x-0 lg:transition-[width]',
-          collapsed ? 'lg:w-[70px]' : 'lg:w-[244px]',
+          'fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col bg-[#101828] text-white/70 transition-transform duration-200 ease-out lg:translate-x-0 lg:transition-[width]',
+          collapsed ? 'lg:w-[76px]' : 'lg:w-[252px]',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         <div className={cn('flex h-16 items-center gap-2.5 px-4', collapsed && 'lg:justify-center lg:px-0')}>
-          <BrandMark className="h-7 w-7 shrink-0" />
+          <BrandMark className="h-8 w-8 shrink-0" />
           <div className={cn('min-w-0 flex-1', collapsed && 'lg:hidden')}>
-            <p className="truncate text-[12.5px] font-semibold tracking-[-0.01em] text-white">Academic Intelligence</p>
-            <p className="truncate text-[10px] text-white/35">Academic Intelligence University</p>
+            <p className="truncate text-[13px] font-semibold tracking-[-0.01em] text-white">Academic Intelligence</p>
+            <p className="truncate text-[10.5px] text-white/45">{workspace.title}</p>
           </div>
           <button
             type="button"
@@ -163,48 +186,55 @@ export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollap
           </button>
         </div>
 
-        <div className={cn('mx-3 mb-1 mt-1 hidden rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-2 lg:block', collapsed && 'lg:hidden')}>
-          <p className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-white/30">Workspace</p>
-          <p className="mt-0.5 flex items-center gap-1.5 text-[11.5px] font-medium text-white/85">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-            {workspace.label}
+        <div
+          className={cn(
+            'mx-3 mb-2 hidden rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-2 lg:block',
+            collapsed && 'lg:hidden'
+          )}
+        >
+          <p className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-white/35">
+            {preview ? 'Dean view' : 'Student portal'}
           </p>
+          <p className="mt-0.5 truncate text-[11.5px] font-medium text-white/85">
+            {preview ? 'Inspecting the student workspace' : secondary}
+          </p>
+          {preview && (
+            <Link to="/dean/dashboard" className="mt-1 inline-block text-[10.5px] font-medium text-[#A9A0FF] hover:text-white">
+              Back to command center
+            </Link>
+          )}
         </div>
 
         <nav className="no-scrollbar flex-1 overflow-y-auto px-2 pb-2">
           {groups.map((group) => (
-            <div key={group.label}>
+            <div key={group.label || 'main'}>
               <GroupLabel collapsed={collapsed}>{group.label}</GroupLabel>
-              {collapsed && <div className="mx-auto mb-1 hidden h-px w-6 bg-white/10 lg:block" />}
+              {collapsed && group.label && <div className="mx-auto mb-1 hidden h-px w-6 bg-white/10 lg:block" />}
               <div className="space-y-0.5">
                 {group.items.map((item) => (
-                  <NavItem key={item.to + item.label} item={item} collapsed={collapsed} />
+                  <NavItem key={item.to || item.label} item={item} collapsed={collapsed} />
                 ))}
               </div>
             </div>
           ))}
-
-          <div>
-            <GroupLabel collapsed={collapsed}>Account</GroupLabel>
-            {collapsed && <div className="mx-auto mb-1 hidden h-px w-6 bg-white/10 lg:block" />}
-            <div className="space-y-0.5">
-              {ACCOUNT_NAV.map((item) => (
-                <NavItem key={item.to} item={item} collapsed={collapsed} />
-              ))}
-            </div>
-          </div>
         </nav>
 
         <div className="border-t border-white/[0.07] p-2">
-          <div className={cn('flex items-center gap-2.5 rounded-lg px-2 py-2', collapsed && 'lg:hidden')}>
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10.5px] font-semibold text-white">
+          <Link
+            to={isStudent ? '/student/profile' : '/profile'}
+            className={cn(
+              'flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-white/[0.06]',
+              collapsed && 'lg:hidden'
+            )}
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-royal/25 text-[10.5px] font-semibold text-white">
               {initials(displayName)}
             </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[11.5px] font-medium text-white">{displayName}</p>
-              <p className="truncate text-[10px] text-white/40">{workspace.label} workspace</p>
-            </div>
-          </div>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[11.5px] font-medium text-white">{displayName}</span>
+              <span className="block truncate text-[10px] text-white/45">{user?.email || workspace.title}</span>
+            </span>
+          </Link>
           <button
             type="button"
             onClick={onToggleCollapse}

@@ -5,29 +5,27 @@ import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 export const NAV_BY_ROLE = {
   student: [
     {
-      label: 'My studies',
+      label: '',
       items: [
         { to: P.student.dashboard, label: 'Dashboard', icon: 'LayoutDashboard' },
-        { to: P.student.courses, label: 'My Courses', icon: 'BookOpen', soon: true },
-        { to: P.student.timetable, label: 'Timetable', icon: 'CalendarDays', soon: true },
-        { to: P.student.assignments, label: 'Assignments', icon: 'ClipboardList', soon: true },
-        { to: P.student.exams, label: 'Quizzes & Exams', icon: 'ClipboardCheck', soon: true },
-        { to: P.student.grades, label: 'Grades & Transcript', icon: 'GraduationCap', soon: true },
-        { to: P.student.attendance, label: 'Attendance', icon: 'CalendarCheck', soon: true },
-      ],
-    },
-    {
-      label: 'Student services',
-      items: [
-        { to: P.student.applications, label: 'Applications & Certificates', icon: 'FileText', soon: true },
+        { to: P.student.courses, label: 'My Courses', icon: 'BookOpen' },
+        { to: P.student.timetable, label: 'Timetable', icon: 'CalendarDays' },
+        { to: P.student.assignments, label: 'Assignments', icon: 'ClipboardList' },
+        { to: P.student.quizzes, label: 'Quizzes & Exams', icon: 'ClipboardCheck' },
+        { to: P.student.grades, label: 'Grades & Transcript', icon: 'GraduationCap' },
+        { to: P.student.attendance, label: 'Attendance', icon: 'CalendarCheck' },
+        { to: P.student.applications, label: 'Applications & Certificates', icon: 'FileText' },
+        { to: P.student.library, label: 'Library', icon: 'BookMarked' },
         { to: P.student.notifications, label: 'Notifications', icon: 'Bell' },
+        { to: P.student.ai, label: 'AI Study Companion', icon: 'Sparkles' },
+        { to: P.student.profile, label: 'Profile & Settings', icon: 'UserRound' },
       ],
     },
     {
-      label: 'Assistance',
+      label: 'Support',
       items: [
-        { to: P.student.ai, label: 'AI Study Companion', icon: 'Sparkles', soon: true },
-        { to: P.student.profile, label: 'Profile & Settings', icon: 'UserRound' },
+        { to: '/help', label: 'Help & Support', icon: 'LifeBuoy' },
+        { label: 'Logout', icon: 'LogOut', action: 'logout' },
       ],
     },
   ],
@@ -59,6 +57,10 @@ export const NAV_BY_ROLE = {
         { to: P.professor.profile, label: 'Profile & Settings', icon: 'UserRound' },
       ],
     },
+    {
+      label: 'Support',
+      items: [{ to: '/help', label: 'Help & Support', icon: 'LifeBuoy' }],
+    },
   ],
   dean: [
     {
@@ -88,7 +90,14 @@ export const NAV_BY_ROLE = {
         { to: P.dean.profile, label: 'Profile & Settings', icon: 'UserRound' },
       ],
     },
+    {
+      label: 'Support',
+      items: [
+        { to: P.student.dashboard, label: 'Student workspace', icon: 'Users' },
+        { to: '/help', label: 'Help & Support', icon: 'LifeBuoy' },
+      ],
+    },
   ],
 };
 
-export const ACCOUNT_NAV = [{ to: '/help', label: 'Help & support', icon: 'LifeBuoy' }];
+export const ACCOUNT_NAV = [{ to: '/help', label: 'Help & Support', icon: 'LifeBuoy' }];

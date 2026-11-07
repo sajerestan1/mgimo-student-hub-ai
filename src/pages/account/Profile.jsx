@@ -7,7 +7,7 @@ import { useWorkspace, WORKSPACES } from '@/lib/workspaceRole';
 
 export default function Profile() {
   const { logout } = useAuth();
-  const { user, role, displayName, workspace } = useWorkspace();
+  const { user, role, displayName, workspace, canView } = useWorkspace();
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -75,7 +75,7 @@ export default function Profile() {
                     <span className="chip bg-[#EDF1FE] text-[#3B5AE0]">Yours</span>
                   )}
                 </div>
-                {item.role === role ? (
+                {canView(item.role) ? (
                   <Link to={item.home} className="link-quiet mt-1">
                     Open {item.label.toLowerCase()} workspace
                   </Link>

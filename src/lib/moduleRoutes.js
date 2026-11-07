@@ -7,13 +7,14 @@ export const MODULE_PATHS = {
     courses: '/student/courses',
     timetable: '/student/timetable',
     assignments: '/student/assignments',
-    exams: '/student/exams',
+    quizzes: '/student/quizzes',
     grades: '/student/grades',
     attendance: '/student/attendance',
     applications: '/student/applications',
+    library: '/student/library',
     notifications: '/student/notifications',
-    ai: '/student/ai-companion',
-    profile: '/profile',
+    ai: '/student/ai-study-companion',
+    profile: '/student/profile',
   },
   professor: {
     dashboard: '/professor/dashboard',
@@ -45,15 +46,9 @@ export const MODULE_PATHS = {
   },
 };
 
+// Modules that are still design-stage placeholders. The student workspace is
+// fully routed below, so none of its paths appear here.
 export const MODULE_INFO = {
-  '/student/courses': { title: 'My Courses' },
-  '/student/timetable': { title: 'Timetable' },
-  '/student/assignments': { title: 'Assignments' },
-  '/student/exams': { title: 'Quizzes & Exams' },
-  '/student/grades': { title: 'Grades & Transcript' },
-  '/student/attendance': { title: 'Attendance' },
-  '/student/applications': { title: 'Applications & Certificates' },
-  '/student/ai-companion': { title: 'AI Study Companion' },
   '/professor/teaching': { title: 'My Teaching' },
   '/professor/courses': { title: 'Courses' },
   '/professor/materials': { title: 'Course Materials' },

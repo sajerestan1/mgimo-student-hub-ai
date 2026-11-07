@@ -6,8 +6,8 @@ import { useWorkspace } from '@/lib/workspaceRole';
  * to their own dashboard instead of seeing another workspace's data.
  */
 export default function RoleRoute({ role, children }) {
-  const { role: currentRole, workspace } = useWorkspace();
+  const { canView, workspace } = useWorkspace();
 
-  if (currentRole !== role) return <Navigate to={workspace.home} replace />;
+  if (!canView(role)) return <Navigate to={workspace.home} replace />;
   return children;
 }

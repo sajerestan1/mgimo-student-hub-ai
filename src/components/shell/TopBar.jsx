@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { useWorkspace } from '@/lib/workspaceRole';
 import { NAV_BY_ROLE } from '@/lib/workspaceNav';
 import { NOTIFICATIONS } from '@/lib/demoUniversity';
+import { STUDENT } from '@/lib/studentWorkspace';
 
 const initials = (name) =>
   name
@@ -47,6 +48,8 @@ export default function TopBar({ onOpenMobile }) {
     .find((item) => item.to === pathname);
   const title = activeItem?.label || workspace.title;
   const notificationsPath = workspace.role === 'student' ? '/student/notifications' : '/notifications';
+  const isStudent = workspace.role === 'student';
+  const context = isStudent ? `${STUDENT.programme} · Group ${STUDENT.group}` : workspace.title;
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur">
@@ -56,8 +59,8 @@ export default function TopBar({ onOpenMobile }) {
         </button>
 
         <div className="min-w-0 flex-1">
-          <p className="hidden text-[10.5px] font-medium uppercase tracking-[0.1em] text-mutedink sm:block">
-            {workspace.label}
+          <p className="hidden truncate text-[10.5px] font-medium uppercase tracking-[0.08em] text-mutedink sm:block">
+            {context}
           </p>
           <p className="truncate text-[13.5px] font-semibold leading-tight tracking-[-0.01em] text-ink sm:mt-0.5">{title}</p>
         </div>
@@ -65,7 +68,7 @@ export default function TopBar({ onOpenMobile }) {
         <div className="relative hidden md:block">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-mutedink/80" />
           <input
-            placeholder="Search university…"
+            placeholder={isStudent ? 'Search courses, assignments, library…' : 'Search university…'}
             onFocus={() => {
               clearTimeout(blurTimer.current);
               setSearchOpen(true);
@@ -79,14 +82,19 @@ export default function TopBar({ onOpenMobile }) {
             <div className="fade-up absolute right-0 top-11 w-80 rounded-xl border border-line bg-white p-3.5 shadow-[0_24px_48px_-28px_rgba(16,27,51,0.45)]">
               <p className="text-[12px] font-medium text-ink">Global search</p>
               <p className="mt-1 text-[11.5px] leading-relaxed text-mutedink">
-                Searching courses, students, assignments and documents arrives in Stage 2. This field is a designed
-                placeholder and returns no results yet.
+                {isStudent
+                  ? 'Searching your courses, assignments and library arrivals is not connected yet — this field is a designed placeholder and returns no results.'
+                  : 'Searching courses, students, assignments and documents arrives in Stage 2. This field is a designed placeholder and returns no results yet.'}
               </p>
             </div>
           )}
         </div>
 
         <span className="hidden h-6 w-px bg-line md:block" />
+
+        <button type="button" onClick={() => navigate('/help')} className="icon-btn" aria-label="Help and support">
+          <LifeBuoy className="h-[18px] w-[18px]" />
+        </button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -142,7 +150,9 @@ export default function TopBar({ onOpenMobile }) {
                 <span className="block max-w-[148px] truncate text-[11.5px] font-medium leading-tight text-ink">
                   {displayName}
                 </span>
-                <span className="block text-[10px] leading-tight text-mutedink">{workspace.label}</span>
+                <span className="block truncate text-[10px] leading-tight text-mutedink">
+                  {isStudent ? `Year ${STUDENT.year} · ${STUDENT.group}` : workspace.label}
+                </span>
               </span>
             </button>
           </DropdownMenuTrigger>
@@ -152,7 +162,7 @@ export default function TopBar({ onOpenMobile }) {
               <span className="mt-0.5 block text-[10.5px] font-normal text-mutedink">{workspace.title}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => navigate('/profile')}>
+            <DropdownMenuItem onSelect={() => navigate(isStudent ? '/student/profile' : '/profile')}>
               <UserRound className="mr-2 h-3.5 w-3.5" /> Profile
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => navigate('/settings')}>

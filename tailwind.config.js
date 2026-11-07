@@ -13,12 +13,17 @@ module.exports = {
   		colors: {
   			navy: {
   				DEFAULT: '#14213D',
-  				deep: '#0E1830',
-  				mid: '#1D2E52'
+  				deep: '#101828',
+  				mid: '#1B2C4F'
   			},
   			gold: {
-  				DEFAULT: '#4F75FF',
-  				light: '#DDE6FF'
+  				DEFAULT: '#D6AD55',
+  				light: '#F6EEDD'
+  			},
+  			royal: {
+  				DEFAULT: '#5B4DEB',
+  				soft: '#EEEBFE',
+  				deep: '#4A3DD8'
   			},
   			brand: {
   				DEFAULT: '#4F75FF',
@@ -26,13 +31,13 @@ module.exports = {
   				deep: '#3B5AE0'
   			},
   			violet: '#7666F5',
-  			positive: '#2E9E6B',
-  			warning: '#D99524',
+  			positive: '#16A085',
+  			warning: '#E6A23C',
   			critical: '#D64545',
-  			canvas: '#F6F7FA',
-  			ink: '#101B33',
-  			mutedink: '#667085',
-  			line: '#E6E9F2',
+  			canvas: '#F6F8FC',
+  			ink: '#172033',
+  			mutedink: '#6B7280',
+  			line: '#E7EAF2',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

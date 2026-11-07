@@ -18,9 +18,9 @@ import { METRICS, FACULTIES, UNIVERSITY } from '@/lib/demoUniversity';
 const WORKSPACES = [
   {
     role: 'Student',
-    to: '/student',
+    to: '/student/dashboard',
     icon: Users,
-    title: 'Student workspace',
+    title: 'Student portal',
     summary: 'A personal academic workspace: today’s timetable, deadlines, credits and results in one calm view.',
     points: ['Today’s schedule and upcoming deadlines', 'Academic progress and credit tracking', 'Requests and AI study companion'],
   },
@@ -190,8 +190,8 @@ export default function Welcome() {
                     </li>
                   ))}
                 </ul>
-                <Link to={destination} className="link-quiet mt-4">
-                  {user ? 'Open workspace' : 'Sign in to preview'} <ArrowRight className="h-3.5 w-3.5" />
+                <Link to={user ? item.to : '/login'} className="link-quiet mt-4">
+                  {user ? `Open ${item.role.toLowerCase()} workspace` : 'Sign in to open'} <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
             );

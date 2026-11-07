@@ -14,6 +14,16 @@ import { COMING_SOON_ROUTES, MODULE_PATHS } from '@/lib/moduleRoutes';
 import Welcome from '@/pages/Welcome';
 import RoleDashboard from '@/pages/RoleDashboard';
 import StudentDashboard from '@/pages/student/StudentDashboard';
+import CoursesPage from '@/pages/student/CoursesPage';
+import TimetablePage from '@/pages/student/TimetablePage';
+import AssignmentsPage from '@/pages/student/AssignmentsPage';
+import QuizzesPage from '@/pages/student/QuizzesPage';
+import GradesPage from '@/pages/student/GradesPage';
+import AttendancePage from '@/pages/student/AttendancePage';
+import ApplicationsPage from '@/pages/student/ApplicationsPage';
+import LibraryPage from '@/pages/student/LibraryPage';
+import AiStudyCompanion from '@/pages/student/AiStudyCompanion';
+import StudentProfilePage from '@/pages/student/StudentProfilePage';
 import ProfessorDashboard from '@/pages/professor/ProfessorDashboard';
 import DeanDashboard from '@/pages/dean/DeanDashboard';
 import Profile from '@/pages/account/Profile';
@@ -70,11 +80,92 @@ const AuthenticatedApp = () => {
           <Route path="/professor" element={<Navigate to={MODULE_PATHS.professor.dashboard} replace />} />
           <Route path="/dean" element={<Navigate to={MODULE_PATHS.dean.dashboard} replace />} />
 
+          {/* Student workspace: dedicated pages, all owned by the student role. */}
           <Route
             path={MODULE_PATHS.student.dashboard}
             element={
               <RoleRoute role="student">
                 <StudentDashboard />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.student.courses}
+            element={
+              <RoleRoute role="student">
+                <CoursesPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.student.timetable}
+            element={
+              <RoleRoute role="student">
+                <TimetablePage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.student.assignments}
+            element={
+              <RoleRoute role="student">
+                <AssignmentsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.student.quizzes}
+            element={
+              <RoleRoute role="student">
+                <QuizzesPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.student.grades}
+            element={
+              <RoleRoute role="student">
+                <GradesPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.student.attendance}
+            element={
+              <RoleRoute role="student">
+                <AttendancePage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.student.applications}
+            element={
+              <RoleRoute role="student">
+                <ApplicationsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.student.library}
+            element={
+              <RoleRoute role="student">
+                <LibraryPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.student.ai}
+            element={
+              <RoleRoute role="student">
+                <AiStudyCompanion />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.student.profile}
+            element={
+              <RoleRoute role="student">
+                <StudentProfilePage />
               </RoleRoute>
             }
           />

@@ -1,94 +1,68 @@
-import { CalendarDays, ClipboardList, FileText, GraduationCap } from 'lucide-react';
-import KpiStrip from '@/components/shell/KpiStrip';
-import QuickActions from '@/components/shell/QuickActions';
-import StudentHeader from '@/components/student/StudentHeader';
-import SchedulePanel from '@/components/student/SchedulePanel';
-import DeadlinesPanel from '@/components/student/DeadlinesPanel';
-import GradesPanel from '@/components/student/GradesPanel';
-import ProgressPanel from '@/components/student/ProgressPanel';
-import StandingPanel from '@/components/student/StandingPanel';
-import ExamsPanel from '@/components/student/ExamsPanel';
-import AnnouncementsPanel from '@/components/student/AnnouncementsPanel';
-import AssistantEntry from '@/components/shared/AssistantEntry';
+import { Link } from 'react-router-dom';
+import { CalendarDays, Sparkles } from 'lucide-react';
+import AiSummaryCard from '@/components/student/AiSummaryCard';
+import SummaryCards from '@/components/student/SummaryCards';
+import DeadlinesCard from '@/components/student/DeadlinesCard';
+import TodayScheduleCard from '@/components/student/TodayScheduleCard';
+import RecentGradesCard from '@/components/student/RecentGradesCard';
+import ProgressCard from '@/components/student/ProgressCard';
+import WellbeingCard from '@/components/student/WellbeingCard';
+import ExamPrepCard from '@/components/student/ExamPrepCard';
+import MentorsCard from '@/components/student/MentorsCard';
+import AnnouncementsCard from '@/components/student/AnnouncementsCard';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
-import { DEMO_STUDENT } from '@/lib/demoUniversity';
-
-const QUICK_ACTIONS = [
-  { label: 'View timetable', to: P.student.timetable, icon: CalendarDays },
-  { label: 'Submit assignment', to: P.student.assignments, icon: ClipboardList },
-  { label: 'Check grades', to: P.student.grades, icon: GraduationCap },
-  { label: 'Apply for certificate', to: P.student.applications, icon: FileText },
-];
-
-const openAssignments = DEMO_STUDENT.assignments.filter((item) => item.status !== 'submitted').length;
-
-const METRICS = [
-  {
-    label: 'Current GPA',
-    value: DEMO_STUDENT.gpa.toFixed(2),
-    hint: 'Fall Semester 2026 · top 12% of cohort',
-    delta: '+0.04',
-    tone: 'positive',
-  },
-  {
-    label: 'Cumulative GPA',
-    value: DEMO_STUDENT.cumulativeGpa.toFixed(2),
-    hint: `Across ${DEMO_STUDENT.creditsEarned} completed credits`,
-    delta: '+0.02',
-    tone: 'positive',
-  },
-  {
-    label: 'Credits completed',
-    value: String(DEMO_STUDENT.creditsEarned),
-    hint: `${DEMO_STUDENT.creditsRemaining} remaining of ${DEMO_STUDENT.creditsRequired}`,
-  },
-  {
-    label: 'Attendance',
-    value: `${DEMO_STUDENT.attendance}%`,
-    hint: 'Requirement is 85% per course',
-    delta: '+1.2',
-    tone: 'positive',
-  },
-  {
-    label: 'Open assignments',
-    value: String(openAssignments),
-    hint: 'Closest deadline in 2 days',
-    delta: 'Due 9 Nov',
-    tone: 'warning',
-  },
-];
+import { STUDENT } from '@/lib/studentWorkspace';
 
 export default function StudentDashboard() {
   return (
-    <div>
-      <StudentHeader student={DEMO_STUDENT} />
-
-      <KpiStrip columns={5} items={METRICS} />
-
-      <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <div className="space-y-4">
-          <SchedulePanel />
-          <DeadlinesPanel />
-          <GradesPanel />
+    <div className="space-y-4">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-royal/10 text-[13px] font-semibold text-royal">
+            {STUDENT.initials}
+          </span>
+          <div className="min-w-0">
+            <h1 className="truncate text-[22px] font-semibold leading-tight tracking-[-0.03em] text-ink sm:text-[26px]">
+              Welcome back, {STUDENT.firstName}!
+            </h1>
+            <p className="mt-0.5 text-[12px] text-mutedink">
+              Here is your academic overview for {STUDENT.semester.toLowerCase()}.
+            </p>
+          </div>
         </div>
-        <div className="space-y-4">
-          <StandingPanel />
-          <ProgressPanel />
-          <ExamsPanel />
-          <AnnouncementsPanel />
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-md border border-line bg-white px-2 py-1 text-[10.5px] text-mutedink">
+            {STUDENT.group} · Year {STUDENT.year}
+          </span>
+          <Link to={P.student.timetable} className="btn-quiet">
+            <CalendarDays className="h-3.5 w-3.5" /> Timetable
+          </Link>
+          <Link to={P.student.ai} className="btn-primary">
+            <Sparkles className="h-3.5 w-3.5" /> Study companion
+          </Link>
         </div>
+      </header>
+
+      <AiSummaryCard />
+      <SummaryCards />
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <DeadlinesCard />
+        <TodayScheduleCard />
+        <RecentGradesCard />
       </div>
 
-      <AssistantEntry
-        eyebrow="AI study companion"
-        title="Ask about your own courses, deadlines and results"
-        description="A personal study assistant scoped to your own academic record — it can explain your grades, plan revision around your timetable and flag deadlines you are close to missing."
-        prompts={['What should I revise for the ECO-301 mid-term?', 'How many credits do I still need?', 'Plan my week around the 9 Nov deadline']}
-        to={P.student.ai}
-        ctaLabel="Open study companion"
-      />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ProgressCard />
+        <WellbeingCard />
+      </div>
 
-      <QuickActions className="mt-4" title="My actions" items={QUICK_ACTIONS} />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ExamPrepCard />
+        <MentorsCard />
+      </div>
+
+      <AnnouncementsCard />
     </div>
   );
 }
