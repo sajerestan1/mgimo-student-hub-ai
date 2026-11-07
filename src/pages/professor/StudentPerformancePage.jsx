@@ -4,6 +4,7 @@ import Surface from '@/components/shell/Surface';
 import StatusChip from '@/components/shell/StatusChip';
 import { base44 } from '@/api/base44Client';
 import { useProfessorContext, loadTeaching, pct } from '@/lib/professorData';
+import { GradeDistributionChart, CourseProgressChart } from '@/components/professor/PerformanceCharts';
 
 export default function StudentPerformancePage() {
   const { professor, courses } = useProfessorContext();
@@ -74,6 +75,15 @@ export default function StudentPerformancePage() {
           </select>
         }
       />
+
+      <div className="mb-4 grid gap-4 lg:grid-cols-2">
+        <Surface title="Grade distribution" subtitle="Students per mark band in the selected courses">
+          <GradeDistributionChart rows={rows} />
+        </Surface>
+        <Surface title="Progress by course" subtitle="Average mark, submitted work and attendance">
+          <CourseProgressChart rows={rows} />
+        </Surface>
+      </div>
 
       <Surface title="Support watchlist" subtitle="Average below 60% or attendance below 70%" bodyClassName="px-0 pb-0 pt-1">
         <ul className="divide-y divide-line">
