@@ -55,7 +55,9 @@ export default function Register() {
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
       }
-      window.location.href = safeReturnTo();
+      // A brand-new account belongs in its role workspace, not the public site.
+      const requested = safeReturnTo();
+      window.location.href = requested === "/" ? "/dashboard" : requested;
     } catch (err) {
       setError(err.message || "Invalid verification code");
     } finally {
