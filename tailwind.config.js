@@ -12,17 +12,25 @@ module.exports = {
   		},
   		colors: {
   			navy: {
-  				DEFAULT: '#102D50',
-  				deep: '#0B2140',
-  				mid: '#183B63'
+  				DEFAULT: '#14213D',
+  				deep: '#0E1830',
+  				mid: '#1D2E52'
   			},
   			gold: {
-  				DEFAULT: '#D8B66A',
-  				light: '#EFE1BE'
+  				DEFAULT: '#4F75FF',
+  				light: '#DDE6FF'
   			},
-  			canvas: '#F4F7FB',
-  			ink: '#142B46',
-  			mutedink: '#687C96',
+  			brand: {
+  				DEFAULT: '#4F75FF',
+  				soft: '#EEF2FF'
+  			},
+  			violet: '#7666F5',
+  			positive: '#2E9E6B',
+  			warning: '#D99524',
+  			critical: '#D64545',
+  			canvas: '#F6F8FC',
+  			ink: '#14213D',
+  			mutedink: '#66748C',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

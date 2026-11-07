@@ -7,22 +7,17 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import AppLayout from '@/components/AppLayout';
-import { AdminDataProvider } from '@/lib/AdminDataContext';
-import Dashboard from '@/pages/Dashboard';
-import Faculties from '@/pages/Faculties';
-import Students from '@/pages/Students';
-import StudentDetail from '@/pages/StudentDetail';
-import Staff from '@/pages/Staff';
-import Attendance from '@/pages/Attendance';
-import Performance from '@/pages/Performance';
-import Requests from '@/pages/Requests';
-import CalendarPage from '@/pages/Calendar';
-import Announcements from '@/pages/Announcements';
-import Intelligence from '@/pages/Intelligence';
-import Assistant from '@/pages/Assistant';
-import Reports from '@/pages/Reports';
-import Settings from '@/pages/Settings';
+import AppShell from '@/components/shell/AppShell';
+import ComingSoon from '@/components/shell/ComingSoon';
+import Welcome from '@/pages/Welcome';
+import RoleDashboard from '@/pages/RoleDashboard';
+import StudentWorkspace from '@/pages/student/StudentWorkspace';
+import ProfessorWorkspace from '@/pages/professor/ProfessorWorkspace';
+import DeanCommandCenter from '@/pages/dean/DeanCommandCenter';
+import Profile from '@/pages/account/Profile';
+import UserSettings from '@/pages/account/UserSettings';
+import NotificationsPage from '@/pages/account/NotificationsPage';
+import Help from '@/pages/account/Help';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -56,6 +51,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
+      <Route path="/" element={<Welcome />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -64,27 +60,29 @@ const AuthenticatedApp = () => {
       <Route
         element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}
       >
-        <Route
-          element={
-            <AdminDataProvider>
-              <AppLayout />
-            </AdminDataProvider>
-          }
-        >
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/faculties" element={<Faculties />} />
-          <Route path="/students" element={<Students />} />
-          <Route path="/students/:id" element={<StudentDetail />} />
-          <Route path="/staff" element={<Staff />} />
-          <Route path="/attendance" element={<Attendance />} />
-          <Route path="/performance" element={<Performance />} />
-          <Route path="/requests" element={<Requests />} />
-          <Route path="/calendar" element={<CalendarPage />} />
-          <Route path="/announcements" element={<Announcements />} />
-          <Route path="/intelligence" element={<Intelligence />} />
-          <Route path="/assistant" element={<Assistant />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/settings" element={<Settings />} />
+        <Route element={<AppShell />}>
+          <Route path="/dashboard" element={<RoleDashboard />} />
+          <Route path="/student" element={<StudentWorkspace />} />
+          <Route path="/professor" element={<ProfessorWorkspace />} />
+          <Route path="/dean" element={<DeanCommandCenter />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<UserSettings />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/help" element={<Help />} />
+          <Route path="/courses" element={<ComingSoon />} />
+          <Route path="/lms" element={<ComingSoon />} />
+          <Route path="/assignments" element={<ComingSoon />} />
+          <Route path="/grades" element={<ComingSoon />} />
+          <Route path="/attendance" element={<ComingSoon />} />
+          <Route path="/schedule" element={<ComingSoon />} />
+          <Route path="/announcements" element={<ComingSoon />} />
+          <Route path="/applications" element={<ComingSoon />} />
+          <Route path="/faculty" element={<ComingSoon />} />
+          <Route path="/departments" element={<ComingSoon />} />
+          <Route path="/students" element={<ComingSoon />} />
+          <Route path="/professors" element={<ComingSoon />} />
+          <Route path="/analytics" element={<ComingSoon />} />
+          <Route path="/ai-assistant" element={<ComingSoon />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
