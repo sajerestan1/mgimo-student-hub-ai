@@ -1,5 +1,9 @@
+import { Link } from 'react-router-dom';
 import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
+import TranscriptTable from '@/components/student/TranscriptTable';
+import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
+import { TRANSCRIPT_TOTALS } from '@/lib/studentTranscript';
 import {
   COURSES,
   GRADES,
@@ -101,15 +105,28 @@ export default function GradesPage() {
             </dl>
           </Surface>
 
-          <Surface title="Official transcript">
-            <p className="text-[11.5px] leading-relaxed text-mutedink">
-              The official transcript is issued by the student office as a signed document. You can request an English
-              or Russian copy from Applications &amp; Certificates; a PDF export from this page will arrive in the next
-              stage.
-            </p>
-          </Surface>
         </div>
       </div>
+
+      <Surface
+        className="mt-4"
+        title="Official transcript"
+        subtitle={`${TRANSCRIPT_TOTALS.terms} completed semesters · ${TRANSCRIPT_TOTALS.courses} courses · ${TRANSCRIPT_TOTALS.credits} credits · cumulative average ${TRANSCRIPT_TOTALS.average.toFixed(1)} (${letterFor(TRANSCRIPT_TOTALS.average)})`}
+        bodyClassName="p-0"
+        footer={
+          <div className="flex flex-col gap-1.5 text-[11px] leading-relaxed text-mutedink sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              The official transcript is issued by the student office as a signed document. Request an English or
+              Russian copy from Applications &amp; Certificates.
+            </span>
+            <Link to={P.student.applications} className="link-quiet shrink-0">
+              Request official copy
+            </Link>
+          </div>
+        }
+      >
+        <TranscriptTable />
+      </Surface>
     </div>
   );
 }
