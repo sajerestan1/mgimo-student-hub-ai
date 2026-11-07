@@ -22,15 +22,17 @@ module.exports = {
   			},
   			brand: {
   				DEFAULT: '#4F75FF',
-  				soft: '#EEF2FF'
+  				soft: '#EEF2FF',
+  				deep: '#3B5AE0'
   			},
   			violet: '#7666F5',
   			positive: '#2E9E6B',
   			warning: '#D99524',
   			critical: '#D64545',
-  			canvas: '#F6F8FC',
-  			ink: '#14213D',
-  			mutedink: '#66748C',
+  			canvas: '#F6F7FA',
+  			ink: '#101B33',
+  			mutedink: '#667085',
+  			line: '#E6E9F2',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

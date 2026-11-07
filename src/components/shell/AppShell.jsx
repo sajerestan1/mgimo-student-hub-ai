@@ -24,17 +24,17 @@ export default function AppShell() {
       <div
         className={cn(
           'flex min-h-dvh flex-col transition-[padding] duration-200 ease-out',
-          collapsed ? 'lg:pl-[76px]' : 'lg:pl-[248px]'
+          collapsed ? 'lg:pl-[70px]' : 'lg:pl-[244px]'
         )}
       >
         <TopBar onOpenMobile={() => setMobileOpen(true)} />
-        <main className="flex-1 px-3 py-4 sm:px-6 sm:py-6">
-          <div className="mx-auto w-full max-w-[1400px]">
+        <main className="flex-1 px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+          <div className="mx-auto w-full max-w-[1320px]">
             <Outlet />
           </div>
         </main>
-        <footer className="border-t border-[#E6EAF2] px-3 py-3 sm:px-6">
-          <p className="mx-auto max-w-[1400px] text-[10.5px] leading-relaxed text-mutedink">
+        <footer className="border-t border-line px-4 py-3 sm:px-6 lg:px-8">
+          <p className="mx-auto max-w-[1320px] text-[10.5px] leading-relaxed text-mutedink">
             Independent academic technology prototype developed for the MGIMO AI Challenge 2026. Not an official MGIMO
             service. All people, records and metrics shown are fictional.
           </p>

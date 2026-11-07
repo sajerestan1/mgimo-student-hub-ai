@@ -45,13 +45,13 @@ export default function UserSettings() {
         description={`Preferences for the ${workspace.label.toLowerCase()} workspace. Saved on this device in this prototype.`}
       />
 
-      <Surface title="Preferences" bodyClassName="p-0">
-        <ul className="divide-y divide-[#F3F5FA]">
+      <Surface title="Preferences" subtitle="Saved on this device in this prototype" bodyClassName="p-0">
+        <ul className="divide-y divide-line border-t border-line">
           {PREFERENCES.map((item) => (
-            <li key={item.key} className="flex items-start justify-between gap-4 px-4 py-3">
+            <li key={item.key} className="flex items-start justify-between gap-4 px-5 py-3.5">
               <div className="min-w-0">
                 <p className="text-[12.5px] font-medium text-ink">{item.label}</p>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-mutedink">{item.hint}</p>
+                <p className="mt-0.5 text-[11.5px] leading-relaxed text-mutedink">{item.hint}</p>
               </div>
               <Switch
                 checked={preferences[item.key]}
@@ -63,8 +63,8 @@ export default function UserSettings() {
         </ul>
       </Surface>
 
-      <Surface className="mt-2.5" title="Role and access" subtitle="Managed by the university, not self-service">
-        <p className="text-[12px] leading-relaxed text-mutedink">
+      <Surface className="mt-4" title="Role and access" subtitle="Managed by the university, not self-service">
+        <p className="text-[12.5px] leading-relaxed text-mutedink">
           Your workspace is determined by the role assigned to your account ({workspace.label}). Changing roles, faculties or
           departments is an administrative action and is intentionally unavailable here.
         </p>

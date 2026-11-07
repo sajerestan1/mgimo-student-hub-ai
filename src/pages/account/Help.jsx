@@ -35,20 +35,20 @@ export default function Help() {
         description="Guidance for the prototype and the workspace you are currently using."
       />
 
-      <Surface title="Frequently asked questions" bodyClassName="px-4 py-1">
+      <Surface title="Frequently asked questions" bodyClassName="px-5 pb-1 pt-0">
         <Accordion type="single" collapsible className="w-full">
           {FAQ.map((item, index) => (
-            <AccordionItem key={item.q} value={`item-${index}`} className="border-b border-[#F3F5FA] last:border-0">
-              <AccordionTrigger className="py-3 text-left text-[12.5px] font-medium text-ink hover:no-underline">
+            <AccordionItem key={item.q} value={`item-${index}`} className="border-b border-line last:border-0">
+              <AccordionTrigger className="py-3.5 text-left text-[13px] font-medium text-ink hover:no-underline">
                 {item.q}
               </AccordionTrigger>
-              <AccordionContent className="pb-3 text-[11.5px] leading-relaxed text-mutedink">{item.a}</AccordionContent>
+              <AccordionContent className="pb-3.5 text-[12px] leading-relaxed text-mutedink">{item.a}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
       </Surface>
 
-      <div className="mt-2.5 grid gap-2.5 sm:grid-cols-3">
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <div className="card-surface p-4">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand/10 text-brand">
             <BookOpen className="h-4 w-4" />
@@ -78,7 +78,7 @@ export default function Help() {
         </div>
       </div>
 
-      <div className="mt-2.5 flex items-start gap-2 rounded-2xl border border-[#E6EAF2] bg-white px-4 py-3">
+      <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-line bg-white px-5 py-3.5">
         <LifeBuoy className="mt-0.5 h-4 w-4 shrink-0 text-mutedink" />
         <p className="text-[11px] leading-relaxed text-mutedink">
           Independent academic technology prototype developed for the MGIMO AI Challenge 2026. Not an official MGIMO service.{' '}

@@ -30,7 +30,7 @@
     --chart-3: 220 50% 26%;
     --chart-4: 158 48% 42%;
     --chart-5: 32 85% 55%;
-    --radius: 0.875rem;
+    --radius: 0.75rem;
     --font-heading: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -75,7 +75,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
 
   html {
@@ -83,23 +83,63 @@
   }
 
   body {
-    @apply bg-background text-foreground font-body antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "ss01";
-    letter-spacing: -0.006em;
+    @apply bg-background font-body text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "ss01", "tnum" 0;
+    letter-spacing: -0.008em;
   }
 
   ::selection {
-    background-color: rgba(79, 117, 255, 0.18);
+    background-color: rgba(79, 117, 255, 0.16);
+  }
+}
+
+@layer components {
+  /* One surface treatment for every panel, card and table container. */
+  .card-surface {
+    @apply rounded-xl border border-line bg-white;
+    box-shadow: 0 1px 2px rgba(16, 27, 51, 0.04);
+  }
+
+  .eyebrow {
+    @apply text-[10.5px] font-semibold uppercase tracking-[0.16em] text-mutedink;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-navy px-3.5 py-2 text-[12.5px] font-medium text-white transition-colors duration-150 hover:bg-navy-mid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-1;
+  }
+
+  .btn-quiet {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-[12.5px] font-medium text-ink transition-colors duration-150 hover:border-[#D6DCE8] hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25;
+  }
+
+  .btn-sm {
+    @apply px-2.5 py-1.5 text-[11.5px];
+  }
+
+  .link-quiet {
+    @apply inline-flex items-center gap-1 text-[11.5px] font-medium text-brand transition-colors hover:text-[#3B5AE0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium leading-5;
+  }
+
+  .icon-btn {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg text-ink/60 transition-colors hover:bg-canvas hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25;
+  }
+
+  .row-hover {
+    @apply transition-colors hover:bg-[#FAFBFD];
+  }
+
+  .table-head {
+    @apply text-[10.5px] font-semibold uppercase tracking-[0.06em] text-mutedink;
   }
 }
 
 @layer utilities {
-  .card-surface {
-    @apply rounded-2xl border border-[#E6EAF2] bg-white shadow-[0_1px_2px_rgba(20,33,61,0.04)];
-  }
-
   .soft-shadow {
-    box-shadow: 0 1px 2px rgba(20, 33, 61, 0.04), 0 16px 36px -30px rgba(20, 33, 61, 0.35);
+    box-shadow: 0 1px 2px rgba(16, 27, 51, 0.04), 0 18px 40px -34px rgba(16, 27, 51, 0.4);
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -111,15 +151,25 @@
     scrollbar-width: none;
   }
 
+  .scroll-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: #DCE2EC;
+    border-radius: 9999px;
+  }
+
   .fade-up {
-    animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 }
 
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
 
   to {

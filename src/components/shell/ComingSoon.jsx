@@ -1,7 +1,9 @@
 import { useLocation, Link } from 'react-router-dom';
-import { Check, Layers, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Check, Layers } from 'lucide-react';
 import { ROADMAP } from '@/lib/roadmap';
 import PageTitle from '@/components/shell/PageTitle';
+import Surface from '@/components/shell/Surface';
+import StatusChip from '@/components/shell/StatusChip';
 import { useWorkspace } from '@/lib/workspaceRole';
 
 export default function ComingSoon() {
@@ -14,60 +16,58 @@ export default function ComingSoon() {
   };
 
   return (
-    <div>
+    <div className="mx-auto max-w-4xl">
       <PageTitle
         eyebrow="Stage 2 · In design"
         title={section.title}
         description={section.summary}
         actions={
-          <Link
-            to={workspace.home}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#E6EAF2] bg-white px-3 py-2 text-[11.5px] font-medium text-ink hover:bg-[#F6F8FC]"
-          >
+          <Link to={workspace.home} className="btn-quiet">
             <ArrowLeft className="h-3.5 w-3.5" /> Back to my workspace
           </Link>
         }
       />
 
-      <div className="grid gap-3 lg:grid-cols-3">
-        <div className="card-surface p-5 lg:col-span-2">
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand/10 text-brand">
+      <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
+        <Surface>
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#EDF1FE] text-[#3B5AE0]">
               <Layers className="h-4 w-4" />
             </span>
-            <p className="text-[13px] font-semibold text-ink">What this section will provide</p>
+            <div>
+              <p className="text-[13.5px] font-semibold text-ink">What this section will provide</p>
+              <p className="mt-0.5 text-[11.5px] text-mutedink">Planned capability, not yet implemented</p>
+            </div>
           </div>
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-4 space-y-2.5">
             {section.bullets.map((item) => (
-              <li key={item} className="flex items-start gap-2 text-[12.5px] leading-relaxed text-ink/80">
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-positive" />
+              <li key={item} className="flex items-start gap-2.5 text-[12.5px] leading-relaxed text-ink/80">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-positive" strokeWidth={2.2} />
                 {item}
               </li>
             ))}
           </ul>
-        </div>
-
-        <div className="card-surface p-5">
-          <p className="text-[13px] font-semibold text-ink">Development status</p>
-          <p className="mt-1.5 text-[12px] leading-relaxed text-mutedink">
-            Stage 1 delivers the application shell, role-aware navigation and the three workspace dashboards. This section
-            is deliberately not implemented, so nothing here pretends to be functional.
+          <p className="mt-4 rounded-lg bg-canvas px-3 py-2.5 text-[11.5px] leading-relaxed text-mutedink">
+            Nothing on this page pretends to be functional. Every other module in the navigation opens this description
+            until the corresponding stage ships.
           </p>
-          <div className="mt-3 space-y-1.5 text-[11.5px]">
-            <div className="flex items-center justify-between rounded-lg bg-[#F6F8FC] px-2.5 py-1.5">
-              <span className="text-mutedink">Navigation</span>
-              <span className="font-medium text-positive">Live</span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg bg-[#F6F8FC] px-2.5 py-1.5">
-              <span className="text-mutedink">Data model</span>
-              <span className="font-medium text-warning">Prepared</span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg bg-[#F6F8FC] px-2.5 py-1.5">
-              <span className="text-mutedink">{section.title} module</span>
-              <span className="font-medium text-mutedink">Stage 2</span>
-            </div>
-          </div>
-        </div>
+        </Surface>
+
+        <Surface title="Development status">
+          <ul className="space-y-2">
+            {[
+              ['Navigation', 'Live', 'positive'],
+              ['Application shell', 'Live', 'positive'],
+              ['Data model', 'Prepared', 'warning'],
+              [`${section.title} module`, 'Stage 2', 'neutral'],
+            ].map(([label, value, tone]) => (
+              <li key={label} className="flex items-center justify-between gap-3 border-b border-line pb-2 text-[12px] last:border-0 last:pb-0">
+                <span className="text-mutedink">{label}</span>
+                <StatusChip tone={tone}>{value}</StatusChip>
+              </li>
+            ))}
+          </ul>
+        </Surface>
       </div>
     </div>
   );

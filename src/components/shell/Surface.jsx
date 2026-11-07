@@ -1,18 +1,35 @@
 import { cn } from '@/lib/utils';
 
-export default function Surface({ title, subtitle, action, className, bodyClassName, children }) {
+/**
+ * The single panel primitive: a hairline surface with an optional header,
+ * an optional footer strip, and a body whose padding can be dropped for
+ * full-bleed tables and charts.
+ */
+export default function Surface({
+  title,
+  subtitle,
+  action,
+  footer,
+  className,
+  bodyClassName,
+  children,
+}) {
+  const hasHeader = Boolean(title || action);
   return (
-    <section className={cn('card-surface overflow-hidden', className)}>
+    <section className={cn('card-surface flex flex-col overflow-hidden', className)}>
       {(title || action) && (
-        <header className="flex items-start justify-between gap-3 border-b border-[#EEF1F7] px-4 py-3">
+        <header className="flex items-start justify-between gap-4 px-5 pb-3 pt-4">
           <div className="min-w-0">
-            <h2 className="text-[13px] font-semibold tracking-tight text-ink">{title}</h2>
-            {subtitle && <p className="mt-0.5 text-[11px] leading-relaxed text-mutedink">{subtitle}</p>}
+            {title && (
+              <h2 className="text-[14px] font-semibold leading-tight tracking-[-0.01em] text-ink">{title}</h2>
+            )}
+            {subtitle && <p className="mt-1 text-[11.5px] leading-relaxed text-mutedink">{subtitle}</p>}
           </div>
-          {action}
+          {action && <div className="shrink-0 pt-0.5">{action}</div>}
         </header>
       )}
-      <div className={cn('p-4', bodyClassName)}>{children}</div>
+      <div className={cn(hasHeader ? 'px-5 pb-5' : 'p-5', bodyClassName)}>{children}</div>
+      {footer && <div className="mt-auto border-t border-line px-5 py-3">{footer}</div>}
     </section>
   );
 }
