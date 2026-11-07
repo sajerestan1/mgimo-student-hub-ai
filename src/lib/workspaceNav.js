@@ -1,28 +1,33 @@
+import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
+
+// Navigation is a role contract: the three lists share no module wording and
+// each entry resolves inside that role's own route space.
 export const NAV_BY_ROLE = {
   student: [
     {
-      label: 'Workspace',
+      label: 'My studies',
       items: [
-        { to: '/student', label: 'My dashboard', icon: 'LayoutDashboard' },
-        { to: '/schedule', label: 'Schedule', icon: 'CalendarDays', soon: true },
-        { to: '/assignments', label: 'Assignments', icon: 'ClipboardList', soon: true },
-        { to: '/grades', label: 'Grades', icon: 'GraduationCap', soon: true },
+        { to: P.student.dashboard, label: 'Dashboard', icon: 'LayoutDashboard' },
+        { to: P.student.courses, label: 'My Courses', icon: 'BookOpen', soon: true },
+        { to: P.student.timetable, label: 'Timetable', icon: 'CalendarDays', soon: true },
+        { to: P.student.assignments, label: 'Assignments', icon: 'ClipboardList', soon: true },
+        { to: P.student.exams, label: 'Quizzes & Exams', icon: 'ClipboardCheck', soon: true },
+        { to: P.student.grades, label: 'Grades & Transcript', icon: 'GraduationCap', soon: true },
+        { to: P.student.attendance, label: 'Attendance', icon: 'CalendarCheck', soon: true },
       ],
     },
     {
-      label: 'Learning',
+      label: 'Student services',
       items: [
-        { to: '/courses', label: 'Courses', icon: 'BookOpen', soon: true },
-        { to: '/lms', label: 'Learning platform', icon: 'MonitorPlay', soon: true },
-        { to: '/attendance', label: 'Attendance', icon: 'CalendarCheck', soon: true },
-        { to: '/applications', label: 'Applications', icon: 'FileText', soon: true },
+        { to: P.student.applications, label: 'Applications & Certificates', icon: 'FileText', soon: true },
+        { to: P.student.notifications, label: 'Notifications', icon: 'Bell' },
       ],
     },
     {
-      label: 'Communication',
+      label: 'Assistance',
       items: [
-        { to: '/announcements', label: 'Announcements', icon: 'Megaphone', soon: true },
-        { to: '/ai-assistant', label: 'AI study companion', icon: 'Sparkles', soon: true },
+        { to: P.student.ai, label: 'AI Study Companion', icon: 'Sparkles', soon: true },
+        { to: P.student.profile, label: 'Profile & Settings', icon: 'UserRound' },
       ],
     },
   ],
@@ -30,86 +35,60 @@ export const NAV_BY_ROLE = {
     {
       label: 'Teaching',
       items: [
-        { to: '/professor', label: 'My dashboard', icon: 'LayoutDashboard' },
-        { to: '/courses', label: 'My courses', icon: 'BookOpen', soon: true },
-        { to: '/assignments', label: 'Assignments & grading', icon: 'ClipboardList', soon: true },
-        { to: '/attendance', label: 'Attendance', icon: 'CalendarCheck', soon: true },
-        { to: '/schedule', label: 'Teaching schedule', icon: 'CalendarDays', soon: true },
+        { to: P.professor.dashboard, label: 'Dashboard', icon: 'LayoutDashboard' },
+        { to: P.professor.teaching, label: 'My Teaching', icon: 'Presentation', soon: true },
+        { to: P.professor.courses, label: 'Courses', icon: 'BookOpen', soon: true },
+        { to: P.professor.materials, label: 'Course Materials', icon: 'FolderOpen', soon: true },
       ],
     },
     {
-      label: 'Cohorts',
+      label: 'Assessment',
       items: [
-        { to: '/students', label: 'My students', icon: 'Users', soon: true },
-        { to: '/grades', label: 'Grade book', icon: 'GraduationCap', soon: true },
-        { to: '/announcements', label: 'Course announcements', icon: 'Megaphone', soon: true },
+        { to: P.professor.assignments, label: 'Assignments', icon: 'ClipboardList', soon: true },
+        { to: P.professor.quizzes, label: 'Quizzes', icon: 'ClipboardCheck', soon: true },
+        { to: P.professor.grading, label: 'Submissions & Grading', icon: 'GraduationCap', soon: true },
+        { to: P.professor.attendance, label: 'Attendance Management', icon: 'CalendarCheck', soon: true },
       ],
     },
     {
-      label: 'Intelligence',
-      items: [{ to: '/ai-assistant', label: 'AI teaching assistant', icon: 'Sparkles', soon: true }],
+      label: 'Cohort & support',
+      items: [
+        { to: P.professor.students, label: 'Student Performance', icon: 'TrendingUp', soon: true },
+        { to: P.professor.discussions, label: 'Discussions', icon: 'MessagesSquare', soon: true },
+        { to: P.professor.ai, label: 'AI Teaching Assistant', icon: 'Sparkles', soon: true },
+        { to: P.professor.profile, label: 'Profile & Settings', icon: 'UserRound' },
+      ],
     },
   ],
   dean: [
     {
-      label: 'Command',
+      label: 'Command center',
       items: [
-        { to: '/dean', label: 'Command center', icon: 'LayoutDashboard' },
-        { to: '/faculty', label: 'Faculties', icon: 'Building2', soon: true },
-        { to: '/departments', label: 'Departments', icon: 'Network', soon: true },
+        { to: P.dean.dashboard, label: 'Command Center', icon: 'LayoutDashboard' },
+        { to: P.dean.faculties, label: 'Faculties', icon: 'Building2', soon: true },
+        { to: P.dean.departments, label: 'Departments', icon: 'Network', soon: true },
+        { to: P.dean.programmes, label: 'Academic Programmes', icon: 'BookOpen', soon: true },
       ],
     },
     {
       label: 'People',
       items: [
-        { to: '/students', label: 'Students', icon: 'Users', soon: true },
-        { to: '/professors', label: 'Professors', icon: 'Presentation', soon: true },
+        { to: P.dean.students, label: 'Students', icon: 'Users', soon: true },
+        { to: P.dean.professors, label: 'Professors', icon: 'Presentation', soon: true },
+        { to: P.dean.courses, label: 'Courses', icon: 'GraduationCap', soon: true },
       ],
     },
     {
-      label: 'Insight',
+      label: 'Intelligence',
       items: [
-        { to: '/analytics', label: 'Academic analytics', icon: 'BarChart3', soon: true },
-        { to: '/attendance', label: 'Attendance reports', icon: 'CalendarCheck', soon: true },
-        { to: '/lms', label: 'Learning platform', icon: 'MonitorPlay', soon: true },
-        { to: '/ai-assistant', label: 'AI academic assistant', icon: 'Sparkles', soon: true },
+        { to: P.dean.performance, label: 'Academic Performance', icon: 'TrendingUp', soon: true },
+        { to: P.dean.attendance, label: 'Attendance Analytics', icon: 'CalendarCheck', soon: true },
+        { to: P.dean.risk, label: 'Academic Risk Radar', icon: 'Radar', soon: true },
+        { to: P.dean.reports, label: 'Reports & Insights', icon: 'BarChart3', soon: true },
+        { to: P.dean.profile, label: 'Profile & Settings', icon: 'UserRound' },
       ],
-    },
-    {
-      label: 'Communication',
-      items: [{ to: '/announcements', label: 'Announcements', icon: 'Megaphone', soon: true }],
     },
   ],
 };
 
-export const ACCOUNT_NAV = [
-  { to: '/notifications', label: 'Notifications', icon: 'Bell' },
-  { to: '/profile', label: 'Profile', icon: 'UserRound' },
-  { to: '/settings', label: 'Settings', icon: 'Settings' },
-  { to: '/help', label: 'Help & support', icon: 'LifeBuoy' },
-];
-
-export const PAGE_TITLES = {
-  '/dashboard': 'Dashboard',
-  '/student': 'Student Workspace',
-  '/professor': 'Professor Workspace',
-  '/dean': "Dean's Command Center",
-  '/profile': 'Profile',
-  '/settings': 'Settings',
-  '/notifications': 'Notifications',
-  '/help': 'Help & support',
-  '/courses': 'Courses',
-  '/lms': 'Learning platform',
-  '/assignments': 'Assignments',
-  '/grades': 'Grades',
-  '/attendance': 'Attendance',
-  '/schedule': 'Schedule',
-  '/announcements': 'Announcements',
-  '/applications': 'Applications',
-  '/faculty': 'Faculties',
-  '/departments': 'Departments',
-  '/students': 'Students',
-  '/professors': 'Professors',
-  '/analytics': 'Academic analytics',
-  '/ai-assistant': 'AI assistant',
-};
+export const ACCOUNT_NAV = [{ to: '/help', label: 'Help & support', icon: 'LifeBuoy' }];

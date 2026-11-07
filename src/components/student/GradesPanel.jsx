@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import Surface from '@/components/shell/Surface';
 import { DEMO_STUDENT } from '@/lib/demoUniversity';
+import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 
 export default function GradesPanel() {
   const grades = DEMO_STUDENT.grades;
@@ -11,7 +12,7 @@ export default function GradesPanel() {
       title="Recent grades"
       subtitle="Current term results released so far"
       action={
-        <Link to="/grades" className="link-quiet">
+        <Link to={P.student.grades} className="link-quiet">
           Full grade book <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       }

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, AlertTriangle } from 'lucide-react';
 import Surface from '@/components/shell/Surface';
 import { DEMO_PROFESSOR } from '@/lib/demoUniversity';
+import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 
 export default function AttendanceReview() {
   return (
@@ -10,7 +11,7 @@ export default function AttendanceReview() {
       subtitle="Flagged by this week’s submissions"
       bodyClassName="px-5 pb-2 pt-1"
       footer={
-        <Link to="/attendance" className="link-quiet">
+        <Link to={P.professor.attendance} className="link-quiet">
           Review attendance <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       }

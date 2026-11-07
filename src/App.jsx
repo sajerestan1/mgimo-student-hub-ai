@@ -9,11 +9,13 @@ import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AppShell from '@/components/shell/AppShell';
 import ComingSoon from '@/components/shell/ComingSoon';
+import RoleRoute from '@/components/shell/RoleRoute';
+import { COMING_SOON_ROUTES, MODULE_PATHS } from '@/lib/moduleRoutes';
 import Welcome from '@/pages/Welcome';
 import RoleDashboard from '@/pages/RoleDashboard';
-import StudentWorkspace from '@/pages/student/StudentWorkspace';
-import ProfessorWorkspace from '@/pages/professor/ProfessorWorkspace';
-import DeanCommandCenter from '@/pages/dean/DeanCommandCenter';
+import StudentDashboard from '@/pages/student/StudentDashboard';
+import ProfessorDashboard from '@/pages/professor/ProfessorDashboard';
+import DeanDashboard from '@/pages/dean/DeanDashboard';
 import Profile from '@/pages/account/Profile';
 import UserSettings from '@/pages/account/UserSettings';
 import NotificationsPage from '@/pages/account/NotificationsPage';
@@ -62,27 +64,54 @@ const AuthenticatedApp = () => {
       >
         <Route element={<AppShell />}>
           <Route path="/dashboard" element={<RoleDashboard />} />
-          <Route path="/student" element={<StudentWorkspace />} />
-          <Route path="/professor" element={<ProfessorWorkspace />} />
-          <Route path="/dean" element={<DeanCommandCenter />} />
+
+          {/* Legacy workspace paths resolve to the role's dashboard. */}
+          <Route path="/student" element={<Navigate to={MODULE_PATHS.student.dashboard} replace />} />
+          <Route path="/professor" element={<Navigate to={MODULE_PATHS.professor.dashboard} replace />} />
+          <Route path="/dean" element={<Navigate to={MODULE_PATHS.dean.dashboard} replace />} />
+
+          <Route
+            path={MODULE_PATHS.student.dashboard}
+            element={
+              <RoleRoute role="student">
+                <StudentDashboard />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.professor.dashboard}
+            element={
+              <RoleRoute role="professor">
+                <ProfessorDashboard />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.dean.dashboard}
+            element={
+              <RoleRoute role="dean">
+                <DeanDashboard />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.student.notifications}
+            element={
+              <RoleRoute role="student">
+                <NotificationsPage />
+              </RoleRoute>
+            }
+          />
+
+          {/* Role-scoped module routes; each one verifies ownership by path prefix. */}
+          {COMING_SOON_ROUTES.map((path) => (
+            <Route key={path} path={path} element={<ComingSoon />} />
+          ))}
+
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<UserSettings />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/help" element={<Help />} />
-          <Route path="/courses" element={<ComingSoon />} />
-          <Route path="/lms" element={<ComingSoon />} />
-          <Route path="/assignments" element={<ComingSoon />} />
-          <Route path="/grades" element={<ComingSoon />} />
-          <Route path="/attendance" element={<ComingSoon />} />
-          <Route path="/schedule" element={<ComingSoon />} />
-          <Route path="/announcements" element={<ComingSoon />} />
-          <Route path="/applications" element={<ComingSoon />} />
-          <Route path="/faculty" element={<ComingSoon />} />
-          <Route path="/departments" element={<ComingSoon />} />
-          <Route path="/students" element={<ComingSoon />} />
-          <Route path="/professors" element={<ComingSoon />} />
-          <Route path="/analytics" element={<ComingSoon />} />
-          <Route path="/ai-assistant" element={<ComingSoon />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

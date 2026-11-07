@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import Surface from '@/components/shell/Surface';
 import StatusChip from '@/components/shell/StatusChip';
 import { DEMO_STUDENT } from '@/lib/demoUniversity';
+import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -37,7 +38,7 @@ export default function DeadlinesPanel() {
       title="Upcoming deadlines"
       subtitle={`${open} open · closest due in 2 days`}
       action={
-        <Link to="/assignments" className="link-quiet">
+        <Link to={P.student.assignments} className="link-quiet">
           All assignments <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       }

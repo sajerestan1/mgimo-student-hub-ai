@@ -12,7 +12,7 @@ const FAQ = [
   },
   {
     q: 'Why can’t I open another workspace?',
-    a: 'Your workspace follows the role assigned to your account. Student and professor dashboards run on fictional demonstration data, so the dean may preview them; the command center is limited to dean accounts.',
+    a: 'Your workspace follows the role assigned to your account, and each workspace has its own routes: a student account cannot open the professor or command-center dashboards, and those URLs redirect to your own dashboard.',
   },
   {
     q: 'Is this connected to a real university?',

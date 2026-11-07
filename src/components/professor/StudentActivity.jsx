@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import Surface from '@/components/shell/Surface';
 import { DEMO_PROFESSOR } from '@/lib/demoUniversity';
+import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 
 const initials = (name) =>
   name
@@ -17,7 +18,7 @@ export default function StudentActivity() {
       title="Student activity"
       subtitle="Latest submissions across your courses"
       action={
-        <Link to="/students" className="link-quiet">
+        <Link to={P.professor.students} className="link-quiet">
           Students <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       }

@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import Surface from '@/components/shell/Surface';
 import ProgressBar from '@/components/shell/ProgressBar';
 import { DEMO_PROFESSOR } from '@/lib/demoUniversity';
+import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 
 export default function GradingQueue() {
   const queue = DEMO_PROFESSOR.gradingQueue;
@@ -13,7 +14,7 @@ export default function GradingQueue() {
       title="Grading queue"
       subtitle={`${awaiting?.value || 0} submissions awaiting feedback · oldest 4 days`}
       action={
-        <Link to="/assignments" className="link-quiet">
+        <Link to={P.professor.grading} className="link-quiet">
           Open grading <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       }
@@ -36,7 +37,7 @@ export default function GradingQueue() {
                     <span className={overdue ? 'font-medium text-warning' : ''}>due {item.due}</span>
                   </p>
                 </div>
-                <Link to="/assignments" className="btn-quiet btn-sm shrink-0">
+                <Link to={P.professor.grading} className="btn-quiet btn-sm shrink-0">
                   Grade
                 </Link>
               </div>

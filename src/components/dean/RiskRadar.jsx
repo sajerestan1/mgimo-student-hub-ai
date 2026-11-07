@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Sparkles, ArrowRight, Radar } from 'lucide-react';
 import ProgressBar from '@/components/shell/ProgressBar';
 import { RISK_FLAGS, RISK_SUMMARY } from '@/lib/demoUniversity';
+import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 
 const SEVERITY_TONE = (gpa) => (gpa < 3 ? 'critical' : 'warning');
 
@@ -66,7 +67,7 @@ export default function RiskRadar() {
             Computed from fictional records. Live explanations and interventions are not implemented yet.
           </p>
           <Link
-            to="/ai-assistant"
+            to={P.dean.risk}
             className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-[11.5px] font-medium text-[#0F1A31] transition-colors hover:bg-white/90"
           >
             <Sparkles className="h-3.5 w-3.5" /> Ask the assistant <ArrowRight className="h-3.5 w-3.5" />

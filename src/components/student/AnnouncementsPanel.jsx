@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import Surface from '@/components/shell/Surface';
 import { DEMO_STUDENT } from '@/lib/demoUniversity';
+import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 
 export default function AnnouncementsPanel() {
   return (
@@ -9,7 +10,7 @@ export default function AnnouncementsPanel() {
       title="Announcements"
       subtitle="University, faculty and course"
       action={
-        <Link to="/announcements" className="link-quiet">
+        <Link to={P.student.notifications} className="link-quiet">
           All <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       }

@@ -1,24 +1,39 @@
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, Navigate } from 'react-router-dom';
 import { ArrowLeft, Check, Layers } from 'lucide-react';
 import { ROADMAP } from '@/lib/roadmap';
+import { MODULE_INFO } from '@/lib/moduleRoutes';
 import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
 import StatusChip from '@/components/shell/StatusChip';
 import { useWorkspace } from '@/lib/workspaceRole';
 
+// Every module path belongs to exactly one workspace role.
+const PATH_OWNER = { '/student': 'student', '/professor': 'professor', '/dean': 'dean' };
+
+const WORKSPACE_SUMMARY = {
+  student: 'Part of the student workspace. The route, permissions and navigation are in place; the working screen ships in Stage 2.',
+  professor: 'Part of the professor workspace. The route, permissions and navigation are in place; the working screen ships in Stage 2.',
+  dean: 'Part of the dean’s command center. The route, permissions and navigation are in place; the working screen ships in Stage 2.',
+};
+
 export default function ComingSoon() {
   const { pathname } = useLocation();
   const { workspace } = useWorkspace();
+
+  const owner = Object.entries(PATH_OWNER).find(([prefix]) => pathname.startsWith(prefix))?.[1];
+  if (owner && owner !== workspace.role) return <Navigate to={workspace.home} replace />;
+
+  const title = MODULE_INFO[pathname]?.title || ROADMAP[pathname]?.title || 'This section';
   const section = ROADMAP[pathname] || {
-    title: 'This section',
-    summary: 'This area is part of the platform architecture and is scheduled for the next development stage.',
-    bullets: ['Interface and navigation are already in place', 'Data model and permissions are being prepared'],
+    title,
+    summary: WORKSPACE_SUMMARY[workspace.role] || WORKSPACE_SUMMARY.student,
+    bullets: ['Interface, route and navigation are already in place', 'Permissions follow the workspace role'],
   };
 
   return (
     <div className="mx-auto max-w-4xl">
       <PageTitle
-        eyebrow="Stage 2 · In design"
+        eyebrow={`${workspace.label} workspace · Stage 2`}
         title={section.title}
         description={section.summary}
         actions={
@@ -48,8 +63,8 @@ export default function ComingSoon() {
             ))}
           </ul>
           <p className="mt-4 rounded-lg bg-canvas px-3 py-2.5 text-[11.5px] leading-relaxed text-mutedink">
-            Nothing on this page pretends to be functional. Every other module in the navigation opens this description
-            until the corresponding stage ships.
+            Nothing on this page pretends to be functional. Every other module in the {workspace.label.toLowerCase()}{' '}
+            navigation opens this description until the corresponding stage ships.
           </p>
         </Surface>
 
@@ -58,7 +73,7 @@ export default function ComingSoon() {
             {[
               ['Navigation', 'Live', 'positive'],
               ['Application shell', 'Live', 'positive'],
-              ['Data model', 'Prepared', 'warning'],
+              ['Role permissions', 'Live', 'positive'],
               [`${section.title} module`, 'Stage 2', 'neutral'],
             ].map(([label, value, tone]) => (
               <li key={label} className="flex items-center justify-between gap-3 border-b border-line pb-2 text-[12px] last:border-0 last:pb-0">

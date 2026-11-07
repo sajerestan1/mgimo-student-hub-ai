@@ -22,6 +22,11 @@ import {
   X,
   ChevronsLeft,
   ChevronsRight,
+  ClipboardCheck,
+  FolderOpen,
+  MessagesSquare,
+  TrendingUp,
+  Radar,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NAV_BY_ROLE, ACCOUNT_NAV } from '@/lib/workspaceNav';
@@ -48,6 +53,11 @@ const ICONS = {
   Settings,
   LifeBuoy,
   Network,
+  ClipboardCheck,
+  FolderOpen,
+  MessagesSquare,
+  TrendingUp,
+  Radar,
 };
 
 const initials = (name) =>

@@ -179,8 +179,11 @@ export const DEMO_STUDENT = {
   group: 'ECO-23-3',
   year: 3,
   gpa: 4.42,
+  cumulativeGpa: 4.36,
+  standing: 'Good standing',
   creditsEarned: 128,
   creditsRequired: 180,
+  creditsRemaining: 52,
   attendance: 94,
   overview: [
     { key: 'gpa', label: 'Current GPA', value: '4.42', hint: 'Top 12% of the cohort', tone: 'positive' },
@@ -199,6 +202,11 @@ export const DEMO_STUDENT = {
     { id: 'as2', title: 'Econometrics problem set 5', course: 'Econometrics II', due: '12 Nov', status: 'in_progress', priority: 'normal' },
     { id: 'as3', title: 'World Economy reading response', course: 'World Economy', due: '15 Nov', status: 'not_started', priority: 'low' },
     { id: 'as4', title: 'Monetary policy essay', course: 'Macroeconomic Policy', due: '24 Nov', status: 'submitted', priority: 'normal' },
+  ],
+  exams: [
+    { id: 'x1', title: 'Mid-term exam', course: 'ECO-301 World Economy', date: '16 Nov', time: '10:00', room: 'Room 214' },
+    { id: 'x2', title: 'Quiz 3', course: 'ECO-318 Econometrics II', date: '20 Nov', time: '14:00', room: 'Lab 3B' },
+    { id: 'x3', title: 'Oral defence', course: 'ECO-322 Trade Policy Seminar', date: '27 Nov', time: '09:30', room: 'Room 108' },
   ],
   grades: [
     { course: 'World Economy', code: 'ECO-301', credits: 6, grade: 'A', points: 4.0 },
@@ -229,7 +237,8 @@ export const DEMO_PROFESSOR = {
   metrics: [
     { key: 'courses', label: 'Courses taught', value: '4', hint: '2 lecture, 2 seminar' },
     { key: 'students', label: 'Students', value: '186', hint: 'across assigned courses' },
-    { key: 'grading', label: 'Awaiting grading', value: '27', hint: 'oldest 4 days ago', tone: 'warning' },
+    { key: 'grading', label: 'Assignment grading', value: '27', hint: 'oldest 4 days ago', tone: 'warning' },
+    { key: 'quizzes', label: 'Quiz grading', value: '12', hint: 'ECO-215 · Quiz 3', tone: 'warning' },
     { key: 'attendance', label: 'Attendance to review', value: '3', hint: 'sessions flagged this week', tone: 'warning' },
   ],
   schedule: [
@@ -238,10 +247,10 @@ export const DEMO_PROFESSOR = {
     { id: 'p3', time: '15:00 – 16:30', course: 'Economic Forecasting', code: 'ECO-340', room: 'Lab 3B', group: 'ECO-24-2', state: 'later' },
   ],
   courses: [
-    { id: 'c1', code: 'ECO-301', title: 'World Economy', students: 62, progress: 64, term: 'Fall 2026', status: 'On track' },
-    { id: 'c2', code: 'ECO-215', title: 'International Finance', students: 48, progress: 58, term: 'Fall 2026', status: 'On track' },
-    { id: 'c3', code: 'ECO-340', title: 'Economic Forecasting', students: 41, progress: 41, term: 'Fall 2026', status: 'Needs attention' },
-    { id: 'c4', code: 'ECO-122', title: 'Principles of Economics', students: 35, progress: 72, term: 'Fall 2026', status: 'On track' },
+    { id: 'c1', code: 'ECO-301', title: 'World Economy', students: 62, progress: 64, average: 4.1, engagement: 88, term: 'Fall 2026', status: 'On track' },
+    { id: 'c2', code: 'ECO-215', title: 'International Finance', students: 48, progress: 58, average: 3.8, engagement: 81, term: 'Fall 2026', status: 'On track' },
+    { id: 'c3', code: 'ECO-340', title: 'Economic Forecasting', students: 41, progress: 41, average: 3.4, engagement: 69, term: 'Fall 2026', status: 'Needs attention' },
+    { id: 'c4', code: 'ECO-122', title: 'Principles of Economics', students: 35, progress: 72, average: 3.9, engagement: 84, term: 'Fall 2026', status: 'On track' },
   ],
   gradingQueue: [
     { id: 'g1', title: 'Trade policy brief', course: 'ECO-301', submitted: 18, total: 22, due: 'Yesterday' },

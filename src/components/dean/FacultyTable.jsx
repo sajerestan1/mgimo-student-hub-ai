@@ -1,7 +1,9 @@
+import { Link } from 'react-router-dom';
 import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ProgressBar from '@/components/shell/ProgressBar';
 import StatusChip from '@/components/shell/StatusChip';
+import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { FACULTIES } from '@/lib/demoUniversity';
 
 function Trend({ value }) {
@@ -39,7 +41,9 @@ export default function FacultyTable() {
           {FACULTIES.map((faculty) => (
             <tr key={faculty.id} className="row-hover border-b border-line last:border-0">
               <td className="px-5 py-3">
-                <p className="text-[12.5px] font-medium text-ink">{faculty.name}</p>
+                <Link to={P.dean.faculties} className="text-[12.5px] font-medium text-ink hover:text-brand hover:underline">
+                  {faculty.name}
+                </Link>
                 <p className="mt-0.5 text-[11px] text-mutedink">{faculty.dean}</p>
               </td>
               <td className="px-3 py-3 text-right text-[12.5px] tabular-nums text-ink">
@@ -79,7 +83,9 @@ export default function FacultyTable() {
           <li key={faculty.id} className="px-4 py-3.5">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[13px] font-medium text-ink">{faculty.name}</p>
+                <Link to={P.dean.faculties} className="text-[13px] font-medium text-ink hover:text-brand">
+                  {faculty.name}
+                </Link>
                 <p className="mt-0.5 text-[11px] text-mutedink">{faculty.dean}</p>
               </div>
               <Trend value={faculty.trend} />

@@ -4,7 +4,7 @@
   "properties": {
     "role": {
       "type": "string",
-      "description": "Administrative role within the Dean's Office",
+      "description": "Assigned by an administrator. Users cannot change their own role.",
       "enum": [
         "admin",
         "dean",
@@ -26,7 +26,14 @@
         "gray",
         "blue",
         "gray"
-      ]
+      ],
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "faculty_id": {
       "type": "string",

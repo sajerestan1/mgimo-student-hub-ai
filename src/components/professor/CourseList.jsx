@@ -4,14 +4,15 @@ import Surface from '@/components/shell/Surface';
 import ProgressBar from '@/components/shell/ProgressBar';
 import StatusChip from '@/components/shell/StatusChip';
 import { DEMO_PROFESSOR } from '@/lib/demoUniversity';
+import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 
 export default function CourseList() {
   return (
     <Surface
       title="My courses"
-      subtitle="Fall Semester 2026 · 186 students"
+      subtitle="Fall Semester 2026 · 186 students · course performance overview"
       action={
-        <Link to="/courses" className="link-quiet">
+        <Link to={P.professor.courses} className="link-quiet">
           All <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       }
@@ -24,7 +25,7 @@ export default function CourseList() {
               <div className="min-w-0">
                 <p className="truncate text-[13px] font-medium text-ink">{course.title}</p>
                 <p className="mt-0.5 text-[11.5px] text-mutedink">
-                  {course.code} · {course.students} students
+                  {course.code} · {course.students} students · avg {course.average.toFixed(1)}
                 </p>
               </div>
               <StatusChip tone={course.status === 'On track' ? 'positive' : 'warning'}>
@@ -35,6 +36,7 @@ export default function CourseList() {
               <ProgressBar value={course.progress} tone={course.status === 'On track' ? 'brand' : 'warning'} />
               <span className="w-9 shrink-0 text-right text-[10.5px] tabular-nums text-mutedink">{course.progress}%</span>
             </div>
+            <p className="mt-1.5 text-[10.5px] text-mutedink">Student engagement {course.engagement}%</p>
           </li>
         ))}
       </ul>

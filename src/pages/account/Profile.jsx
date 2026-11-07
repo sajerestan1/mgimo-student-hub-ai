@@ -75,12 +75,13 @@ export default function Profile() {
                     <span className="chip bg-[#EDF1FE] text-[#3B5AE0]">Yours</span>
                   )}
                 </div>
-                <Link
-                  to={item.home}
-                  className="link-quiet mt-1"
-                >
-                  Open {item.label.toLowerCase()} workspace
-                </Link>
+                {item.role === role ? (
+                  <Link to={item.home} className="link-quiet mt-1">
+                    Open {item.label.toLowerCase()} workspace
+                  </Link>
+                ) : (
+                  <p className="mt-1 text-[11px] text-mutedink">Not available with your assigned role</p>
+                )}
               </li>
             ))}
           </ul>

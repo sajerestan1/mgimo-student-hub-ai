@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/lib/AuthContext';
 import { useWorkspace } from '@/lib/workspaceRole';
-import { PAGE_TITLES } from '@/lib/workspaceNav';
+import { NAV_BY_ROLE } from '@/lib/workspaceNav';
 import { NOTIFICATIONS } from '@/lib/demoUniversity';
 
 const initials = (name) =>
@@ -40,7 +40,13 @@ export default function TopBar({ onOpenMobile }) {
 
   useEffect(() => () => clearTimeout(blurTimer.current), []);
 
-  const title = PAGE_TITLES[pathname] || 'Academic Intelligence';
+  // The header title comes from the signed-in role's own navigation, so it can
+  // never display another workspace's module name.
+  const activeItem = (NAV_BY_ROLE[workspace.role] || [])
+    .flatMap((group) => group.items)
+    .find((item) => item.to === pathname);
+  const title = activeItem?.label || workspace.title;
+  const notificationsPath = workspace.role === 'student' ? '/student/notifications' : '/notifications';
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur">
@@ -104,7 +110,7 @@ export default function TopBar({ onOpenMobile }) {
             </div>
             <DropdownMenuSeparator />
             {NOTIFICATIONS.map((item) => (
-              <DropdownMenuItem key={item.id} onSelect={() => navigate('/notifications')} className="items-start gap-2.5 py-2">
+              <DropdownMenuItem key={item.id} onSelect={() => navigate(notificationsPath)} className="items-start gap-2.5 py-2">
                 <span className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', toneDot[item.tone] || 'bg-brand')} />
                 <span className="min-w-0">
                   <span className="block truncate text-[11.5px] font-medium text-ink">{item.title}</span>
@@ -114,7 +120,7 @@ export default function TopBar({ onOpenMobile }) {
             ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onSelect={() => navigate('/notifications')}
+              onSelect={() => navigate(notificationsPath)}
               className="justify-center text-[11.5px] font-medium text-brand"
             >
               View all notifications

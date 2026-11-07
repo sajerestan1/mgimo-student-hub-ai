@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AlertTriangle, Info, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ALERTS } from '@/lib/demoUniversity';
+import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 
 const SEVERITY = {
   critical: { bar: 'bg-critical', chip: 'bg-[#FBECEC] text-[#A23B3B]', icon: AlertTriangle },
@@ -77,7 +78,7 @@ export default function AttentionPanel() {
       </ul>
 
       <div className="mt-auto border-t border-line px-5 py-3">
-        <Link to="/analytics" className="link-quiet">
+        <Link to={P.dean.performance} className="link-quiet">
           Open academic analytics <ArrowUpRight className="h-3.5 w-3.5" />
         </Link>
       </div>
