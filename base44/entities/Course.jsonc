@@ -2,16 +2,19 @@
   "name": "Course",
   "type": "object",
   "properties": {
-    "user_id": {
-      "type": "string"
-    },
     "code": {
       "type": "string"
     },
     "title": {
       "type": "string"
     },
-    "instructor": {
+    "faculty_id": {
+      "type": "string"
+    },
+    "department_id": {
+      "type": "string"
+    },
+    "professor_id": {
       "type": "string"
     },
     "credits": {
@@ -19,33 +22,81 @@
     },
     "semester": {
       "type": "string"
+    },
+    "year_level": {
+      "type": "number"
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": true
     }
   },
   "required": [
-    "user_id",
     "title"
   ],
   "rls": {
-    "read": {
+    "read": {},
+    "create": {
       "$or": [
-        {
-          "data.user_id": "{{user.id}}"
-        },
         {
           "user_condition": {
             "role": "admin"
           }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "deputy_dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "academic_staff"
+          }
         }
       ]
     },
-    "create": {
-      "data.user_id": "{{user.id}}"
-    },
     "update": {
-      "data.user_id": "{{user.id}}"
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "deputy_dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "academic_staff"
+          }
+        }
+      ]
     },
     "delete": {
-      "data.user_id": "{{user.id}}"
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        }
+      ]
     }
   }
 }
