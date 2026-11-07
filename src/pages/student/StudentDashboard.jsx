@@ -12,18 +12,30 @@ import MentorsCard from '@/components/student/MentorsCard';
 import AnnouncementsCard from '@/components/student/AnnouncementsCard';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { STUDENT } from '@/lib/studentWorkspace';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function StudentDashboard() {
+  const { user } = useAuth();
+  const accountName = user?.full_name || user?.email?.split('@')[0] || STUDENT.fullName;
+  const firstName = accountName.split(' ')[0];
+  const initials = accountName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
   return (
     <div className="space-y-4">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-royal/10 text-[13px] font-semibold text-royal">
-            {STUDENT.initials}
+            {initials}
           </span>
           <div className="min-w-0">
             <h1 className="truncate text-[22px] font-semibold leading-tight tracking-[-0.03em] text-ink sm:text-[26px]">
-              Welcome back, {STUDENT.firstName}!
+              Welcome back, {firstName}!
             </h1>
             <p className="mt-0.5 text-[12px] text-mutedink">
               Here is your academic overview for {STUDENT.semester.toLowerCase()}.

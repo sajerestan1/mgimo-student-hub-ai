@@ -3,15 +3,24 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import { useAuth } from '@/lib/AuthContext';
+import { normalizeRole } from '@/lib/workspaceRole';
+import { activateStudentAccount } from '@/lib/studentActivation';
 
 export default function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
+  const { user } = useAuth();
 
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  // A student account owns its portal from the first visit.
+  useEffect(() => {
+    if (normalizeRole(user) === 'student') activateStudentAccount(user);
+  }, [user?.id]);
 
   return (
     <div className="min-h-dvh bg-canvas">
