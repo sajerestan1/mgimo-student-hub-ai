@@ -24,6 +24,7 @@ export const MODULE_PATHS = {
     assignments: '/professor/assignments',
     quizzes: '/professor/quizzes',
     grading: '/professor/grading',
+    bulkGrading: '/professor/bulk-grading',
     gradeEntry: '/professor/grade-entry',
     attendance: '/professor/attendance',
     students: '/professor/student-performance',

@@ -30,6 +30,7 @@ import {
   Radar,
   LogOut,
   PenLine,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
@@ -66,6 +67,7 @@ const ICONS = {
   Radar,
   LogOut,
   PenLine,
+  FileSpreadsheet,
 };
 
 const initials = (name) =>
