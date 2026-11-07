@@ -3,20 +3,95 @@ import { base44 } from '@/api/base44Client';
 import { seedAdminData } from '@/lib/adminSeed';
 import { buildAnalytics, iso } from '@/lib/adminMetrics';
 import { STAFF_ROLES } from '@/lib/roles';
+import { withRetry } from '@/lib/apiRetry';
 
 const AdminDataContext = createContext(null);
+
+// Institutional records change rarely: keep one shared snapshot so remounting the
+// layout does not re-issue the whole read set and exhaust the request budget.
+const FRESH_MS = 60000;
+let sharedSnapshot = null;
+let sharedAt = 0;
+let sharedLoad = null;
 
 async function fetchAll(entity, sort = '-created_date') {
   const rows = [];
   let cursor = null;
   for (let page = 0; page < 8; page += 1) {
-    const result = await entity.filter({}, { sort, limit: 500, ...(cursor ? { cursor } : {}) });
+    const result = await withRetry(() =>
+      entity.filter({}, { sort, limit: 500, ...(cursor ? { cursor } : {}) })
+    );
     if (Array.isArray(result)) return result;
     rows.push(...(result?.items || []));
     if (!result?.has_more) break;
     cursor = result.next_cursor;
   }
   return rows;
+}
+
+function loadSnapshot(user, force) {
+  if (!force && sharedSnapshot && Date.now() - sharedAt < FRESH_MS) return Promise.resolve(sharedSnapshot);
+  if (!force && sharedLoad) return sharedLoad;
+  sharedLoad = (async () => {
+    await seedAdminData(user);
+    const [
+      faculties,
+      departments,
+      students,
+      professors,
+      courses,
+      academicRecords,
+      attendanceRecords,
+      requests,
+      requestEvents,
+      announcements,
+      events,
+      tasks,
+      settings,
+      auditLogs,
+    ] = await Promise.all([
+      fetchAll(base44.entities.Faculty, 'code'),
+      fetchAll(base44.entities.Department, 'name'),
+      fetchAll(base44.entities.Student, 'full_name'),
+      fetchAll(base44.entities.Professor, 'full_name'),
+      fetchAll(base44.entities.Course, 'code'),
+      fetchAll(base44.entities.AcademicRecord, '-recorded_date'),
+      fetchAll(base44.entities.AttendanceRecord, '-session_date'),
+      fetchAll(base44.entities.AdminRequest, '-submitted_date'),
+      fetchAll(base44.entities.RequestEvent, '-event_date'),
+      fetchAll(base44.entities.Announcement, '-publish_date'),
+      fetchAll(base44.entities.AcademicEvent, 'start_date'),
+      fetchAll(base44.entities.AdministrativeTask, 'due_date'),
+      fetchAll(base44.entities.AppSetting, 'key'),
+      fetchAll(base44.entities.AuditLog, '-logged_at'),
+    ]);
+    return {
+      faculties,
+      departments,
+      students,
+      professors,
+      // only institutional course offerings carry a faculty; legacy rows are excluded
+      courses: courses.filter((course) => course.faculty_id),
+      academicRecords,
+      attendanceRecords,
+      requests,
+      requestEvents,
+      announcements,
+      events,
+      tasks,
+      settings,
+      auditLogs,
+    };
+  })();
+  return sharedLoad
+    .then((snapshot) => {
+      sharedSnapshot = snapshot;
+      sharedAt = Date.now();
+      return snapshot;
+    })
+    .finally(() => {
+      sharedLoad = null;
+    });
 }
 
 export function AdminDataProvider({ children }) {
@@ -41,61 +116,14 @@ export function AdminDataProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     setLoading(true);
     setError(null);
     try {
-      const user = await base44.auth.me();
+      const user = await withRetry(() => base44.auth.me());
       setMe(user);
-      await seedAdminData(user);
-      const [
-        faculties,
-        departments,
-        students,
-        professors,
-        courses,
-        academicRecords,
-        attendanceRecords,
-        requests,
-        requestEvents,
-        announcements,
-        events,
-        tasks,
-        settings,
-        auditLogs,
-      ] = await Promise.all([
-        fetchAll(base44.entities.Faculty, 'code'),
-        fetchAll(base44.entities.Department, 'name'),
-        fetchAll(base44.entities.Student, 'full_name'),
-        fetchAll(base44.entities.Professor, 'full_name'),
-        fetchAll(base44.entities.Course, 'code'),
-        fetchAll(base44.entities.AcademicRecord, '-recorded_date'),
-        fetchAll(base44.entities.AttendanceRecord, '-session_date'),
-        fetchAll(base44.entities.AdminRequest, '-submitted_date'),
-        fetchAll(base44.entities.RequestEvent, '-event_date'),
-        fetchAll(base44.entities.Announcement, '-publish_date'),
-        fetchAll(base44.entities.AcademicEvent, 'start_date'),
-        fetchAll(base44.entities.AdministrativeTask, 'due_date'),
-        fetchAll(base44.entities.AppSetting, 'key'),
-        fetchAll(base44.entities.AuditLog, '-logged_at'),
-      ]);
-      setData({
-        faculties,
-        departments,
-        students,
-        professors,
-        // only institutional course offerings carry a faculty; legacy rows are excluded
-        courses: courses.filter((course) => course.faculty_id),
-        academicRecords,
-        attendanceRecords,
-        requests,
-        requestEvents,
-        announcements,
-        events,
-        tasks,
-        settings,
-        auditLogs,
-      });
+      const snapshot = await loadSnapshot(user, force);
+      setData(snapshot);
     } catch (err) {
       setError(err?.message || 'Institutional records could not be loaded.');
     } finally {
@@ -355,7 +383,7 @@ export function AdminDataProvider({ children }) {
       error,
       ...data,
       analytics,
-      reload: load,
+      reload: () => load(true),
       logAction,
       changeRequestStatus,
       createRequest,

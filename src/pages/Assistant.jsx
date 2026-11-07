@@ -4,6 +4,7 @@ import PageHeader from '@/components/PageHeader';
 import AiAnswer from '@/components/assistant/AiAnswer';
 import { useAdminData } from '@/lib/AdminDataContext';
 import { askDeanAssistant } from '@/lib/aiEngine';
+import { withRetry } from '@/lib/apiRetry';
 import { base44 } from '@/api/base44Client';
 import { roleLabel } from '@/lib/roles';
 
@@ -46,12 +47,13 @@ export default function Assistant() {
     let active = true;
     (async () => {
       if (!me?.id) return;
-      const conversations = await base44.entities.Conversation.filter({ user_id: me.id }, { sort: '-updated_date', limit: 1 });
+      const conversations = await withRetry(() =>
+        base44.entities.Conversation.filter({ user_id: me.id }, { sort: '-updated_date', limit: 1 })
+      );
       const conversation = toList(conversations)[0];
       if (conversation && active) {
-        const stored = await base44.entities.Message.filter(
-          { conversation_id: conversation.id },
-          { sort: 'created_date', limit: 60 }
+        const stored = await withRetry(() =>
+          base44.entities.Message.filter({ conversation_id: conversation.id }, { sort: 'created_date', limit: 60 })
         );
         if (active) {
           setConversationId(conversation.id);
