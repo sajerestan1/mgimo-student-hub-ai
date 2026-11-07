@@ -6,25 +6,25 @@
 
 @layer base {
   :root {
-    --background: 220 33% 97%;
-    --foreground: 214 40% 15%;
+    --background: 214 47% 97%;
+    --foreground: 214 56% 18%;
     --card: 0 0% 100%;
-    --card-foreground: 214 40% 15%;
+    --card-foreground: 214 56% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 214 40% 15%;
-    --primary: 212 66% 24%;
+    --popover-foreground: 214 56% 18%;
+    --primary: 213 67% 19%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 214 30% 96%;
-    --secondary-foreground: 214 40% 18%;
-    --muted: 214 30% 96%;
-    --muted-foreground: 215 15% 46%;
+    --secondary: 214 40% 96%;
+    --secondary-foreground: 214 56% 18%;
+    --muted: 214 40% 96%;
+    --muted-foreground: 214 18% 50%;
     --accent: 214 32% 95%;
     --accent-foreground: 214 40% 18%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 215 25% 90%;
-    --input: 215 25% 90%;
-    --ring: 212 66% 24%;
+    --border: 214 32% 90%;
+    --input: 214 32% 90%;
+    --ring: 213 67% 19%;
     --chart-1: 212 66% 24%;
     --chart-2: 40 49% 57%;
     --chart-3: 205 55% 45%;
@@ -35,14 +35,14 @@
     --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-display: 'Playfair Display', Georgia, serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    --sidebar-background: 213 63% 17%;
+    --sidebar-background: 213 67% 16%;
     --sidebar-foreground: 210 40% 96%;
-    --sidebar-primary: 40 49% 57%;
-    --sidebar-primary-foreground: 213 63% 17%;
-    --sidebar-accent: 213 45% 24%;
+    --sidebar-primary: 42 58% 63%;
+    --sidebar-primary-foreground: 213 67% 16%;
+    --sidebar-accent: 213 52% 23%;
     --sidebar-accent-foreground: 210 40% 96%;
-    --sidebar-border: 213 40% 26%;
-    --sidebar-ring: 40 49% 57%;
+    --sidebar-border: 213 45% 24%;
+    --sidebar-ring: 42 58% 63%;
   }
 
   .dark {

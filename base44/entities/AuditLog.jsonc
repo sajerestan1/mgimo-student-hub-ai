@@ -1,0 +1,110 @@
+{
+  "name": "AuditLog",
+  "type": "object",
+  "properties": {
+    "actor_name": {
+      "type": "string"
+    },
+    "actor_role": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "details": {
+      "type": "string"
+    },
+    "logged_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "action"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "deputy_dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "academic_staff"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "deputy_dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "academic_staff"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "faculty_admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "department_head"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "professor"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

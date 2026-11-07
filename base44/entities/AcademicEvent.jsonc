@@ -1,30 +1,44 @@
 {
-  "name": "CourseOffering",
+  "name": "AcademicEvent",
   "type": "object",
   "properties": {
-    "code": {
+    "title": {
       "type": "string"
     },
-    "title": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "exam_period",
+        "deadline",
+        "faculty_meeting",
+        "department_meeting",
+        "university_event",
+        "semester"
+      ],
+      "enumColors": [
+        "red",
+        "yellow",
+        "purple",
+        "blue",
+        "green",
+        "gray"
+      ],
+      "default": "deadline"
+    },
+    "start_date": {
+      "type": "string"
+    },
+    "end_date": {
       "type": "string"
     },
     "faculty_id": {
       "type": "string"
     },
-    "department_id": {
+    "location": {
       "type": "string"
     },
-    "professor_id": {
+    "description": {
       "type": "string"
-    },
-    "credits": {
-      "type": "number"
-    },
-    "semester": {
-      "type": "string"
-    },
-    "year_level": {
-      "type": "number"
     },
     "is_demo": {
       "type": "boolean",
@@ -32,7 +46,8 @@
     }
   },
   "required": [
-    "title"
+    "title",
+    "start_date"
   ],
   "rls": {
     "read": {},
@@ -57,6 +72,11 @@
           "user_condition": {
             "role": "academic_staff"
           }
+        },
+        {
+          "user_condition": {
+            "role": "faculty_admin"
+          }
         }
       ]
     },
@@ -80,6 +100,11 @@
         {
           "user_condition": {
             "role": "academic_staff"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "faculty_admin"
           }
         }
       ]

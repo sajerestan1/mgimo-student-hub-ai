@@ -36,10 +36,10 @@
       "enumColors": [
         "blue",
         "yellow",
-        "orange",
+        "pink",
         "green",
         "red",
-        "purple"
+        "gray"
       ],
       "default": "submitted"
     },

@@ -1,17 +1,57 @@
 {
+  "name": "User",
+  "type": "object",
   "properties": {
     "role": {
       "type": "string",
-      "description": "The role of the user in the app",
+      "description": "Administrative role within the Dean's Office",
       "enum": [
         "admin",
+        "dean",
+        "deputy_dean",
+        "faculty_admin",
+        "department_head",
+        "professor",
+        "academic_staff",
+        "student",
         "user"
+      ],
+      "enumColors": [
+        "red",
+        "blue",
+        "purple",
+        "green",
+        "yellow",
+        "pink",
+        "gray",
+        "blue",
+        "gray"
       ]
+    },
+    "faculty_id": {
+      "type": "string",
+      "description": "Faculty scope for faculty administrators (assigned by an administrator)",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "department_id": {
+      "type": "string",
+      "description": "Department scope for department heads (assigned by an administrator)",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     }
   },
   "required": [
     "role"
-  ],
-  "name": "User",
-  "type": "object"
+  ]
 }

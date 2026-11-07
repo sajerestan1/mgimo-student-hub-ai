@@ -1,0 +1,182 @@
+{
+  "name": "Announcement",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "audience_type": {
+      "type": "string",
+      "enum": [
+        "university",
+        "faculty",
+        "department",
+        "student_group",
+        "academic_staff",
+        "students"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "pink",
+        "green",
+        "yellow",
+        "gray"
+      ],
+      "default": "university"
+    },
+    "faculty_id": {
+      "type": "string"
+    },
+    "department_id": {
+      "type": "string"
+    },
+    "group_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "scheduled",
+        "published",
+        "archived"
+      ],
+      "enumColors": [
+        "gray",
+        "yellow",
+        "green",
+        "blue"
+      ],
+      "default": "draft"
+    },
+    "publish_date": {
+      "type": "string"
+    },
+    "author_name": {
+      "type": "string"
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "title",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "deputy_dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "academic_staff"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "faculty_admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "department_head"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "professor"
+          }
+        },
+        {
+          "data.status": "published"
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "deputy_dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "academic_staff"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "faculty_admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "deputy_dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "academic_staff"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        }
+      ]
+    }
+  }
+}

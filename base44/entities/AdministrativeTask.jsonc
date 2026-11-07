@@ -1,0 +1,141 @@
+{
+  "name": "AdministrativeTask",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "assigned_to": {
+      "type": "string"
+    },
+    "due_date": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "in_progress",
+        "done"
+      ],
+      "enumColors": [
+        "yellow",
+        "blue",
+        "green"
+      ],
+      "default": "open"
+    },
+    "related_request_id": {
+      "type": "string"
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "title",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "deputy_dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "academic_staff"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "faculty_admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "department_head"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "deputy_dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "academic_staff"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "deputy_dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "academic_staff"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        }
+      ]
+    }
+  }
+}

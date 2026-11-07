@@ -8,14 +8,21 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AppLayout from '@/components/AppLayout';
+import { AdminDataProvider } from '@/lib/AdminDataContext';
 import Dashboard from '@/pages/Dashboard';
-import Schedule from '@/pages/Schedule';
+import Faculties from '@/pages/Faculties';
+import Students from '@/pages/Students';
+import StudentDetail from '@/pages/StudentDetail';
+import Staff from '@/pages/Staff';
+import Attendance from '@/pages/Attendance';
 import Performance from '@/pages/Performance';
-import Applications from '@/pages/Applications';
-import Notifications from '@/pages/Notifications';
+import Requests from '@/pages/Requests';
+import CalendarPage from '@/pages/Calendar';
+import Announcements from '@/pages/Announcements';
+import Intelligence from '@/pages/Intelligence';
 import Assistant from '@/pages/Assistant';
-import Profile from '@/pages/Profile';
-import { StudentDataProvider } from '@/lib/StudentDataContext';
+import Reports from '@/pages/Reports';
+import Settings from '@/pages/Settings';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -59,18 +66,25 @@ const AuthenticatedApp = () => {
       >
         <Route
           element={
-            <StudentDataProvider>
+            <AdminDataProvider>
               <AppLayout />
-            </StudentDataProvider>
+            </AdminDataProvider>
           }
         >
           <Route path="/" element={<Dashboard />} />
-          <Route path="/schedule" element={<Schedule />} />
+          <Route path="/faculties" element={<Faculties />} />
+          <Route path="/students" element={<Students />} />
+          <Route path="/students/:id" element={<StudentDetail />} />
+          <Route path="/staff" element={<Staff />} />
+          <Route path="/attendance" element={<Attendance />} />
           <Route path="/performance" element={<Performance />} />
-          <Route path="/applications" element={<Applications />} />
-          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/requests" element={<Requests />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/announcements" element={<Announcements />} />
+          <Route path="/intelligence" element={<Intelligence />} />
           <Route path="/assistant" element={<Assistant />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

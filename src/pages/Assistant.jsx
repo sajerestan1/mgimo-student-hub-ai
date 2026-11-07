@@ -1,306 +1,265 @@
-import { useEffect, useRef, useState } from 'react';
-import { Sparkles, Send, Trash2, User as UserIcon } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Sparkles, Send, Trash2, Loader2, AlertCircle, User } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
-import { Button } from '@/components/ui/button';
+import AiAnswer from '@/components/assistant/AiAnswer';
+import { useAdminData } from '@/lib/AdminDataContext';
+import { askDeanAssistant } from '@/lib/aiEngine';
 import { base44 } from '@/api/base44Client';
-import { useStudentData } from '@/lib/StudentDataContext';
-import { buildAssistantPrompt, SUGGESTED_PROMPTS } from '@/lib/assistantPrompt';
-import { cn } from '@/lib/utils';
+import { roleLabel } from '@/lib/roles';
 
-function items(result) {
-  if (Array.isArray(result)) return result;
-  return result?.items || [];
+const SUGGESTIONS = [
+  'What is the attendance rate today?',
+  'Which faculty has the lowest attendance?',
+  'How many students are at academic risk?',
+  'Which departments have the highest failure rates?',
+  'Compare faculty performance this semester.',
+  'Show outstanding administrative requests.',
+  'Prepare a weekly dean’s report.',
+  'Identify students with declining GPA.',
+  'Summarise attendance problems.',
+];
+
+const toList = (result) => (Array.isArray(result) ? result : result?.items || []);
+
+function decodeAssistant(content) {
+  try {
+    const parsed = JSON.parse(content);
+    if (parsed && typeof parsed === 'object' && parsed.answer) return parsed;
+  } catch (error) {
+    /* stored as plain text */
+  }
+  return { answer: content, findings: [], actions: [], visualization: null, table: null, limitations: '' };
 }
 
-const markdownComponents = {
-  p: ({ children }) => <p className="mb-1.5 last:mb-0">{children}</p>,
-  ul: ({ children }) => <ul className="mb-1.5 list-disc space-y-1 pl-4 last:mb-0">{children}</ul>,
-  ol: ({ children }) => <ol className="mb-1.5 list-decimal space-y-1 pl-4 last:mb-0">{children}</ol>,
-  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-  a: ({ children, href }) => (
-    <a href={href} className="underline" target="_blank" rel="noreferrer">
-      {children}
-    </a>
-  ),
-};
-
 export default function Assistant() {
-  const { userId, profile, courses, schedule, grades, applications, notifications, loading } =
-    useStudentData();
+  const context = useAdminData();
+  const { me, analytics, loading } = context;
   const [messages, setMessages] = useState([]);
   const [conversationId, setConversationId] = useState(null);
   const [input, setInput] = useState('');
-  const [sending, setSending] = useState(false);
-  const [threadLoading, setThreadLoading] = useState(true);
-  const [error, setError] = useState('');
-  const endRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const [restored, setRestored] = useState(false);
+  const scrollRef = useRef(null);
 
   useEffect(() => {
-    if (!userId) return;
     let active = true;
-    const loadThread = async () => {
-      setThreadLoading(true);
-      try {
-        const conversations = items(
-          await base44.entities.Conversation.filter(
-            { user_id: userId },
-            { sort: '-updated_date', limit: 1 }
-          )
+    (async () => {
+      if (!me?.id) return;
+      const conversations = await base44.entities.Conversation.filter({ user_id: me.id }, { sort: '-updated_date', limit: 1 });
+      const conversation = toList(conversations)[0];
+      if (conversation && active) {
+        const stored = await base44.entities.Message.filter(
+          { conversation_id: conversation.id },
+          { sort: 'created_date', limit: 60 }
         );
-        if (!active) return;
-        const latest = conversations[0];
-        if (latest) {
-          setConversationId(latest.id);
-          const stored = items(
-            await base44.entities.Message.filter(
-              { conversation_id: latest.id },
-              { sort: 'created_date', limit: 100 }
-            )
-          );
-          if (active) setMessages(stored);
+        if (active) {
+          setConversationId(conversation.id);
+          setMessages(toList(stored).map((message) => ({ role: message.role, text: message.content, payload: message.role === 'assistant' ? decodeAssistant(message.content) : null })));
         }
-      } catch (err) {
-        if (active) setError(err?.message || 'Your conversation history could not be loaded.');
-      } finally {
-        if (active) setThreadLoading(false);
       }
-    };
-    loadThread();
+      if (active) setRestored(true);
+    })();
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [me?.id]);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages, sending]);
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages, busy]);
 
-  const send = async (raw) => {
-    const content = String(raw || '').trim();
-    if (!content || sending || !userId) return;
+  const history = useMemo(
+    () => messages.map((message) => ({ role: message.role, content: message.role === 'assistant' ? message.payload?.answer || message.text : message.text })),
+    [messages]
+  );
 
-    setError('');
+  const ensureConversation = async (text) => {
+    if (conversationId) return conversationId;
+    const created = await base44.entities.Conversation.create({
+      user_id: me.id,
+      title: text.slice(0, 70),
+      preview: text.slice(0, 120),
+    });
+    setConversationId(created.id);
+    return created.id;
+  };
+
+  const send = async (question) => {
+    const text = question.trim();
+    if (!text || busy) return;
+    setError(null);
     setInput('');
-    setSending(true);
-    setMessages((prev) => [...prev, { id: `local-${Date.now()}`, role: 'user', content }]);
-
+    const conversation = await ensureConversation(text);
+    await base44.entities.Message.create({
+      user_id: me.id,
+      conversation_id: conversation,
+      role: 'user',
+      content: text,
+    });
+    setMessages((prev) => [...prev, { role: 'user', text }]);
+    setBusy(true);
     try {
-      let activeConversation = conversationId;
-      if (!activeConversation) {
-        const created = await base44.entities.Conversation.create({
-          user_id: userId,
-          title: content.slice(0, 70),
-          preview: '',
-        });
-        activeConversation = created.id;
-        setConversationId(activeConversation);
-      }
-
-      await base44.entities.Message.create({
-        user_id: userId,
-        conversation_id: activeConversation,
-        role: 'user',
-        content,
-      });
-
-      const reply = await base44.integrations.Core.InvokeLLM({
-        prompt: buildAssistantPrompt(
-          { profile, courses, schedule, grades, applications, notifications },
-          content,
-          messages
-        ),
-      });
-
-      await base44.entities.Message.create({
-        user_id: userId,
-        conversation_id: activeConversation,
+      const response = await askDeanAssistant({ question: text, data: context, analytics, history });
+      const saved = await base44.entities.Message.create({
+        user_id: me.id,
+        conversation_id: conversation,
         role: 'assistant',
-        content: String(reply),
+        content: JSON.stringify(response),
       });
-      await base44.entities.Conversation.update(activeConversation, {
-        preview: String(reply).slice(0, 140),
-      });
-
-      setMessages((prev) => [
-        ...prev,
-        { id: `reply-${Date.now()}`, role: 'assistant', content: String(reply) },
-      ]);
+      setMessages((prev) => [...prev, { role: 'assistant', text: response.answer, payload: response, id: saved.id }]);
+      await base44.entities.Conversation.update(conversation, { preview: response.answer.slice(0, 120) });
     } catch (err) {
-      setError(
-        err?.message ||
-          'The assistant could not answer right now. Please check your connection and try again.'
-      );
+      setError('The assistant could not complete this analysis. Please try again.');
     } finally {
-      setSending(false);
+      setBusy(false);
     }
   };
 
   const clearConversation = async () => {
-    if (!conversationId) {
-      setMessages([]);
-      return;
-    }
-    if (!window.confirm('Clear this conversation? The messages will be deleted.')) return;
-    try {
-      await base44.entities.Message.deleteMany({ user_id: userId, conversation_id: conversationId });
-      await base44.entities.Conversation.delete(conversationId);
-      setConversationId(null);
-      setMessages([]);
-      setError('');
-    } catch (err) {
-      setError(err?.message || 'The conversation could not be cleared.');
-    }
+    if (!conversationId) return;
+    await base44.entities.Message.deleteMany({ conversation_id: conversationId });
+    await base44.entities.Conversation.delete(conversationId);
+    setConversationId(null);
+    setMessages([]);
   };
 
   return (
-    <div className="fade-up">
+    <div>
       <PageHeader
-        eyebrow="AI assistant"
-        title="AI student assistant"
-        description="Ask about your schedule, grades, applications or notifications. Answers are built from your own records only."
+        eyebrow="AI Dean Assistant"
+        title="Ask the university intelligence engine"
+        description="Natural-language analysis over the institutional records you are authorised to access. Answers are computed from the application database."
         actions={
-          <Button
-            type="button"
-            variant="outline"
-            onClick={clearConversation}
-            disabled={sending || (messages.length === 0 && !conversationId)}
-            className="rounded-xl text-[12.5px]"
-          >
-            <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Clear conversation
-          </Button>
+          conversationId ? (
+            <button
+              type="button"
+              onClick={clearConversation}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#E1E8F2] bg-white px-3 py-2 text-[11.5px] font-medium text-ink hover:bg-[#F7FAFD]"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Clear conversation
+            </button>
+          ) : null
         }
       />
 
-      <div className="card-surface flex h-[calc(100dvh-330px)] min-h-[460px] flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
-          {threadLoading || loading ? (
-            <div className="flex h-full items-center justify-center">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#E4E9F2] border-t-navy" />
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="mx-auto flex h-full max-w-md flex-col justify-center text-center">
-              <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-navy/[0.06] text-navy">
-                <Sparkles className="h-5 w-5" strokeWidth={1.7} />
-              </span>
-              <p className="font-heading text-[18px] text-navy-deep">How can I help you today?</p>
-              <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">
-                I can read your own schedule, results, applications and notifications. I will never
-                make up a grade or a status.
-              </p>
-              <div className="mt-5 flex flex-wrap justify-center gap-2">
-                {SUGGESTED_PROMPTS.map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    onClick={() => send(prompt)}
-                    className="rounded-full border border-[#E4E9F2] bg-white px-3 py-1.5 text-[11.5px] text-navy-mid transition-colors hover:border-gold/50 hover:bg-[#FCFAF5] hover:text-navy"
-                  >
-                    {prompt}
-                  </button>
-                ))}
+      <div className="grid gap-4 lg:grid-cols-4">
+        <div className="card-surface flex h-[calc(100dvh-260px)] min-h-[480px] flex-col lg:col-span-3">
+          <div ref={scrollRef} className="no-scrollbar flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
+            {messages.length === 0 && !loading && (
+              <div className="py-6 text-center">
+                <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-navy text-gold">
+                  <Sparkles className="h-5 w-5" />
+                </span>
+                <p className="mt-2 font-heading text-[16px] text-ink">Ask about performance, attendance, risk or workload</p>
+                <p className="mx-auto mt-1 max-w-md text-[11.5px] leading-relaxed text-mutedink">
+                  Every answer is generated from {analytics.kpis.totalStudents} student records,{' '}
+                  {context.academicRecords.length} academic results and {context.attendanceRecords.length} attendance sessions in the
+                  demonstration database.
+                </p>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((message) => {
-                const isUser = message.role === 'user';
-                return (
-                  <div
-                    key={message.id}
-                    className={cn('flex items-start gap-2.5', isUser ? 'flex-row-reverse' : 'flex-row')}
-                  >
-                    <span
-                      className={cn(
-                        'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
-                        isUser ? 'bg-[#F1F5FB] text-navy-mid' : 'bg-navy text-gold-light'
-                      )}
-                    >
-                      {isUser ? (
-                        <UserIcon className="h-3.5 w-3.5" strokeWidth={1.8} />
-                      ) : (
-                        <Sparkles className="h-3.5 w-3.5" strokeWidth={1.8} />
-                      )}
-                    </span>
-                    <div
-                      className={cn(
-                        'max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed',
-                        isUser
-                          ? 'rounded-br-md bg-navy text-white'
-                          : 'rounded-bl-md border border-[#E9EEF6] bg-[#F7F9FD] text-navy-deep'
-                      )}
-                    >
-                      {isUser ? (
-                        <p className="whitespace-pre-wrap">{message.content}</p>
-                      ) : (
-                        <ReactMarkdown components={markdownComponents}>
-                          {message.content}
-                        </ReactMarkdown>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-              {sending && (
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-navy text-gold-light">
-                    <Sparkles className="h-3.5 w-3.5" strokeWidth={1.8} />
-                  </span>
-                  <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-[#E9EEF6] bg-[#F7F9FD] px-4 py-3">
-                    {[0, 150, 300].map((delay) => (
-                      <span
-                        key={delay}
-                        className="h-1.5 w-1.5 animate-bounce rounded-full bg-navy-mid/60"
-                        style={{ animationDelay: `${delay}ms` }}
-                      />
-                    ))}
+            )}
+
+            {messages.map((message, index) =>
+              message.role === 'user' ? (
+                <div key={`${index}-user`} className="flex justify-end">
+                  <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-navy px-3.5 py-2.5 text-[12px] leading-relaxed text-white">
+                    {message.text}
                   </div>
                 </div>
-              )}
-              <div ref={endRef} />
-            </div>
-          )}
+              ) : (
+                <div key={`${index}-assistant`} className="flex gap-2.5">
+                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gold/20 text-[#8A6C26]">
+                    <Sparkles className="h-3.5 w-3.5" />
+                  </span>
+                  <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm border border-[#E9EFF7] bg-white px-3.5 py-3">
+                    {message.payload ? <AiAnswer response={message.payload} /> : <p className="text-[12px] text-ink">{message.text}</p>}
+                  </div>
+                </div>
+              )
+            )}
+
+            {busy && (
+              <div className="flex gap-2.5">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gold/20 text-[#8A6C26]">
+                  <Sparkles className="h-3.5 w-3.5" />
+                </span>
+                <div className="flex items-center gap-2 rounded-2xl border border-[#E9EFF7] bg-white px-3.5 py-2.5">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-navy" />
+                  <span className="text-[11.5px] text-mutedink">Analysing authorised records…</span>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="flex items-center gap-2 rounded-lg border border-[#F0CFCC] bg-[#FBECEB] px-3 py-2 text-[11.5px] text-[#A33A38]">
+                <AlertCircle className="h-3.5 w-3.5" /> {error}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-[#EEF2F8] p-3">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                send(input);
+              }}
+              className="flex items-center gap-2"
+            >
+              <input
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                placeholder="Ask about attendance, performance, risk, workload or requests…"
+                className="h-10 flex-1 rounded-xl border border-[#E1E8F2] bg-[#F7F9FC] px-3 text-[12.5px] text-ink placeholder:text-mutedink/80 focus:border-navy/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy/10"
+              />
+              <button
+                type="submit"
+                disabled={busy || !input.trim()}
+                className="flex h-10 items-center gap-1.5 rounded-xl bg-navy px-3.5 text-[12px] font-medium text-white transition-colors hover:bg-navy-mid disabled:opacity-50"
+              >
+                <Send className="h-3.5 w-3.5" /> Ask
+              </button>
+            </form>
+            <p className="mt-1.5 text-[9.5px] text-mutedink">
+              Demonstration records only. The assistant cannot execute administrative actions.
+            </p>
+          </div>
         </div>
 
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            send(input);
-          }}
-          className="border-t border-[#EEF1F7] bg-white px-3 py-3 sm:px-4"
-        >
-          {error && (
-            <p className="mb-2 rounded-xl bg-rose-50 px-3 py-2 text-[11.5px] text-rose-700">{error}</p>
-          )}
-          <div className="flex items-end gap-2">
-            <textarea
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault();
-                  send(input);
-                }
-              }}
-              rows={1}
-              placeholder="Ask about your schedule, grades or applications…"
-              className="max-h-32 min-h-[42px] flex-1 resize-none rounded-xl border border-[#E4E9F2] px-3.5 py-2.5 text-[13px] text-navy-deep outline-none transition-colors placeholder:text-slate-400 focus:border-navy-mid focus:ring-2 focus:ring-navy/10"
-            />
-            <Button
-              type="submit"
-              disabled={!input.trim() || sending}
-              className="h-[42px] rounded-xl bg-navy px-3.5 hover:bg-navy-deep"
-              aria-label="Send message"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+        <div className="space-y-3">
+          <div className="card-surface p-4">
+            <p className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-mutedink">Suggested questions</p>
+            <ul className="mt-2 space-y-1.5">
+              {SUGGESTIONS.map((suggestion) => (
+                <li key={suggestion}>
+                  <button
+                    type="button"
+                    onClick={() => send(suggestion)}
+                    disabled={busy}
+                    className="w-full rounded-lg border border-[#EEF2F8] px-2.5 py-1.5 text-left text-[11px] text-ink transition-colors hover:border-navy/25 hover:bg-[#F7FAFD] disabled:opacity-50"
+                  >
+                    {suggestion}
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
-        </form>
-      </div>
 
-      <p className="mt-3 text-center text-[10.5px] leading-relaxed text-slate-400">
-        The assistant answers only from the records in your account. Fictional demonstration data.
-      </p>
+          <div className="card-surface p-4">
+            <p className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-mutedink">Session</p>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#EEF3FA] text-navy">
+                <User className="h-3.5 w-3.5" />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-[11.5px] font-medium text-ink">{me?.full_name || 'Dean’s Office'}</p>
+                <p className="text-[10px] text-mutedink">{roleLabel(context.role)} · authorised scope</p>
+              </div>
+            </div>
+            {!restored && <p className="mt-2 text-[10px] text-mutedink">Restoring conversation history…</p>}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

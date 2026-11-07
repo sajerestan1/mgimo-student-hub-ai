@@ -12,15 +12,17 @@ module.exports = {
   		},
   		colors: {
   			navy: {
-  				DEFAULT: '#153B68',
-  				deep: '#102A4C',
-  				mid: '#245A91'
+  				DEFAULT: '#102D50',
+  				deep: '#0B2140',
+  				mid: '#183B63'
   			},
   			gold: {
-  				DEFAULT: '#C8A45D',
-  				light: '#E8D3A2'
+  				DEFAULT: '#D8B66A',
+  				light: '#EFE1BE'
   			},
-  			canvas: '#F5F7FB',
+  			canvas: '#F4F7FB',
+  			ink: '#142B46',
+  			mutedink: '#687C96',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

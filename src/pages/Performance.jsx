@@ -1,219 +1,170 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import { GraduationCap, BookOpen, Award, Layers } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { TrendingUp, Percent, Award, AlertTriangle } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
-import { LoadingState, ErrorState } from '@/components/LoadingState';
-import EmptyState from '@/components/EmptyState';
-import { useStudentData } from '@/lib/StudentDataContext';
-import { formatDateValue } from '@/lib/academic';
-import { cn } from '@/lib/utils';
+import Panel from '@/components/admin/Panel';
+import DataTable from '@/components/admin/DataTable';
+import KpiCard from '@/components/admin/KpiCard';
+import FilterSelect from '@/components/admin/FilterSelect';
+import { RiskBadge } from '@/components/admin/StatusPill';
+import { BarBlock, DonutBlock, ChartLegend } from '@/components/charts/Charts';
+import { useAdminData } from '@/lib/AdminDataContext';
+import { formatGpa, formatPercent } from '@/lib/exportCsv';
 
-function StatTile({ icon: Icon, label, value, hint }) {
-  return (
-    <div className="card-surface flex items-start gap-3 p-4 sm:p-5">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F1F5FB] text-navy-mid">
-        <Icon className="h-4 w-4" strokeWidth={1.8} />
-      </span>
-      <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">{label}</p>
-        <p className="mt-1 font-heading text-[22px] leading-none text-navy-deep">{value}</p>
-        {hint && <p className="mt-1 text-[10.5px] text-slate-400">{hint}</p>}
-      </div>
-    </div>
-  );
-}
-
-const TYPE_LABELS = { exam: 'Exam', credit: 'Credit', coursework: 'Coursework' };
-
-function gradeTone(points) {
-  if (points >= 5) return 'bg-emerald-50 text-emerald-700 ring-emerald-200';
-  if (points >= 4) return 'bg-blue-50 text-blue-700 ring-blue-200';
-  return 'bg-amber-50 text-amber-700 ring-amber-200';
-}
+const mean = (values) => (values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null);
+const pct = (part, total) => (total ? (part / total) * 100 : null);
 
 export default function Performance() {
-  const { loading, error, reload, grades, courses, average, credits } = useStudentData();
+  const { analytics, academicRecords, courses, loading } = useAdminData();
+  const navigate = useNavigate();
+  const [faculty, setFaculty] = useState('all');
 
-  if (loading) return <LoadingState />;
-  if (error) return <ErrorState message={error} onRetry={reload} />;
+  const scopedRecords = useMemo(
+    () => academicRecords.filter((record) => faculty === 'all' || record.faculty_id === faculty),
+    [academicRecords, faculty]
+  );
 
-  const chartData = [...grades]
-    .sort((a, b) => (Number(b.grade_points) || 0) - (Number(a.grade_points) || 0))
-    .map((grade) => ({
-      name: grade.course_code || grade.title.slice(0, 12),
-      fullTitle: grade.title,
-      points: Number(grade.grade_points) || 0,
-    }));
+  const courseStats = useMemo(() => {
+    const current = scopedRecords.filter((record) => record.term === analytics.currentTermLabel);
+    return courses
+      .filter((course) => faculty === 'all' || course.faculty_id === faculty)
+      .map((course) => {
+        const rows = current.filter((record) => record.course_id === course.id);
+        return {
+          id: course.id,
+          code: course.code,
+          title: course.title,
+          facultyName: analytics.facultyById[course.faculty_id]?.code || '—',
+          graded: rows.length,
+          passRate: pct(rows.filter((record) => Number(record.grade) >= 3).length, rows.length),
+          avg: mean(rows.map((record) => Number(record.grade))),
+        };
+      })
+      .filter((course) => course.graded > 0)
+      .sort((a, b) => (a.passRate || 0) - (b.passRate || 0));
+  }, [scopedRecords, courses, faculty, analytics.currentTermLabel, analytics.facultyById]);
 
-  const best = [...grades].sort(
-    (a, b) => (Number(b.grade_points) || 0) - (Number(a.grade_points) || 0)
-  )[0];
+  const semesterComparison = useMemo(() => {
+    const rows = (faculty === 'all' ? analytics.facultyRows : analytics.facultyRows.filter((row) => row.id === faculty)).map((row) => {
+      const currentRows = academicRecords.filter(
+        (record) => record.faculty_id === row.id && record.term === analytics.currentTermLabel
+      );
+      const previousRows = academicRecords.filter(
+        (record) => record.faculty_id === row.id && record.term === '2025/2026 · Spring'
+      );
+      return {
+        label: row.code,
+        current: mean(currentRows.map((record) => Number(record.grade))),
+        previous: mean(previousRows.map((record) => Number(record.grade))),
+      };
+    });
+    return rows;
+  }, [analytics.facultyRows, academicRecords, faculty, analytics.currentTermLabel]);
 
-  const distribution = [5, 4, 3, 2].map((mark) => ({
-    mark,
-    count: grades.filter((grade) => Number(grade.grade_points) === mark).length,
-  }));
-  const maxCount = Math.max(1, ...distribution.map((row) => row.count));
+  if (loading) return <div className="h-64 animate-pulse rounded-2xl bg-white" />;
+
+  const { kpis, gradeDistribution, examStats } = analytics;
+  const flagged = analytics.studentInsights
+    .filter((insight) => ['high', 'medium'].includes(insight.level))
+    .sort((a, b) => (a.gpa || 5) - (b.gpa || 5))
+    .slice(0, 12);
+
+  const comparisonData = semesterComparison.flatMap((row) =>
+    row.current && row.previous
+      ? [
+          { label: row.label, value: Number(row.current.toFixed(2)) },
+          { label: `${row.label} prev`, value: Number(row.previous.toFixed(2)) },
+        ]
+      : [{ label: row.label, value: Number((row.current || 0).toFixed(2)) }]
+  );
 
   return (
-    <div className="fade-up">
+    <div>
       <PageHeader
-        eyebrow="Academic record"
-        title="Academic performance"
-        description="Grades, credits and examination results for the current academic year."
+        eyebrow="Academic Performance"
+        title="Performance analytics"
+        description="All figures are calculated from stored grade records for the current and previous semester."
+        actions={
+          <FilterSelect
+            label="Faculty"
+            value={faculty}
+            onChange={setFaculty}
+            options={[{ value: 'all', label: 'All faculties' }, ...analytics.facultyRows.map((row) => ({ value: row.id, label: row.code }))]}
+            className="w-40"
+          />
+        }
       />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatTile
-          icon={Award}
-          label="Academic average"
-          value={average ? average.toFixed(2) : '—'}
-          hint="out of 5.00"
-        />
-        <StatTile icon={Layers} label="Credits earned" value={credits} hint="across all assessments" />
-        <StatTile icon={BookOpen} label="Courses this semester" value={courses.length} />
-        <StatTile
-          icon={GraduationCap}
-          label="Best result"
-          value={best ? best.grade : '—'}
-          hint={best ? best.title : 'No results yet'}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiCard label="Average performance" value={`${formatGpa(kpis.avgGpa)} / 5`} caption="current semester" icon={TrendingUp} />
+        <KpiCard label="Course pass rate" value={formatPercent(kpis.passRate)} caption="grades of 3 and above" icon={Percent} accent="green" />
+        <KpiCard label="Examination pass rate" value={formatPercent(examStats.passRate)} caption={`${examStats.count} exam records`} icon={Award} accent="gold" />
+        <KpiCard
+          label="Students below review threshold"
+          value={kpis.atRisk}
+          caption={`GPA below ${analytics.thresholds.gpaMedium.toFixed(1)} or attendance concerns`}
+          icon={AlertTriangle}
+          accent="red"
         />
       </div>
 
-      {grades.length === 0 ? (
-        <div className="mt-6">
-          <EmptyState
-            icon={GraduationCap}
-            title="No grades recorded yet"
-            description="Results appear here as soon as the dean’s office publishes them."
+      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        <Panel title="Faculty performance comparison" subtitle="Average grade, current semester" className="lg:col-span-2" bodyClassName="p-3">
+          <BarBlock
+            data={semesterComparison.map((row) => ({ label: row.label, value: Number((row.current || 0).toFixed(2)) }))}
+            height={220}
+            onSelect={() => navigate('/faculties')}
           />
-        </div>
-      ) : (
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <section className="card-surface p-5 sm:p-6 lg:col-span-2">
-            <div className="mb-4 flex items-baseline justify-between gap-3">
-              <h2 className="font-heading text-[17px] text-navy-deep">Grade points by course</h2>
-              <span className="text-[10.5px] text-slate-400">Scale 3 — 5</span>
-            </div>
-            <div className="h-[260px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
-                  <CartesianGrid stroke="#EEF1F7" vertical={false} />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fontSize: 10, fill: '#7A899E' }}
-                    axisLine={false}
-                    tickLine={false}
-                    interval={0}
-                    angle={chartData.length > 6 ? -30 : 0}
-                    textAnchor={chartData.length > 6 ? 'end' : 'middle'}
-                    height={chartData.length > 6 ? 52 : 30}
-                  />
-                  <YAxis
-                    domain={[0, 5]}
-                    tick={{ fontSize: 10, fill: '#7A899E' }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    cursor={{ fill: 'rgba(21,59,104,0.04)' }}
-                    contentStyle={{
-                      borderRadius: 12,
-                      border: '1px solid #E4E9F2',
-                      fontSize: 12,
-                      boxShadow: '0 12px 30px -18px rgba(16,42,76,0.45)',
-                    }}
-                    labelStyle={{ color: '#102A4C', fontWeight: 600 }}
-                    formatter={(value, _name, entry) => [`${value} points`, entry.payload.fullTitle]}
-                  />
-                  <Bar dataKey="points" radius={[5, 5, 0, 0]} maxBarSize={46}>
-                    {chartData.map((entry) => (
-                      <Cell key={entry.name} fill={entry.points >= 5 ? '#C8A45D' : '#245A91'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </section>
+        </Panel>
+        <Panel title="Grade distribution" subtitle="Current semester" bodyClassName="p-3">
+          <DonutBlock
+            data={gradeDistribution}
+            height={155}
+            colors={['#102D50', '#4C79A8', '#D8B66A', '#B05C5A']}
+            centerValue={formatGpa(kpis.avgGpa)}
+            centerLabel="avg GPA"
+          />
+          <ChartLegend data={gradeDistribution} colors={['#102D50', '#4C79A8', '#D8B66A', '#B05C5A']} />
+        </Panel>
+      </div>
 
-          <section className="card-surface p-5 sm:p-6">
-            <h2 className="mb-4 font-heading text-[17px] text-navy-deep">Grade distribution</h2>
-            <div className="space-y-3">
-              {distribution.map((row) => (
-                <div key={row.mark}>
-                  <div className="mb-1 flex items-baseline justify-between text-[11.5px]">
-                    <span className="font-medium text-navy-deep">Grade {row.mark}</span>
-                    <span className="text-slate-400">
-                      {row.count} {row.count === 1 ? 'course' : 'courses'}
-                    </span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-[#EEF1F7]">
-                    <div
-                      className={cn('h-full rounded-full', row.mark === 5 ? 'bg-gold' : 'bg-navy-mid')}
-                      style={{ width: `${(row.count / maxCount) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="mt-5 rounded-xl bg-[#F7F9FD] px-3.5 py-3 text-[11px] leading-relaxed text-slate-500">
-              Fictional demonstration results. Official records are issued only by the dean’s office.
-            </p>
-          </section>
-        </div>
-      )}
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <Panel title="Semester comparison" subtitle="Current versus previous semester average grade" bodyClassName="p-3">
+          <BarBlock data={comparisonData} height={220} color="#183B63" />
+        </Panel>
+        <Panel title="Course pass rates" subtitle="Lowest performing courses first" bodyClassName="p-0">
+          <DataTable
+            dense
+            emptyLabel="No graded course records in scope."
+            columns={[
+              { key: 'code', label: 'Course', render: (row) => <span className="font-medium">{row.code}</span> },
+              { key: 'title', label: 'Title', render: (row) => <span className="text-[11px]">{row.title}</span> },
+              { key: 'graded', label: 'Graded', align: 'center', render: (row) => row.graded },
+              { key: 'pass', label: 'Pass rate', align: 'right', render: (row) => formatPercent(row.passRate) },
+              { key: 'avg', label: 'Avg grade', align: 'right', render: (row) => formatGpa(row.avg) },
+            ]}
+            rows={courseStats}
+          />
+        </Panel>
+      </div>
 
-      {grades.length > 0 && (
-        <section className="card-surface mt-6 overflow-hidden">
-          <div className="border-b border-[#EEF1F7] px-5 py-4 sm:px-6">
-            <h2 className="font-heading text-[17px] text-navy-deep">Examination results</h2>
-          </div>
-          <ul className="divide-y divide-[#F1F4FA]">
-            {grades.map((grade) => (
-              <li
-                key={grade.id}
-                className="flex flex-col gap-2 px-5 py-3.5 transition-colors hover:bg-[#FCFDFF] sm:flex-row sm:items-center sm:gap-4 sm:px-6"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13.5px] font-medium text-navy-deep">{grade.title}</p>
-                  <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
-                    <span>{grade.course_code}</span>
-                    <span>{grade.instructor}</span>
-                    <span>{TYPE_LABELS[grade.type] || grade.type}</span>
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 sm:gap-5">
-                  <span className="text-[11px] text-slate-400 sm:hidden">
-                    {formatDateValue(grade.date)}
-                  </span>
-                  <span className="hidden w-[86px] text-right text-[11px] text-slate-400 sm:block">
-                    {formatDateValue(grade.date)}
-                  </span>
-                  <span className="w-[54px] text-right text-[11.5px] font-medium text-navy-mid">
-                    {grade.credits} cr
-                  </span>
-                  <span
-                    className={cn(
-                      'flex h-8 w-8 items-center justify-center rounded-full text-[12.5px] font-semibold ring-1 ring-inset',
-                      gradeTone(Number(grade.grade_points))
-                    )}
-                  >
-                    {grade.grade}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <Panel className="mt-4" title="Academic risk identification" subtitle="Students with high or medium indicators — evidence available in the profile" bodyClassName="p-0">
+        <DataTable
+          dense
+          onRowClick={(row) => navigate(`/students/${row.student.id}`)}
+          emptyLabel="No students currently flagged."
+          columns={[
+            { key: 'name', label: 'Student', render: (row) => <span className="font-medium">{row.student.full_name}</span> },
+            { key: 'faculty', label: 'Faculty', render: (row) => <span className="text-[11px]">{row.facultyName}</span> },
+            { key: 'year', label: 'Year', align: 'center', render: (row) => row.student.year },
+            { key: 'gpa', label: 'GPA', align: 'right', render: (row) => formatGpa(row.gpa) },
+            { key: 'att', label: 'Attendance', align: 'right', render: (row) => formatPercent(row.attendanceRate) },
+            { key: 'fails', label: 'Failed', align: 'center', render: (row) => row.failed },
+            { key: 'risk', label: 'Risk', align: 'right', render: (row) => <RiskBadge level={row.level} /> },
+          ]}
+          rows={flagged}
+        />
+      </Panel>
     </div>
   );
 }
