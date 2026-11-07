@@ -39,6 +39,7 @@ import ProfessorAssignmentsPage from '@/pages/professor/AssignmentsPage';
 import ProfessorAttendancePage from '@/pages/professor/AttendancePage';
 import ProfessorCoursesPage from '@/pages/professor/CoursesPage';
 import ProfessorGradingPage from '@/pages/professor/GradingPage';
+import ProfessorGradeEntryPage from '@/pages/professor/GradeEntryPage';
 import ProfessorMaterialsPage from '@/pages/professor/MaterialsPage';
 import ProfessorQuizzesPage from '@/pages/professor/QuizzesPage';
 import ProfessorStudentPerformancePage from '@/pages/professor/StudentPerformancePage';
@@ -195,6 +196,7 @@ const AuthenticatedApp = () => {
             [MODULE_PATHS.professor.assignments, ProfessorAssignmentsPage],
             [MODULE_PATHS.professor.quizzes, ProfessorQuizzesPage],
             [MODULE_PATHS.professor.grading, ProfessorGradingPage],
+            [MODULE_PATHS.professor.gradeEntry, ProfessorGradeEntryPage],
             [MODULE_PATHS.professor.attendance, ProfessorAttendancePage],
             [MODULE_PATHS.professor.students, ProfessorStudentPerformancePage],
             [MODULE_PATHS.professor.discussions, ProfessorDiscussionsPage],

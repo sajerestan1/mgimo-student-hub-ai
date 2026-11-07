@@ -29,6 +29,7 @@ import {
   TrendingUp,
   Radar,
   LogOut,
+  PenLine,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
@@ -64,6 +65,7 @@ const ICONS = {
   TrendingUp,
   Radar,
   LogOut,
+  PenLine,
 };
 
 const initials = (name) =>

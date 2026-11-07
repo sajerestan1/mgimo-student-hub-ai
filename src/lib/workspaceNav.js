@@ -45,6 +45,7 @@ export const NAV_BY_ROLE = {
         { to: P.professor.assignments, label: 'Assignments', icon: 'ClipboardList' },
         { to: P.professor.quizzes, label: 'Quizzes & Exams', icon: 'ClipboardCheck' },
         { to: P.professor.grading, label: 'Submissions & Grading', icon: 'GraduationCap' },
+        { to: P.professor.gradeEntry, label: 'Grade Entry', icon: 'PenLine' },
         { to: P.professor.attendance, label: 'Attendance Management', icon: 'CalendarCheck' },
       ],
     },
