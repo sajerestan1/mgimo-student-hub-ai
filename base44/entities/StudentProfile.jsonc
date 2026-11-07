@@ -1,0 +1,60 @@
+{
+  "name": "StudentProfile",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Owner of this profile"
+    },
+    "full_name": {
+      "type": "string"
+    },
+    "student_id": {
+      "type": "string"
+    },
+    "program": {
+      "type": "string"
+    },
+    "faculty": {
+      "type": "string"
+    },
+    "year": {
+      "type": "number"
+    },
+    "university": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "advisor": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.user_id": "{{user.id}}"
+    },
+    "update": {
+      "data.user_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.user_id": "{{user.id}}"
+    }
+  }
+}

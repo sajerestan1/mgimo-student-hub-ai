@@ -1,0 +1,74 @@
+{
+  "name": "ScheduleEntry",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "course_code": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "instructor": {
+      "type": "string"
+    },
+    "room": {
+      "type": "string"
+    },
+    "weekday": {
+      "type": "number",
+      "description": "1 = Monday ... 7 = Sunday"
+    },
+    "start_time": {
+      "type": "string"
+    },
+    "end_time": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "lecture",
+        "seminar",
+        "practice",
+        "consultation"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "green",
+        "yellow"
+      ]
+    }
+  },
+  "required": [
+    "user_id",
+    "title",
+    "weekday"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.user_id": "{{user.id}}"
+    },
+    "update": {
+      "data.user_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.user_id": "{{user.id}}"
+    }
+  }
+}
