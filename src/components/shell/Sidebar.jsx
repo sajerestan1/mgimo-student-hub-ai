@@ -33,6 +33,7 @@ import {
   FileSpreadsheet,
   Scale,
   BellRing,
+  Lightbulb,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
@@ -72,6 +73,7 @@ const ICONS = {
   FileSpreadsheet,
   Scale,
   BellRing,
+  Lightbulb,
 };
 
 const initials = (name) =>

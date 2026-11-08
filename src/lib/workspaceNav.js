@@ -18,6 +18,7 @@ export const NAV_BY_ROLE = {
         { to: P.student.library, label: 'Library', icon: 'BookMarked' },
         { to: P.student.notifications, label: 'Notifications', icon: 'Bell' },
         { to: P.student.ai, label: 'AI Study Companion', icon: 'Sparkles' },
+        { to: P.student.recommendations, label: 'Study Recommendations', icon: 'Lightbulb' },
         { to: P.student.profile, label: 'Profile & Settings', icon: 'UserRound' },
       ],
     },

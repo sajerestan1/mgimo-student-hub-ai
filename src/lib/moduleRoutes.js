@@ -14,6 +14,7 @@ export const MODULE_PATHS = {
     library: '/student/library',
     notifications: '/student/notifications',
     ai: '/student/ai-study-companion',
+    recommendations: '/student/recommendations',
     profile: '/student/profile',
   },
   professor: {

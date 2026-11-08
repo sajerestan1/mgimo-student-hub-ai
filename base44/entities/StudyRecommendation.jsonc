@@ -1,0 +1,133 @@
+{
+  "name": "StudyRecommendation",
+  "type": "object",
+  "properties": {
+    "student_user_id": {
+      "type": "string"
+    },
+    "student_name": {
+      "type": "string"
+    },
+    "course_code": {
+      "type": "string"
+    },
+    "course_title": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "material",
+        "remedial_task",
+        "practice",
+        "support"
+      ],
+      "enumColors": [
+        "blue",
+        "yellow",
+        "purple",
+        "green"
+      ],
+      "default": "remedial_task"
+    },
+    "title": {
+      "type": "string"
+    },
+    "why": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "enumColors": [
+        "red",
+        "yellow",
+        "gray"
+      ],
+      "default": "medium"
+    },
+    "material_id": {
+      "type": "string"
+    },
+    "material_title": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "suggested",
+        "in_progress",
+        "done"
+      ],
+      "enumColors": [
+        "gray",
+        "blue",
+        "green"
+      ],
+      "default": "suggested"
+    },
+    "source_average": {
+      "type": "number"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "student_user_id",
+    "title",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
