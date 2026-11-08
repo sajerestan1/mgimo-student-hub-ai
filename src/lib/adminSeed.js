@@ -263,6 +263,7 @@ async function runSeed() {
       enrollmentMeta.push({ studentIndex, courseIndex });
       enrollmentRows.push({
         student_id: student.id,
+        student_user_id: student.user_id || undefined,
         course_id: course.id,
         faculty_id: course.faculty_id,
         department_id: course.department_id,

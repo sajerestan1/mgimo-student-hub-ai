@@ -8,7 +8,7 @@ import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { useProfessorContext, dateLabel, pct } from '@/lib/professorData';
 
 export default function ProfessorCoursesPage() {
-  const { professor, courses } = useProfessorContext();
+  const { loading, courses, reason, error } = useProfessorContext();
   const [selectedId, setSelectedId] = useState(new URLSearchParams(window.location.search).get('course'));
   const [detail, setDetail] = useState(null);
 
@@ -63,6 +63,25 @@ export default function ProfessorCoursesPage() {
     return { student, submitted: subs.length, avg, attendance: pct(present, att.length) };
   });
 
+  if (loading) {
+    return <div className="card-surface p-6 text-[12.5px] text-mutedink">Loading your courses…</div>;
+  }
+
+  if (reason === 'error') {
+    return (
+      <div>
+        <PageTitle eyebrow="Professor workspace" title="My courses" />
+        <Surface title="Courses could not be loaded">
+          <p className="text-[12px] leading-relaxed text-mutedink">
+            The teaching context query failed, so no courses can be shown. The technical reason is written to the
+            browser console.
+          </p>
+          <p className="mt-2 break-words text-[11px] text-mutedink">{String(error?.message || error || 'Unknown error')}</p>
+        </Surface>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageTitle
@@ -88,7 +107,13 @@ export default function ProfessorCoursesPage() {
                 </button>
               </li>
             ))}
-            {!courses.length && <li className="px-5 py-6 text-[11.5px] text-mutedink">No courses are assigned to your profile.</li>}
+            {!courses.length && (
+              <li className="px-5 py-6 text-[11.5px] leading-relaxed text-mutedink">
+                {reason === 'no_profile'
+                  ? 'No professor profile is linked to this account yet. The faculty office links accounts to teaching profiles.'
+                  : 'No courses are assigned to your teaching profile for this semester.'}
+              </li>
+            )}
           </ul>
         </Surface>
 

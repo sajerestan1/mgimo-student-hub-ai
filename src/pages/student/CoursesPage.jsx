@@ -9,6 +9,17 @@ import { useAuth } from '@/lib/AuthContext';
 import { loadStudentCourses, shortDate } from '@/lib/studentCourses';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 
+// A zero-course result is never reported as a generic empty page: each cause
+// has its own message so the reader knows whether to enrol, ask the office, or
+// report a failure.
+const EMPTY_STATES = {
+  no_user: ['Session not resolved', 'Your account could not be resolved. Reload the page or sign in again.'],
+  no_profile: ['No student profile linked', 'This account has no student record. The student office links accounts to academic profiles.'],
+  no_enrollments: ['No enrolments recorded', 'Your student record has no course enrolments yet. Contact the student office to be enrolled in this semester.'],
+  no_published_courses: ['Courses not published yet', 'Your enrolled courses are still unpublished, so their workspaces are closed.'],
+  error: ['Courses could not be loaded', 'The course query failed. The technical reason is written to the browser console.'],
+};
+
 export default function CoursesPage() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
@@ -16,31 +27,58 @@ export default function CoursesPage() {
   useEffect(() => {
     let active = true;
     (async () => {
-      const context = await loadStudentCourses(user?.id);
-      const courses = (context.courses || []).filter((course) => course.status === 'published');
-      const ids = courses.map((course) => course.id);
+      try {
+        const context = await loadStudentCourses(user?.id);
+        const courses = (context.courses || []).filter((course) => course.status === 'published');
+        const ids = courses.map((course) => course.id);
 
-      if (!ids.length) {
-        if (active) setData({ student: context.student, courses: [], modules: [], resources: [], assignments: [], professors: [] });
-        return;
+        if (!ids.length) {
+          if (active) {
+            setData({
+              student: context.student,
+              courses: [],
+              modules: [],
+              resources: [],
+              assignments: [],
+              professors: [],
+              reason: context.reason || 'no_enrollments',
+            });
+          }
+          return;
+        }
+
+        const [modules, resources, assignments, professors] = await Promise.all([
+          base44.entities.CourseModule.filter({ course_id: { $in: ids } }, { limit: 400 }),
+          base44.entities.LearningResource.filter({ course_id: { $in: ids }, visible_to_students: true }, { limit: 600 }),
+          base44.entities.Assignment.filter({ course_id: { $in: ids } }, { sort: 'due_date', limit: 200 }),
+          base44.entities.Professor.list('-created_date', 100),
+        ]);
+
+        if (!active) return;
+        setData({
+          student: context.student,
+          courses,
+          modules: modules.items || [],
+          resources: resources.items || [],
+          assignments: assignments.items || [],
+          professors: professors || [],
+          reason: 'ok',
+        });
+      } catch (error) {
+        console.error('[student courses] course query failed', error);
+        if (active) {
+          setData({
+            student: null,
+            courses: [],
+            modules: [],
+            resources: [],
+            assignments: [],
+            professors: [],
+            reason: 'error',
+            error,
+          });
+        }
       }
-
-      const [modules, resources, assignments, professors] = await Promise.all([
-        base44.entities.CourseModule.filter({ course_id: { $in: ids } }, { limit: 400 }),
-        base44.entities.LearningResource.filter({ course_id: { $in: ids }, visible_to_students: true }, { limit: 600 }),
-        base44.entities.Assignment.filter({ course_id: { $in: ids } }, { sort: 'due_date', limit: 200 }),
-        base44.entities.Professor.list('-created_date', 100),
-      ]);
-
-      if (!active) return;
-      setData({
-        student: context.student,
-        courses,
-        modules: modules.items || [],
-        resources: resources.items || [],
-        assignments: assignments.items || [],
-        professors: professors || [],
-      });
     })();
     return () => { active = false; };
   }, [user?.id]);
@@ -82,8 +120,15 @@ export default function CoursesPage() {
       </div>
 
       {!data.courses.length && (
-        <Surface title="No courses yet">
-          <p className="text-[12px] text-mutedink">You are not enrolled in a published course. Contact the student office if this looks wrong.</p>
+        <Surface title={EMPTY_STATES[data.reason]?.[0] || 'No courses yet'}>
+          <p className="text-[12px] leading-relaxed text-mutedink">
+            {EMPTY_STATES[data.reason]?.[1] || 'You are not enrolled in a published course. Contact the student office if this looks wrong.'}
+          </p>
+          {data.reason === 'error' && (
+            <p className="mt-2 break-words text-[11px] text-mutedink">
+              {String(data.error?.message || data.error || 'Unknown error')}
+            </p>
+          )}
         </Surface>
       )}
 
