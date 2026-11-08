@@ -97,6 +97,12 @@ export const NAV_BY_ROLE = {
       ],
     },
     {
+      label: 'Administration',
+      items: [
+        { to: '/admin/users', label: 'User management', icon: 'ShieldCheck', adminOnly: true },
+      ],
+    },
+    {
       label: 'Support',
       items: [
         { to: P.student.dashboard, label: 'Student workspace', icon: 'Users' },

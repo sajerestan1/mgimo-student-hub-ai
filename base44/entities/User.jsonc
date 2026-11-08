@@ -35,9 +35,125 @@
         }
       }
     },
+    "admin_level": {
+      "type": "string",
+      "description": "Distinguishes a Super Administrator from a standard Administrator",
+      "enum": [
+        "super",
+        "standard"
+      ],
+      "enumColors": [
+        "red",
+        "blue"
+      ],
+      "default": "standard",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "account_status": {
+      "type": "string",
+      "description": "Suspended and deactivated accounts cannot use the application",
+      "enum": [
+        "active",
+        "suspended",
+        "deactivated"
+      ],
+      "enumColors": [
+        "green",
+        "yellow",
+        "red"
+      ],
+      "default": "active",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "provisioned": {
+      "type": "boolean",
+      "description": "True only for accounts created by an administrator through institutional provisioning",
+      "default": false,
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "phone": {
+      "type": "string"
+    },
+    "contact_email": {
+      "type": "string",
+      "description": "Institutional email, kept in step with the sign-in address by an administrator",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "photo_uri": {
+      "type": "string",
+      "description": "Private storage URI of the profile photo"
+    },
+    "student_id": {
+      "type": "string",
+      "description": "Official student number, assigned by an administrator",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "professor_id": {
+      "type": "string",
+      "description": "Official professor number, assigned by an administrator",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "group_name": {
+      "type": "string",
+      "description": "Class / study group, assigned by an administrator",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "programme": {
+      "type": "string",
+      "description": "Academic programme, assigned by an administrator",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
     "faculty_id": {
       "type": "string",
-      "description": "Faculty scope for faculty administrators (assigned by an administrator)",
+      "description": "Faculty scope, assigned by an administrator",
       "rls": {
         "update": {
           "user_condition": {
@@ -48,7 +164,7 @@
     },
     "department_id": {
       "type": "string",
-      "description": "Department scope for department heads (assigned by an administrator)",
+      "description": "Department scope, assigned by an administrator",
       "rls": {
         "update": {
           "user_condition": {
@@ -56,6 +172,13 @@
           }
         }
       }
+    },
+    "profile_completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "last_login_at": {
+      "type": "string"
     }
   },
   "required": [

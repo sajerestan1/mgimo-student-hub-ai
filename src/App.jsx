@@ -33,7 +33,6 @@ import UserSettings from '@/pages/account/UserSettings';
 import NotificationsPage from '@/pages/account/NotificationsPage';
 import Help from '@/pages/account/Help';
 import Login from '@/pages/Login';
-import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Mfa from '@/pages/Mfa';
@@ -52,6 +51,9 @@ import ProfessorGradeAlertsPage from '@/pages/professor/GradeAlertsPage';
 import ProfessorDiscussionsPage from '@/pages/professor/DiscussionsPage';
 import ProfessorAiAssistant from '@/pages/professor/AiTeachingAssistant';
 import MyTeachingPage from '@/pages/professor/MyTeachingPage';
+import UserManagement from '@/pages/admin/UserManagement';
+import CompleteProfile from '@/pages/account/CompleteProfile';
+import AdminOnlyRoute from '@/components/shell/AdminOnlyRoute';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -82,7 +84,6 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={<Welcome />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/mfa" element={<Mfa />} />
@@ -91,6 +92,15 @@ const AuthenticatedApp = () => {
       >
         <Route element={<AppShell />}>
           <Route path="/dashboard" element={<RoleDashboard />} />
+          <Route path="/complete-profile" element={<CompleteProfile />} />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminOnlyRoute>
+                <UserManagement />
+              </AdminOnlyRoute>
+            }
+          />
 
           {/* Legacy workspace paths resolve to the role's dashboard. */}
           <Route path="/student" element={<Navigate to={MODULE_PATHS.student.dashboard} replace />} />

@@ -34,6 +34,7 @@ import {
   Scale,
   BellRing,
   Lightbulb,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
@@ -74,6 +75,7 @@ const ICONS = {
   Scale,
   BellRing,
   Lightbulb,
+  ShieldCheck,
 };
 
 const initials = (name) =>
@@ -159,7 +161,12 @@ function GroupLabel({ children, collapsed }) {
 
 export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollapse }) {
   const { workspace, displayName, user, preview } = useWorkspace();
-  const groups = NAV_BY_ROLE[workspace.role] || NAV_BY_ROLE.student;
+  // Administration entries are only rendered for administrator accounts; the
+  // server verifies the role again on every administrative action.
+  const isAdmin = user?.role === 'admin';
+  const groups = (NAV_BY_ROLE[workspace.role] || NAV_BY_ROLE.student)
+    .map((group) => ({ ...group, items: group.items.filter((item) => !item.adminOnly || isAdmin) }))
+    .filter((group) => group.items.length);
   const isStudent = workspace.role === 'student';
   const secondary = isStudent ? STUDENT.programme : workspace.title;
 
