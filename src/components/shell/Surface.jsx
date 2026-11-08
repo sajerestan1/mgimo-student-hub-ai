@@ -21,9 +21,11 @@ export default function Surface({
         <header className="flex items-start justify-between gap-4 px-5 pb-3 pt-4">
           <div className="min-w-0">
             {title && (
-              <h2 className="text-[14px] font-semibold leading-tight tracking-[-0.01em] text-ink">{title}</h2>
+              <h2 className="text-[length:var(--type-card)] font-semibold leading-tight tracking-[-0.01em] text-ink">{title}</h2>
             )}
-            {subtitle && <p className="mt-1 text-[11.5px] leading-relaxed text-mutedink">{subtitle}</p>}
+            {subtitle && (
+              <p className="mt-1 text-[length:var(--type-secondary)] leading-[1.5] text-mutedink">{subtitle}</p>
+            )}
           </div>
           {action && <div className="shrink-0 pt-0.5">{action}</div>}
         </header>

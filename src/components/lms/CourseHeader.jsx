@@ -18,26 +18,26 @@ export default function CourseHeader({ course, professorName, progress, weighted
             <p className="eyebrow">
               {course.code} · {course.level || 'intermediate'} · {course.semester}
             </p>
-            <h1 className="mt-1.5 text-[22px] font-semibold leading-tight tracking-[-0.02em] text-ink sm:text-[26px]">
+            <h1 className="mt-1.5 text-[22px] font-semibold leading-tight tracking-[-0.02em] text-ink sm:text-[24px]">
               {course.title}
             </h1>
-            <p className="mt-1 text-[12.5px] text-mutedink">
+            <p className="mt-1 text-[15px] text-mutedink">
               {professorName || 'Course instructor'} · {course.credits} credits · Year {course.year_level}
             </p>
-            <p className="mt-3 max-w-3xl text-[12.5px] leading-relaxed text-mutedink">{course.description}</p>
+            <p className="mt-3 max-w-3xl text-[15px] leading-[1.65] text-mutedink">{course.description}</p>
           </div>
 
           <div className="grid shrink-0 grid-cols-2 gap-x-5 gap-y-3 border-line lg:border-l lg:pl-5">
             <div>
               <p className="text-[10.5px] text-mutedink">Course progress</p>
-              <p className="mt-0.5 text-[16px] font-semibold tabular-nums text-ink">{progress.percent}%</p>
+              <p className="mt-0.5 text-[19px] font-semibold tabular-nums text-ink">{progress.percent}%</p>
               <p className="text-[10.5px] text-mutedink">
                 {progress.completed} of {progress.total} modules
               </p>
             </div>
             <div>
               <p className="text-[10.5px] text-mutedink">Weighted grade</p>
-              <p className="mt-0.5 text-[16px] font-semibold tabular-nums text-ink">
+              <p className="mt-0.5 text-[19px] font-semibold tabular-nums text-ink">
                 {weighted === null ? '—' : weighted.toFixed(1)}
                 <span className="ml-1 text-[10.5px] font-medium text-mutedink">{letterFor(weighted)}</span>
               </p>

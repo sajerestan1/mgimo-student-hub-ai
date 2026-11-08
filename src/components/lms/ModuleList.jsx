@@ -37,7 +37,7 @@ export default function ModuleList({ modules, resources, progress, onToggle, onO
                   <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-mutedink">
                     Module {module.module_number}
                   </p>
-                  <p className="mt-0.5 text-[13px] font-semibold leading-snug text-ink">{module.title}</p>
+                  <p className="mt-1 text-[18px] font-semibold leading-snug text-ink">{module.title}</p>
                   <p className="mt-0.5 text-[11px] text-mutedink">
                     {materials.length} resources · {work.length + checks.length} assessed items · {module.duration_hours}h study
                   </p>
@@ -47,13 +47,13 @@ export default function ModuleList({ modules, resources, progress, onToggle, onO
 
               {isOpen && (
                 <div className="space-y-4 bg-canvas px-5 py-4">
-                  <p className="text-[12px] leading-relaxed text-ink/80">{module.introduction}</p>
+                  <p className="text-[length:var(--type-body)] leading-[1.7] text-ink/80">{module.introduction}</p>
 
                   <div>
                     <p className="eyebrow mb-1.5">Learning objectives</p>
                     <ul className="space-y-1">
                       {(module.objectives || []).map((objective) => (
-                        <li key={objective} className="flex items-start gap-1.5 text-[11.5px] leading-relaxed text-ink/75">
+                        <li key={objective} className="flex items-start gap-1.5 text-[15px] leading-[1.65] text-ink/75">
                           <Target className="mt-0.5 h-3 w-3 shrink-0 text-brand" strokeWidth={2} /> {objective}
                         </li>
                       ))}
@@ -62,7 +62,7 @@ export default function ModuleList({ modules, resources, progress, onToggle, onO
 
                   <div className="rounded-lg border border-line bg-white p-3.5">
                     <p className="eyebrow mb-1.5">Lecture — {module.lecture_topic}</p>
-                    <p className="whitespace-pre-wrap text-[11.5px] leading-relaxed text-ink/80">{module.lecture_notes}</p>
+                    <p className="whitespace-pre-wrap text-[length:var(--type-reading)] leading-[var(--leading-reading)] text-ink/85">{module.lecture_notes}</p>
                   </div>
 
                   {materials.length > 0 && (
@@ -74,7 +74,7 @@ export default function ModuleList({ modules, resources, progress, onToggle, onO
                             <button
                               type="button"
                               onClick={() => onOpenResource(resource)}
-                              className="flex w-full items-center gap-2 rounded-md border border-line bg-white px-2.5 py-2 text-left text-[11.5px] text-ink transition-colors hover:border-brand/40"
+                              className="flex w-full items-center gap-2 rounded-md border border-line bg-white px-3 py-2.5 text-left text-[15px] text-ink transition-colors hover:border-brand/40"
                             >
                               <FileText className="h-3.5 w-3.5 shrink-0 text-brand" />
                               <span className="min-w-0 flex-1 truncate">{resource.title}</span>
@@ -90,7 +90,7 @@ export default function ModuleList({ modules, resources, progress, onToggle, onO
 
                   <div>
                     <p className="eyebrow mb-1.5">Learning activity</p>
-                    <p className="text-[11.5px] leading-relaxed text-ink/75">{module.activity}</p>
+                    <p className="text-[15px] leading-[1.65] text-ink/75">{module.activity}</p>
                   </div>
 
                   {(work.length > 0 || checks.length > 0) && (

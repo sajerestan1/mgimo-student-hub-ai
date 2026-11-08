@@ -25,8 +25,8 @@ function Trend({ value }) {
 
 export default function FacultyTable() {
   return (
-    <div>
-      <table className="hidden w-full text-left sm:table">
+    <div className="overflow-x-auto">
+      <table className="hidden w-full min-w-[620px] text-left sm:table">
         <thead>
           <tr className="border-b border-line">
             <th className="table-head px-5 py-2.5 font-semibold">Faculty</th>

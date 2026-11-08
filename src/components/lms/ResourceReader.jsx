@@ -11,20 +11,20 @@ export default function ResourceReader({ resource, onClose }) {
             {resource?.type?.replace('_', ' ')}
             {resource?.module_number ? ` · module ${resource.module_number}` : ''}
           </p>
-          <DialogTitle className="text-[17px] leading-snug">{resource?.title}</DialogTitle>
-          <p className="text-[11px] text-mutedink">
+          <DialogTitle className="text-[22px] font-semibold leading-[1.3]">{resource?.title}</DialogTitle>
+          <p className="text-[14px] text-mutedink">
             Published {shortDate(resource?.published_date)} · {resource?.description}
           </p>
         </DialogHeader>
 
-        <div className="prose-sm max-w-none text-[12.5px] leading-relaxed text-ink/85 [&_h2]:mb-2 [&_h2]:mt-4 [&_h2]:text-[14px] [&_h2]:font-semibold [&_h3]:mb-1 [&_h3]:mt-3 [&_h3]:text-[12.5px] [&_h3]:font-semibold [&_li]:ml-4 [&_li]:list-disc [&_li]:py-0.5 [&_p]:mb-2 [&_strong]:font-semibold">
+        <div className="prose-sm max-w-none text-[length:var(--type-reading)] leading-[var(--leading-reading)] text-ink/85 [&_h2]:mb-2 [&_h2]:mt-5 [&_h2]:text-[22px] [&_h2]:font-semibold [&_h2]:leading-[1.35] [&_h3]:mb-1 [&_h3]:mt-4 [&_h3]:text-[18px] [&_h3]:font-semibold [&_li]:ml-4 [&_li]:list-disc [&_li]:py-1 [&_p]:mb-3 [&_p]:leading-[1.75] [&_strong]:font-semibold">
           <ReactMarkdown>{resource?.content || 'This resource has no recorded content.'}</ReactMarkdown>
         </div>
 
         {!!resource?.reading_list?.length && (
           <div className="mt-2 rounded-lg border border-line bg-canvas p-3">
             <p className="eyebrow mb-1">Reading list</p>
-            <ul className="space-y-0.5 text-[11.5px] text-ink/75">
+            <ul className="space-y-1 text-[15px] leading-[1.7] text-ink/75">
               {resource.reading_list.map((item) => (
                 <li key={item}>• {item}</li>
               ))}

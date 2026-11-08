@@ -149,7 +149,7 @@ export default function CoursesPage() {
                   <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-mutedink">
                     {course.code} · {course.level || 'intermediate'}
                   </p>
-                  <h2 className="mt-1 text-[15px] font-semibold leading-tight tracking-[-0.01em] text-ink">{course.title}</h2>
+                  <h2 className="mt-1 text-[20px] font-semibold leading-tight tracking-[-0.01em] text-ink">{course.title}</h2>
                   <p className="mt-1 text-[11.5px] text-mutedink">{professor?.full_name || 'Course instructor'}</p>
                 </div>
                 <span className="shrink-0 rounded-lg bg-brand/10 px-2 py-1 text-[10.5px] font-semibold text-brand">

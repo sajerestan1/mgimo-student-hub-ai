@@ -43,7 +43,7 @@ export default function AiBriefing() {
             <Sparkles className="h-4 w-4 text-gold" strokeWidth={1.9} />
           </span>
           <div>
-            <h2 className="font-heading text-[16px] leading-tight">AI Dean’s Briefing</h2>
+            <h2 className="font-heading text-[19px] leading-tight">AI Dean’s Briefing</h2>
             <p className="text-[10px] uppercase tracking-[0.16em] text-gold/80">Generated from current records</p>
           </div>
         </div>

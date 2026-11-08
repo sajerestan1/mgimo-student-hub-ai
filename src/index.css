@@ -31,6 +31,17 @@
     --chart-4: 158 48% 42%;
     --chart-5: 32 85% 55%;
     --radius: 0.75rem;
+
+    /* Typography scale (px shown for reference) */
+    --type-title: clamp(1.75rem, 2.4vw, 2rem); /* 28 → 32 */
+    --type-section: clamp(1.3125rem, 1.8vw, 1.5rem); /* 21 → 24 */
+    --type-card: 1.1875rem; /* 19 */
+    --type-body: 1rem; /* 16 */
+    --type-secondary: 0.9375rem; /* 15 */
+    --type-meta: 0.8125rem; /* 13 */
+    --type-reading: 1.09375rem; /* 17.5 */
+    --leading-body: 1.6;
+    --leading-reading: 1.75;
     --font-heading: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -80,10 +91,13 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+    font-size: 16px;
   }
 
   body {
     @apply bg-background font-body text-foreground antialiased;
+    font-size: var(--type-body);
+    line-height: var(--leading-body);
     font-feature-settings: "cv02", "cv03", "cv04", "ss01", "tnum" 0;
     letter-spacing: -0.008em;
   }
@@ -101,27 +115,27 @@
   }
 
   .eyebrow {
-    @apply text-[10.5px] font-semibold uppercase tracking-[0.16em] text-mutedink;
+    @apply text-[0.8125rem] font-semibold uppercase tracking-[0.13em] text-mutedink;
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-navy px-3.5 py-2 text-[12.5px] font-medium text-white transition-colors duration-150 hover:bg-navy-mid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-1;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-navy px-3.5 py-2 text-[0.9375rem] font-medium text-white transition-colors duration-150 hover:bg-navy-mid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-1;
   }
 
   .btn-quiet {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-[12.5px] font-medium text-ink transition-colors duration-150 hover:border-[#D6DCE8] hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-[0.9375rem] font-medium text-ink transition-colors duration-150 hover:border-[#D6DCE8] hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25;
   }
 
   .btn-sm {
-    @apply px-2.5 py-1.5 text-[11.5px];
+    @apply px-2.5 py-1.5 text-[0.875rem];
   }
 
   .link-quiet {
-    @apply inline-flex items-center gap-1 text-[11.5px] font-medium text-brand transition-colors hover:text-[#3B5AE0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25;
+    @apply inline-flex items-center gap-1 text-[0.9375rem] font-medium text-brand transition-colors hover:text-[#3B5AE0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25;
   }
 
   .chip {
-    @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium leading-5;
+    @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[0.8125rem] font-medium leading-[1.45];
   }
 
   .icon-btn {
@@ -133,7 +147,7 @@
   }
 
   .table-head {
-    @apply text-[10.5px] font-semibold uppercase tracking-[0.06em] text-mutedink;
+    @apply text-[0.875rem] font-semibold uppercase tracking-[0.05em] text-mutedink;
   }
 }
 
@@ -176,4 +190,48 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ── Readability floor ──────────────────────────────────────────────────
+   Large parts of the interface were authored with inline sizes between
+   8px and 14px. Instead of rewriting every component, these unlayered
+   rules lift any element carrying one of those inline sizes onto the
+   readable scale. Layout, colour, spacing and structure are untouched;
+   new work uses the semantic type tokens above.
+
+   These rules come after the utilities in source order and match at the same
+   specificity, so they win the cascade; the table rules below them carry one
+   more class selector and therefore win for cells and headers. */
+[class*='text-[8'],
+[class*='text-[9'],
+[class*='text-[10'],
+[class*='text-[11'] {
+  font-size: var(--type-meta); /* 13px */
+}
+
+[class*='text-[12'] {
+  font-size: 0.875rem; /* 14px */
+}
+
+/* Table content reads at interface size, headers just below it. */
+table th,
+table th[class] {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+table td,
+table td[class] {
+  font-size: var(--type-secondary);
+}
+
+/* Forms read at interface size: labels 15px, entered values 16px. */
+label[class] {
+  font-size: var(--type-secondary);
+}
+
+input[class],
+select[class],
+textarea[class] {
+  font-size: var(--type-body);
 }

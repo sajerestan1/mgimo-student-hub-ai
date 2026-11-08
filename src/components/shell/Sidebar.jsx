@@ -86,7 +86,7 @@ const initials = (name) =>
 
 const itemClass = (isActive, collapsed) =>
   cn(
-    'group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[12.5px] leading-5 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30',
+    'group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[15px] leading-6 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30',
     collapsed && 'lg:justify-center lg:px-0',
     isActive
       ? 'bg-royal font-medium text-white shadow-[0_8px_18px_-10px_rgba(91,77,235,0.9)]'
@@ -130,7 +130,7 @@ function NavItem({ item, collapsed }) {
           {item.soon && (
             <span
               className={cn(
-                'ml-auto rounded border border-white/10 px-1 py-px text-[9.5px] font-medium uppercase tracking-[0.04em] text-white/35',
+                'ml-auto rounded border border-white/10 px-1.5 py-px text-[12px] font-medium uppercase tracking-[0.04em] text-white/35',
                 collapsed && 'lg:hidden'
               )}
             >
@@ -148,7 +148,7 @@ function GroupLabel({ children, collapsed }) {
   return (
     <p
       className={cn(
-        'px-3 pb-1.5 pt-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/32',
+        'px-3 pb-1.5 pt-4 text-[13px] font-semibold uppercase tracking-[0.1em] text-white/32',
         collapsed && 'lg:hidden'
       )}
     >
@@ -183,8 +183,8 @@ export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollap
         <div className={cn('flex h-16 items-center gap-2.5 px-4', collapsed && 'lg:justify-center lg:px-0')}>
           <BrandMark className="h-8 w-8 shrink-0" />
           <div className={cn('min-w-0 flex-1', collapsed && 'lg:hidden')}>
-            <p className="truncate text-[13px] font-semibold tracking-[-0.01em] text-white">Academic Intelligence</p>
-            <p className="truncate text-[10.5px] text-white/45">{workspace.title}</p>
+            <p className="truncate text-[15px] font-semibold tracking-[-0.01em] text-white">Academic Intelligence</p>
+            <p className="truncate text-[13px] text-white/45">{workspace.title}</p>
           </div>
           <button
             type="button"
@@ -202,14 +202,14 @@ export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollap
             collapsed && 'lg:hidden'
           )}
         >
-          <p className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-white/35">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-white/35">
             {preview ? 'Dean view' : 'Student portal'}
           </p>
-          <p className="mt-0.5 truncate text-[11.5px] font-medium text-white/85">
+          <p className="mt-0.5 truncate text-[14px] font-medium text-white/85">
             {preview ? 'Inspecting the student workspace' : secondary}
           </p>
           {preview && (
-            <Link to="/dean/dashboard" className="mt-1 inline-block text-[10.5px] font-medium text-[#A9A0FF] hover:text-white">
+            <Link to="/dean/dashboard" className="mt-1 inline-block text-[13px] font-medium text-[#A9A0FF] hover:text-white">
               Back to command center
             </Link>
           )}
@@ -237,19 +237,19 @@ export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollap
               collapsed && 'lg:hidden'
             )}
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-royal/25 text-[10.5px] font-semibold text-white">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-royal/25 text-[12.5px] font-semibold text-white">
               {initials(displayName)}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[11.5px] font-medium text-white">{displayName}</span>
-              <span className="block truncate text-[10px] text-white/45">{user?.email || workspace.title}</span>
+              <span className="block truncate text-[14px] font-medium text-white">{displayName}</span>
+              <span className="block truncate text-[13px] text-white/45">{user?.email || workspace.title}</span>
             </span>
           </Link>
           <button
             type="button"
             onClick={onToggleCollapse}
             className={cn(
-              'hidden w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] text-white/40 transition-colors hover:bg-white/[0.05] hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 lg:flex',
+              'hidden w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] text-white/40 transition-colors hover:bg-white/[0.05] hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 lg:flex',
               collapsed && 'justify-center px-0'
             )}
             aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}

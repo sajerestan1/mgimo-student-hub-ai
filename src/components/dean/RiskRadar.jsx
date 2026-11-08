@@ -15,7 +15,7 @@ export default function RiskRadar() {
             <Radar className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="text-[14px] font-semibold leading-tight tracking-[-0.01em] text-white">AI academic risk radar</h2>
+            <h2 className="text-[18px] font-semibold leading-tight tracking-[-0.01em] text-white">AI academic risk radar</h2>
             <p className="mt-1 text-[11.5px] text-white/50">Signal preview · intelligence layer arrives in Stage 2</p>
           </div>
         </div>

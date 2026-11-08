@@ -7,7 +7,7 @@ export default function Panel({ title, subtitle, actions, children, className, b
         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#EEF2F8] px-4 py-3.5 sm:px-5">
           <div className="min-w-0">
             {title && (
-              <h2 className={cn('font-heading text-[16px] leading-tight text-ink', heading === 'sans' && 'font-body text-[13.5px] font-semibold')}>
+              <h2 className={cn('font-heading text-[19px] leading-tight text-ink', heading === 'sans' && 'font-body text-[16px] font-semibold')}>
                 {title}
               </h2>
             )}

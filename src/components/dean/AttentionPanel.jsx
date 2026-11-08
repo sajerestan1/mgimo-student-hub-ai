@@ -26,7 +26,7 @@ export default function AttentionPanel() {
     <section className="card-surface flex flex-col overflow-hidden">
       <header className="flex flex-wrap items-center justify-between gap-3 px-5 pb-3 pt-4">
         <div>
-          <h2 className="text-[14px] font-semibold leading-tight tracking-[-0.01em] text-ink">Institutional alerts</h2>
+          <h2 className="text-[18px] font-semibold leading-tight tracking-[-0.01em] text-ink">Institutional alerts</h2>
           <p className="mt-1 text-[11.5px] text-mutedink">
             {criticalCount} critical signals need a decision this week
           </p>
