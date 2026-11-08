@@ -35,24 +35,41 @@ export function useProfessorContext() {
     let alive = true;
     (async () => {
       try {
-        const [profs, faculties, departments] = await Promise.all([
-          base44.entities.Professor.list('-created_date', 80),
+        const [faculties, departments] = await Promise.all([
           base44.entities.Faculty.list('-created_date', 20),
           base44.entities.Department.list('-created_date', 40),
         ]);
-        const email = String(user?.email || '').toLowerCase();
-        const professor =
-          profs.find((p) => p.user_id && p.user_id === user?.id) ||
-          profs.find((p) => p.email && String(p.email).toLowerCase() === email) ||
-          null;
 
+        // The myCourses endpoint resolves the teaching profile and its courses
+        // server-side; the direct query is only a fallback if that call fails.
+        let professor = null;
         let courses = [];
-        if (professor) {
-          const page = await base44.entities.Course.filter(
-            { professor_id: professor.id, status: { $ne: 'archived' } },
-            { sort: 'code', limit: 80 }
-          );
-          courses = page.items || [];
+        try {
+          const response = await base44.functions.invoke('myCourses', {});
+          const result = response?.data || {};
+          if (result.error) throw new Error(result.error);
+          if (result.role === 'professor' && result.professor) {
+            professor = result.professor;
+            courses = result.courses || [];
+          }
+        } catch (error) {
+          console.error('[professor workspace] server lookup failed, falling back to a direct query', error);
+        }
+
+        if (!professor) {
+          const profs = await base44.entities.Professor.list('-created_date', 80);
+          const email = String(user?.email || '').toLowerCase();
+          professor =
+            profs.find((p) => p.user_id && p.user_id === user?.id) ||
+            profs.find((p) => p.email && String(p.email).toLowerCase() === email) ||
+            null;
+          if (professor) {
+            const page = await base44.entities.Course.filter(
+              { professor_id: professor.id, status: { $ne: 'archived' } },
+              { sort: 'code', limit: 80 }
+            );
+            courses = page.items || [];
+          }
         }
 
         if (!alive) return;
