@@ -42,6 +42,7 @@ export default function CoursesPage() {
               assignments: [],
               professors: [],
               reason: context.reason || 'no_enrollments',
+              error: context.error,
             });
           }
           return;
