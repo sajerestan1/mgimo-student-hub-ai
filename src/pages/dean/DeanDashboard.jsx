@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Building2, FileText, Radar, RefreshCw, Sparkles } from 'lucide-react';
 import PageTitle from '@/components/shell/PageTitle';
@@ -10,9 +11,10 @@ import RiskRadar from '@/components/dean/RiskRadar';
 import ProgressionPanel from '@/components/dean/ProgressionPanel';
 import { PerformanceTrendChart, AttendanceTrendChart, CompletionChart } from '@/components/dean/DeanCharts';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
+import { num } from '@/lib/deanApi';
 import { METRICS, UNIVERSITY } from '@/lib/demoUniversity';
 
-const METRIC_CARDS = [
+const buildMetrics = (risk) => [
   { label: 'Students', value: METRICS.students.toLocaleString(), hint: '3 faculties · 9 departments' },
   { label: 'Academic staff', value: METRICS.professors, hint: 'Professors and teaching staff' },
   { label: 'Faculties / departments', value: `${METRICS.faculties} / ${METRICS.departments}`, hint: 'Institutional structure' },
@@ -24,7 +26,13 @@ const METRIC_CARDS = [
     hint: 'Fall 26 vs Spring 26',
   },
   { label: 'Attendance', value: `${METRICS.attendance}%`, delta: '+0.3', tone: 'positive', hint: 'Institution-wide average' },
-  { label: 'Students needing support', value: METRICS.studentsAtRisk, delta: '4.5%', tone: 'critical', hint: 'Flagged for intervention' },
+  {
+    label: 'Students needing support',
+    value: risk ? num(risk.high + risk.medium) : '—',
+    delta: risk ? `${risk.high} high risk` : null,
+    tone: 'critical',
+    hint: risk ? `Of ${num(risk.total)} students · live radar` : 'Live from academic records',
+  },
 ];
 
 const QUICK_ACTIONS = [
@@ -40,6 +48,8 @@ const LEGEND = [
 ];
 
 export default function DeanDashboard() {
+  const [riskCounts, setRiskCounts] = useState(null);
+
   return (
     <div>
       <PageTitle
@@ -62,7 +72,7 @@ export default function DeanDashboard() {
         }
       />
 
-      <KpiStrip columns={6} items={METRIC_CARDS} />
+      <KpiStrip columns={6} items={buildMetrics(riskCounts)} />
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
         <Surface
@@ -104,7 +114,7 @@ export default function DeanDashboard() {
         >
           <AttendanceTrendChart />
         </Surface>
-        <RiskRadar />
+        <RiskRadar onCountsChange={setRiskCounts} />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">

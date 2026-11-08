@@ -8,7 +8,7 @@ export async function fetchDeanData(action, params = {}) {
   return response.data;
 }
 
-export function useDeanData(action, params = {}) {
+export function useDeanData(action, params = {}, revision = 0) {
   const [state, setState] = useState({ loading: true, data: null, error: null });
   const key = JSON.stringify(params);
 
@@ -32,7 +32,7 @@ export function useDeanData(action, params = {}) {
     return () => {
       active = false;
     };
-  }, [action, key]);
+  }, [action, key, revision]);
 
   return state;
 }
