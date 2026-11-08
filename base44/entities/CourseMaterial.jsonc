@@ -22,6 +22,7 @@
       "enum": [
         "lecture_notes",
         "presentation",
+        "syllabus",
         "reading",
         "dataset",
         "other"
@@ -29,6 +30,7 @@
       "enumColors": [
         "blue",
         "purple",
+        "pink",
         "green",
         "yellow",
         "gray"
