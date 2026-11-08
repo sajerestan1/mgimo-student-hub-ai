@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Clock, Play, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Surface from '@/components/shell/Surface';
@@ -15,6 +15,8 @@ export default function CourseQuizRunner({ course, quizzes, questions, attempts,
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const answersRef = useRef({});
+  const submitRef = useRef(null);
 
   const quizQuestions = useMemo(
     () => questions.filter((q) => q.quiz_id === activeQuiz?.id).sort((a, b) => a.order - b.order),
@@ -25,11 +27,12 @@ export default function CourseQuizRunner({ course, quizzes, questions, attempts,
     if (!activeQuiz || busy) return;
     setBusy(true);
     try {
+      const current = answersRef.current;
       const possible = quizQuestions.reduce((sum, q) => sum + (q.points || 1), 0);
       let earned = 0;
       let correct = 0;
       quizQuestions.forEach((question, index) => {
-        const given = answers[index];
+        const given = current[index];
         if (question.type === 'multiple_select') {
           const right = (question.correct_answers?.length ? question.correct_answers : [question.correct_index]).slice().sort();
           const got = (Array.isArray(given) ? given : []).slice().sort();
@@ -43,9 +46,11 @@ export default function CourseQuizRunner({ course, quizzes, questions, attempts,
         }
       });
       const score = Math.round((earned / Math.max(1, possible)) * 100);
+      // Stored as strings: a single choice is its index, a multiple select is a
+      // comma-joined list, and an unanswered question is "-1".
       const storedAnswers = quizQuestions.map((_, index) => {
-        const given = answers[index];
-        return Array.isArray(given) ? given : Number(given ?? -1);
+        const given = current[index];
+        return Array.isArray(given) ? given.join(',') : String(given ?? -1);
       });
       await base44.entities.QuizAttempt.create({
         quiz_id: activeQuiz.id,
@@ -59,12 +64,15 @@ export default function CourseQuizRunner({ course, quizzes, questions, attempts,
         max_score: 100,
         submitted_at: new Date().toISOString().slice(0, 10),
       });
-      setResult({ score, correct, possible, answers: { ...answers } });
+      setResult({ score, correct, possible, answers: { ...current } });
       await onRefresh();
     } finally {
       setBusy(false);
     }
   };
+
+  useEffect(() => { answersRef.current = answers; }, [answers]);
+  useEffect(() => { submitRef.current = submit; });
 
   useEffect(() => {
     if (activeQuiz === null) return undefined;
@@ -73,7 +81,7 @@ export default function CourseQuizRunner({ course, quizzes, questions, attempts,
       setSecondsLeft((value) => {
         if (value <= 1) {
           clearInterval(timer);
-          submit();
+          submitRef.current?.();
           return 0;
         }
         return value - 1;

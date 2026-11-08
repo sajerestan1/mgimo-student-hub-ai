@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Surface from '@/components/shell/Surface';
@@ -87,9 +88,9 @@ export default function CourseAssignments({ course, assignments, submissions, st
                     {assignment.assessment_type.replace(/_/g, ' ')} · module {assignment.module_number} · {assignment.max_score} marks · due{' '}
                     {shortDate(assignment.due_date)} · {assignment.submission_format}
                   </p>
-                  <p className="mt-1.5 whitespace-pre-line text-[11.5px] leading-relaxed text-mutedink">
-                    {assignment.instructions}
-                  </p>
+                  <div className="mt-1.5 text-[11.5px] leading-relaxed text-mutedink [&_p]:mb-1 [&_strong]:font-semibold [&_strong]:text-ink/80">
+                    <ReactMarkdown>{assignment.instructions}</ReactMarkdown>
+                  </div>
                   {assignment.objectives?.length > 0 && (
                     <ul className="mt-2 space-y-0.5">
                       {assignment.objectives.map((objective) => (
