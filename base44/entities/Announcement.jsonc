@@ -28,6 +28,18 @@
       ],
       "default": "university"
     },
+    "course_id": {
+      "type": "string"
+    },
+    "course_code": {
+      "type": "string"
+    },
+    "course_title": {
+      "type": "string"
+    },
+    "professor_id": {
+      "type": "string"
+    },
     "faculty_id": {
       "type": "string"
     },
@@ -137,6 +149,11 @@
           "user_condition": {
             "role": "faculty_admin"
           }
+        },
+        {
+          "user_condition": {
+            "role": "professor"
+          }
         }
       ]
     },
@@ -161,6 +178,11 @@
           "user_condition": {
             "role": "academic_staff"
           }
+        },
+        {
+          "user_condition": {
+            "role": "professor"
+          }
         }
       ]
     },
@@ -174,6 +196,11 @@
         {
           "user_condition": {
             "role": "dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "professor"
           }
         }
       ]
