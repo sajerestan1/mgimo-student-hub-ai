@@ -26,6 +26,68 @@
     "year_level": {
       "type": "number"
     },
+    "description": {
+      "type": "string"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "foundation",
+        "intermediate",
+        "advanced"
+      ],
+      "enumColors": [
+        "green",
+        "blue",
+        "purple"
+      ],
+      "default": "intermediate"
+    },
+    "objectives": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "published",
+        "draft",
+        "archived"
+      ],
+      "enumColors": [
+        "green",
+        "gray",
+        "red"
+      ],
+      "default": "published"
+    },
+    "syllabus": {
+      "type": "string"
+    },
+    "weight_assignments": {
+      "type": "number",
+      "default": 30
+    },
+    "weight_quizzes": {
+      "type": "number",
+      "default": 20
+    },
+    "weight_midterm": {
+      "type": "number",
+      "default": 20
+    },
+    "weight_final": {
+      "type": "number",
+      "default": 30
+    },
     "is_demo": {
       "type": "boolean",
       "default": true

@@ -14,15 +14,29 @@
     "professor_id": {
       "type": "string"
     },
+    "module_number": {
+      "type": "number"
+    },
     "title": {
       "type": "string"
     },
     "description": {
       "type": "string"
     },
+    "instructions": {
+      "type": "string"
+    },
     "duration_minutes": {
       "type": "number",
       "default": 20
+    },
+    "attempt_limit": {
+      "type": "number",
+      "default": 2
+    },
+    "pass_mark": {
+      "type": "number",
+      "default": 60
     },
     "available_from": {
       "type": "string"
@@ -62,6 +76,9 @@
       "$or": [
         {
           "data.status": "published"
+        },
+        {
+          "data.status": "closed"
         },
         {
           "user_condition": {

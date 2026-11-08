@@ -11,6 +11,12 @@
     "professor_id": {
       "type": "string"
     },
+    "module_id": {
+      "type": "string"
+    },
+    "module_number": {
+      "type": "number"
+    },
     "parent_id": {
       "type": "string"
     },

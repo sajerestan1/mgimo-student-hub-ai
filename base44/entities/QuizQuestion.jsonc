@@ -8,8 +8,32 @@
     "course_id": {
       "type": "string"
     },
+    "module_id": {
+      "type": "string"
+    },
+    "module_number": {
+      "type": "number"
+    },
     "prompt": {
       "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "multiple_choice",
+        "multiple_select",
+        "true_false",
+        "short_answer",
+        "essay"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "green",
+        "yellow",
+        "pink"
+      ],
+      "default": "multiple_choice"
     },
     "options": {
       "type": "array",
@@ -20,6 +44,29 @@
     "correct_index": {
       "type": "number",
       "default": 0
+    },
+    "correct_answers": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "explanation": {
+      "type": "string"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "enumColors": [
+        "green",
+        "yellow",
+        "red"
+      ],
+      "default": "medium"
     },
     "points": {
       "type": "number",

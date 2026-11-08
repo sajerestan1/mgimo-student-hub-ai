@@ -1,0 +1,77 @@
+{
+  "name": "ModuleProgress",
+  "type": "object",
+  "properties": {
+    "student_user_id": {
+      "type": "string"
+    },
+    "student_id": {
+      "type": "string"
+    },
+    "course_id": {
+      "type": "string"
+    },
+    "course_code": {
+      "type": "string"
+    },
+    "module_id": {
+      "type": "string"
+    },
+    "module_number": {
+      "type": "number"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": true
+    },
+    "completed_at": {
+      "type": "string"
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "student_user_id",
+    "module_id",
+    "completed"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.student_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "professor"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.student_user_id": "{{user.id}}"
+    },
+    "update": {
+      "data.student_user_id": "{{user.id}}"
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.student_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

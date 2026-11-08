@@ -14,11 +14,23 @@
     "professor_id": {
       "type": "string"
     },
+    "module_id": {
+      "type": "string"
+    },
+    "module_number": {
+      "type": "number"
+    },
     "title": {
       "type": "string"
     },
     "instructions": {
       "type": "string"
+    },
+    "objectives": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "assessment_type": {
       "type": "string",
@@ -28,7 +40,12 @@
         "project",
         "presentation",
         "problem_set",
-        "exam"
+        "exam",
+        "case_analysis",
+        "policy_brief",
+        "research_paper",
+        "comparative_analysis",
+        "seminar_prep"
       ],
       "enumColors": [
         "blue",
@@ -36,7 +53,12 @@
         "green",
         "yellow",
         "gray",
-        "red"
+        "red",
+        "pink",
+        "blue",
+        "purple",
+        "green",
+        "yellow"
       ],
       "default": "coursework"
     },
@@ -52,6 +74,26 @@
     },
     "submission_format": {
       "type": "string"
+    },
+    "late_policy": {
+      "type": "string"
+    },
+    "rubric": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "criterion": {
+            "type": "string"
+          },
+          "points": {
+            "type": "number"
+          },
+          "descriptor": {
+            "type": "string"
+          }
+        }
+      }
     },
     "attachment_url": {
       "type": "string"
@@ -88,6 +130,9 @@
       "$or": [
         {
           "data.status": "published"
+        },
+        {
+          "data.status": "closed"
         },
         {
           "user_condition": {
