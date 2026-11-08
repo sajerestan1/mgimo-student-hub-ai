@@ -8,8 +8,11 @@ import GradingQueuePanel from '@/components/professor/GradingQueuePanel';
 import CoursePerformancePanel from '@/components/professor/CoursePerformancePanel';
 import UpcomingAssessmentsPanel from '@/components/professor/UpcomingAssessmentsPanel';
 import TeachingAlerts from '@/components/professor/TeachingAlerts';
+import GradeTrendCard from '@/components/professor/GradeTrendCard';
+import StrugglingStudentsCard from '@/components/professor/StrugglingStudentsCard';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { useProfessorContext, loadTeaching, todayIso, dayDiff, pct, SEMESTER } from '@/lib/professorData';
+import { buildGradeTrend } from '@/lib/gradeTrends';
 
 export default function ProfessorDashboard() {
   const { loading, professor, courses, facultyName, departmentName } = useProfessorContext();
@@ -73,7 +76,19 @@ export default function ProfessorDashboard() {
       (t) => !t.parent_id && !data.threads.some((r) => r.parent_id === t.id && r.author_role === 'professor')
     );
 
+    const trend = buildGradeTrend(data, courses);
+
     const alerts = [];
+    if (trend.watchlist.length) {
+      alerts.push({
+        id: 'trend',
+        tag: 'Early warning',
+        tone: 'critical',
+        title: `${trend.watchlist.length} student${trend.watchlist.length === 1 ? '' : 's'} trending down`,
+        detail: 'Recent marks have fallen — review the grade trend',
+        to: P.professor.students,
+      });
+    }
     if (pending.length) {
       alerts.push({ id: 'pending', tag: 'Grade', tone: 'brand', title: `${pending.length} submissions awaiting a grade`, detail: 'Open the grading queue to return feedback', to: P.professor.grading });
     }
@@ -105,6 +120,7 @@ export default function ProfessorDashboard() {
       },
       queue,
       performance,
+      trend,
       upcomingRows: upcoming.map((a) => ({
         ...a,
         enrolled: data.enrollments.filter((e) => e.course_id === a.course_id).length,
@@ -144,6 +160,11 @@ export default function ProfessorDashboard() {
         <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
           <TodaySchedule sessions={view.sessionsToday} />
           <TeachingAlerts alerts={view.alerts} />
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+          <GradeTrendCard points={view.trend.points} change={view.trend.change} />
+          <StrugglingStudentsCard rows={view.trend.watchlist} />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
