@@ -15,6 +15,7 @@ import Welcome from '@/pages/Welcome';
 import RoleDashboard from '@/pages/RoleDashboard';
 import StudentDashboard from '@/pages/student/StudentDashboard';
 import CoursesPage from '@/pages/student/CoursesPage';
+import CourseDetailPage from '@/pages/student/CourseDetailPage';
 import TimetablePage from '@/pages/student/TimetablePage';
 import AssignmentsPage from '@/pages/student/AssignmentsPage';
 import QuizzesPage from '@/pages/student/QuizzesPage';
@@ -110,6 +111,14 @@ const AuthenticatedApp = () => {
             element={
               <RoleRoute role="student">
                 <CoursesPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={`${MODULE_PATHS.student.courses}/:courseId`}
+            element={
+              <RoleRoute role="student">
+                <CourseDetailPage />
               </RoleRoute>
             }
           />

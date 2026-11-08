@@ -1,28 +1,65 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, BookOpen, CalendarClock, Layers } from 'lucide-react';
 import PageTitle from '@/components/shell/PageTitle';
+import Surface from '@/components/shell/Surface';
+import StatusChip from '@/components/shell/StatusChip';
+import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
+import { loadStudentCourses, shortDate } from '@/lib/studentCourses';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
-import {
-  COURSES,
-  STUDENT,
-  courseAverage,
-  courseAttendance,
-  courseSessions,
-  letterFor,
-  weekdayName,
-} from '@/lib/studentWorkspace';
-import CourseMaterialsPanel from '@/components/student/CourseMaterialsPanel';
 
 export default function CoursesPage() {
-  const credits = COURSES.reduce((total, course) => total + course.credits, 0);
+  const { user } = useAuth();
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const context = await loadStudentCourses(user?.id);
+      const courses = (context.courses || []).filter((course) => course.status === 'published');
+      const ids = courses.map((course) => course.id);
+
+      if (!ids.length) {
+        if (active) setData({ student: context.student, courses: [], modules: [], resources: [], assignments: [], professors: [] });
+        return;
+      }
+
+      const [modules, resources, assignments, professors] = await Promise.all([
+        base44.entities.CourseModule.filter({ course_id: { $in: ids } }, { limit: 400 }),
+        base44.entities.LearningResource.filter({ course_id: { $in: ids }, visible_to_students: true }, { limit: 600 }),
+        base44.entities.Assignment.filter({ course_id: { $in: ids } }, { sort: 'due_date', limit: 200 }),
+        base44.entities.Professor.list('-created_date', 100),
+      ]);
+
+      if (!active) return;
+      setData({
+        student: context.student,
+        courses,
+        modules: modules.items || [],
+        resources: resources.items || [],
+        assignments: assignments.items || [],
+        professors: professors || [],
+      });
+    })();
+    return () => { active = false; };
+  }, [user?.id]);
+
+  if (!data) {
+    return <div className="card-surface p-6 text-[12.5px] text-mutedink">Loading your courses…</div>;
+  }
+
+  const credits = data.courses.reduce((total, course) => total + (course.credits || 0), 0);
+  const today = new Date().toISOString().slice(0, 10);
+  const upcoming = data.assignments.filter((assignment) => assignment.due_date >= today);
 
   return (
     <div>
       <PageTitle
         eyebrow="Student workspace"
         title="My courses"
-        description="Every course you are enrolled in this semester, with the lecturer, your current average and attendance."
-        meta={[STUDENT.semester, `${credits} credits`, `${COURSES.length} courses`, 'Week 10 of 16']}
+        description="Every course you are enrolled in, with its modules, learning resources and assessment structure. Open a course to read, submit work, take quizzes and follow your gradebook."
+        meta={[`${data.courses.length} courses`, `${credits} credits`, `${data.modules.length} modules`, 'Fall Semester 2026']}
         actions={
           <Link to={P.student.timetable} className="btn-quiet">
             Open timetable
@@ -30,60 +67,70 @@ export default function CoursesPage() {
         }
       />
 
-      <CourseMaterialsPanel />
+      <div className="mb-4 grid gap-3 sm:grid-cols-3">
+        {[
+          ['Published resources', data.resources.length, 'across all modules'],
+          ['Assessed items', data.assignments.length, 'assignments and presentations'],
+          ['Upcoming deadlines', upcoming.length, 'still open'],
+        ].map(([label, value, note]) => (
+          <div key={label} className="card-surface px-4 py-3">
+            <p className="text-[10.5px] text-mutedink">{label}</p>
+            <p className="mt-1 text-[19px] font-semibold leading-none tabular-nums text-ink">{value}</p>
+            <p className="mt-1 text-[10.5px] text-mutedink">{note}</p>
+          </div>
+        ))}
+      </div>
+
+      {!data.courses.length && (
+        <Surface title="No courses yet">
+          <p className="text-[12px] text-mutedink">You are not enrolled in a published course. Contact the student office if this looks wrong.</p>
+        </Surface>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
-        {COURSES.map((course) => {
-          const average = courseAverage(course.id);
-          const attendance = courseAttendance(course.id);
-          const next = courseSessions(course.id)[0];
+        {data.courses.map((course) => {
+          const moduleCount = data.modules.filter((module) => module.course_id === course.id).length;
+          const resourceCount = data.resources.filter((resource) => resource.course_id === course.id).length;
+          const professor = data.professors.find((item) => item.id === course.professor_id);
+          const nextDue = data.assignments
+            .filter((assignment) => assignment.course_id === course.id && assignment.due_date >= today)
+            .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))[0];
+
           return (
             <section key={course.id} className="card-surface flex flex-col p-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-mutedink">
-                    {course.code} · {course.type}
+                    {course.code} · {course.level || 'intermediate'}
                   </p>
-                  <h2 className="mt-1 text-[15px] font-semibold leading-tight tracking-[-0.01em] text-ink">
-                    {course.title}
-                  </h2>
-                  <p className="mt-1 text-[11.5px] text-mutedink">{course.lecturer}</p>
+                  <h2 className="mt-1 text-[15px] font-semibold leading-tight tracking-[-0.01em] text-ink">{course.title}</h2>
+                  <p className="mt-1 text-[11.5px] text-mutedink">{professor?.full_name || 'Course instructor'}</p>
                 </div>
-                <span className="shrink-0 rounded-lg bg-royal/10 px-2 py-1 text-[10.5px] font-semibold text-royal">
+                <span className="shrink-0 rounded-lg bg-brand/10 px-2 py-1 text-[10.5px] font-semibold text-brand">
                   {course.credits} cr
                 </span>
               </div>
 
-              <p className="mt-3 text-[11.5px] leading-relaxed text-mutedink">{course.summary}</p>
+              <p className="mt-3 line-clamp-3 text-[11.5px] leading-relaxed text-mutedink">{course.description}</p>
 
-              <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-3">
-                <div>
-                  <dt className="text-[10.5px] text-mutedink">Current average</dt>
-                  <dd className="mt-0.5 text-[15px] font-semibold tabular-nums text-ink">
-                    {average.toFixed(1)}
-                    <span className="ml-1 text-[10.5px] font-medium text-mutedink">{letterFor(average)}</span>
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-[10.5px] text-mutedink">Attendance</dt>
-                  <dd
-                    className={`mt-0.5 text-[15px] font-semibold tabular-nums ${
-                      attendance >= 85 ? 'text-positive' : 'text-warning'
-                    }`}
-                  >
-                    {attendance}%
-                  </dd>
-                </div>
-              </dl>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <StatusChip tone="neutral">
+                  <Layers className="h-3 w-3" /> {moduleCount} modules
+                </StatusChip>
+                <StatusChip tone="neutral">
+                  <BookOpen className="h-3 w-3" /> {resourceCount} resources
+                </StatusChip>
+                {nextDue && (
+                  <StatusChip tone="warning">
+                    <CalendarClock className="h-3 w-3" /> due {shortDate(nextDue.due_date)}
+                  </StatusChip>
+                )}
+              </div>
 
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
-                <p className="text-[11px] text-mutedink">
-                  {next
-                    ? `Next: ${weekdayName(next.weekday)} ${next.start} · ${next.room}`
-                    : 'No sessions scheduled'}
-                </p>
-                <Link to={P.student.grades} className="link-quiet">
-                  Course record <ArrowRight className="h-3 w-3" />
+              <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
+                <p className="text-[11px] text-mutedink">{course.semester}</p>
+                <Link to={`${P.student.courses}/${course.id}`} className="link-quiet">
+                  Open course <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
             </section>

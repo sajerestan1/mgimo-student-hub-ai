@@ -21,10 +21,7 @@
       "type": "string"
     },
     "answers": {
-      "type": "array",
-      "items": {
-        "type": "number"
-      }
+      "type": "array"
     },
     "score": {
       "type": "number"
