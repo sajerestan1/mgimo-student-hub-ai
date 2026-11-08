@@ -42,6 +42,7 @@ import ProfessorGradingPage from '@/pages/professor/GradingPage';
 import ProfessorGradeEntryPage from '@/pages/professor/GradeEntryPage';
 import ProfessorBulkGradingPage from '@/pages/professor/BulkGradingPage';
 import ProfessorMaterialsPage from '@/pages/professor/MaterialsPage';
+import ProfessorAnnouncementsPage from '@/pages/professor/AnnouncementsPage';
 import ProfessorQuizzesPage from '@/pages/professor/QuizzesPage';
 import ProfessorStudentPerformancePage from '@/pages/professor/StudentPerformancePage';
 import ProfessorDiscussionsPage from '@/pages/professor/DiscussionsPage';
@@ -194,6 +195,7 @@ const AuthenticatedApp = () => {
             [MODULE_PATHS.professor.teaching, MyTeachingPage],
             [MODULE_PATHS.professor.courses, ProfessorCoursesPage],
             [MODULE_PATHS.professor.materials, ProfessorMaterialsPage],
+            [MODULE_PATHS.professor.announcements, ProfessorAnnouncementsPage],
             [MODULE_PATHS.professor.assignments, ProfessorAssignmentsPage],
             [MODULE_PATHS.professor.quizzes, ProfessorQuizzesPage],
             [MODULE_PATHS.professor.grading, ProfessorGradingPage],

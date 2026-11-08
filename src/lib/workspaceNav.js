@@ -37,6 +37,7 @@ export const NAV_BY_ROLE = {
         { to: P.professor.teaching, label: 'My Teaching', icon: 'Presentation' },
         { to: P.professor.courses, label: 'My Courses', icon: 'BookOpen' },
         { to: P.professor.materials, label: 'Course Materials', icon: 'FolderOpen' },
+        { to: P.professor.announcements, label: 'Announcements', icon: 'Megaphone' },
       ],
     },
     {

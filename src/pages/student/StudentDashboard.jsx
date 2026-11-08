@@ -10,6 +10,7 @@ import WellbeingCard from '@/components/student/WellbeingCard';
 import ExamPrepCard from '@/components/student/ExamPrepCard';
 import MentorsCard from '@/components/student/MentorsCard';
 import AnnouncementsCard from '@/components/student/AnnouncementsCard';
+import CourseAnnouncementsCard from '@/components/student/CourseAnnouncementsCard';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { STUDENT } from '@/lib/studentWorkspace';
 import { useAuth } from '@/lib/AuthContext';
@@ -74,6 +75,7 @@ export default function StudentDashboard() {
         <MentorsCard />
       </div>
 
+      <CourseAnnouncementsCard />
       <AnnouncementsCard />
     </div>
   );

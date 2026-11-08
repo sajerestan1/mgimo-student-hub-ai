@@ -21,6 +21,7 @@ export const MODULE_PATHS = {
     teaching: '/professor/teaching',
     courses: '/professor/courses',
     materials: '/professor/materials',
+    announcements: '/professor/announcements',
     assignments: '/professor/assignments',
     quizzes: '/professor/quizzes',
     grading: '/professor/grading',
