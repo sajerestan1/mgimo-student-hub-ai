@@ -28,6 +28,16 @@ import StudyRecommendations from '@/pages/student/StudyRecommendations';
 import StudentProfilePage from '@/pages/student/StudentProfilePage';
 import ProfessorDashboard from '@/pages/professor/ProfessorDashboard';
 import DeanDashboard from '@/pages/dean/DeanDashboard';
+import DeanFacultiesPage from '@/pages/dean/FacultiesPage';
+import DeanDepartmentsPage from '@/pages/dean/DepartmentsPage';
+import DeanProgrammesPage from '@/pages/dean/ProgrammesPage';
+import DeanStudentsPage from '@/pages/dean/StudentsPage';
+import DeanProfessorsPage from '@/pages/dean/ProfessorsPage';
+import DeanCoursesPage from '@/pages/dean/CoursesPage';
+import DeanPerformancePage from '@/pages/dean/PerformancePage';
+import DeanAttendancePage from '@/pages/dean/AttendanceAnalyticsPage';
+import DeanRiskPage from '@/pages/dean/RiskRadarPage';
+import DeanReportsPage from '@/pages/dean/ReportsPage';
 import Profile from '@/pages/account/Profile';
 import UserSettings from '@/pages/account/UserSettings';
 import NotificationsPage from '@/pages/account/NotificationsPage';
@@ -256,6 +266,30 @@ const AuthenticatedApp = () => {
               </RoleRoute>
             }
           />
+          {/* Dean modules: each one is a real page reading the authorised
+              institutional dataset. */}
+          {[
+            [MODULE_PATHS.dean.faculties, DeanFacultiesPage],
+            [MODULE_PATHS.dean.departments, DeanDepartmentsPage],
+            [MODULE_PATHS.dean.programmes, DeanProgrammesPage],
+            [MODULE_PATHS.dean.students, DeanStudentsPage],
+            [MODULE_PATHS.dean.professors, DeanProfessorsPage],
+            [MODULE_PATHS.dean.courses, DeanCoursesPage],
+            [MODULE_PATHS.dean.performance, DeanPerformancePage],
+            [MODULE_PATHS.dean.attendance, DeanAttendancePage],
+            [MODULE_PATHS.dean.risk, DeanRiskPage],
+            [MODULE_PATHS.dean.reports, DeanReportsPage],
+          ].map(([path, Component]) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <RoleRoute role="dean">
+                  <Component />
+                </RoleRoute>
+              }
+            />
+          ))}
           <Route
             path={MODULE_PATHS.student.notifications}
             element={

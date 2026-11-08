@@ -67,8 +67,10 @@ export const MODULE_INFO = {
   '/dean/reports': { title: 'Reports & Insights' },
 };
 
-// Paths rendered by the "in design" placeholder, registered as real routes.
-export const COMING_SOON_ROUTES = Object.keys(MODULE_INFO);
+// Paths still rendered by the "in design" placeholder. Every dean module now
+// has a real page, so the list is empty; a future module joins it here and is
+// registered by App.jsx as a placeholder until its page exists.
+export const COMING_SOON_ROUTES = [];
 
 export function modulePath(role, key) {
   const paths = MODULE_PATHS[role] || MODULE_PATHS.student;
