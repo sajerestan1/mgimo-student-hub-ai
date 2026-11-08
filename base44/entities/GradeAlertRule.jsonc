@@ -1,0 +1,91 @@
+{
+  "name": "GradeAlertRule",
+  "type": "object",
+  "properties": {
+    "professor_id": {
+      "type": "string"
+    },
+    "professor_name": {
+      "type": "string"
+    },
+    "professor_user_id": {
+      "type": "string"
+    },
+    "threshold": {
+      "type": "number",
+      "default": 60
+    },
+    "course_scope": {
+      "type": "string",
+      "default": "all"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "last_checked_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "professor_id",
+    "threshold"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "professor"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

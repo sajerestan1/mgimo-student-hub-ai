@@ -49,6 +49,7 @@ export const NAV_BY_ROLE = {
         { to: P.professor.bulkGrading, label: 'Bulk Grading', icon: 'FileSpreadsheet' },
         { to: P.professor.gradeEntry, label: 'Grade Entry', icon: 'PenLine' },
         { to: P.professor.attendance, label: 'Attendance Management', icon: 'CalendarCheck' },
+        { to: P.professor.alerts, label: 'Grade Alerts', icon: 'BellRing' },
       ],
     },
     {

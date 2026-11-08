@@ -46,6 +46,7 @@ import ProfessorAnnouncementsPage from '@/pages/professor/AnnouncementsPage';
 import ProfessorQuizzesPage from '@/pages/professor/QuizzesPage';
 import ProfessorStudentPerformancePage from '@/pages/professor/StudentPerformancePage';
 import ProfessorComparePage from '@/pages/professor/ComparePerformancePage';
+import ProfessorGradeAlertsPage from '@/pages/professor/GradeAlertsPage';
 import ProfessorDiscussionsPage from '@/pages/professor/DiscussionsPage';
 import ProfessorAiAssistant from '@/pages/professor/AiTeachingAssistant';
 import MyTeachingPage from '@/pages/professor/MyTeachingPage';
@@ -205,6 +206,7 @@ const AuthenticatedApp = () => {
             [MODULE_PATHS.professor.attendance, ProfessorAttendancePage],
             [MODULE_PATHS.professor.students, ProfessorStudentPerformancePage],
             [MODULE_PATHS.professor.compare, ProfessorComparePage],
+            [MODULE_PATHS.professor.alerts, ProfessorGradeAlertsPage],
             [MODULE_PATHS.professor.discussions, ProfessorDiscussionsPage],
             [MODULE_PATHS.professor.ai, ProfessorAiAssistant],
           ].map(([path, Component]) => (

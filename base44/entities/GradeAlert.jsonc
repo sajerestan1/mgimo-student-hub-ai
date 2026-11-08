@@ -1,0 +1,150 @@
+{
+  "name": "GradeAlert",
+  "type": "object",
+  "properties": {
+    "rule_id": {
+      "type": "string"
+    },
+    "professor_id": {
+      "type": "string"
+    },
+    "professor_user_id": {
+      "type": "string"
+    },
+    "student_id": {
+      "type": "string"
+    },
+    "student_name": {
+      "type": "string"
+    },
+    "student_group": {
+      "type": "string"
+    },
+    "course_id": {
+      "type": "string"
+    },
+    "course_code": {
+      "type": "string"
+    },
+    "course_title": {
+      "type": "string"
+    },
+    "grade": {
+      "type": "number"
+    },
+    "threshold": {
+      "type": "number"
+    },
+    "shortfall": {
+      "type": "number"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "warning",
+        "critical"
+      ],
+      "enumColors": [
+        "yellow",
+        "red"
+      ],
+      "default": "warning"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "acknowledged",
+        "resolved"
+      ],
+      "enumColors": [
+        "red",
+        "blue",
+        "green"
+      ],
+      "default": "open"
+    },
+    "detected_at": {
+      "type": "string"
+    },
+    "acknowledged_at": {
+      "type": "string"
+    },
+    "acknowledged_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "professor_id",
+    "student_id",
+    "course_id",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "deputy_dean"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "professor"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "dean"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

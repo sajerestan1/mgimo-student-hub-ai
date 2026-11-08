@@ -30,6 +30,7 @@ export const MODULE_PATHS = {
     attendance: '/professor/attendance',
     students: '/professor/student-performance',
     compare: '/professor/compare',
+    alerts: '/professor/alerts',
     discussions: '/professor/discussions',
     ai: '/professor/ai-assistant',
     profile: '/profile',
