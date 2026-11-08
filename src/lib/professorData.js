@@ -74,10 +74,10 @@ const items = (page) => page?.items || [];
 export async function loadTeaching(professorId, courses) {
   const ids = courses.map((c) => c.id);
   if (!ids.length) {
-    return { assignments: [], submissions: [], sessions: [], enrollments: [], attempts: [], quizzes: [], threads: [], attendance: [] };
+    return { assignments: [], submissions: [], sessions: [], enrollments: [], attempts: [], quizzes: [], threads: [], attendance: [], modules: [], progress: [] };
   }
 
-  const [assignments, submissions, sessions, enrollments, attempts, quizzes, threads, attendance] = await Promise.all([
+  const [assignments, submissions, sessions, enrollments, attempts, quizzes, threads, attendance, modules, progress] = await Promise.all([
     base44.entities.Assignment.filter({ professor_id: professorId }, { sort: '-due_date', limit: 100 }),
     base44.entities.Submission.filter({ course_id: { $in: ids } }, { sort: '-submitted_at', limit: 300 }),
     base44.entities.ClassSession.filter({ professor_id: professorId }, { sort: 'session_date', limit: 200 }),
@@ -86,6 +86,8 @@ export async function loadTeaching(professorId, courses) {
     base44.entities.Quiz.filter({ professor_id: professorId }, { limit: 40 }),
     base44.entities.Discussion.filter({ course_id: { $in: ids } }, { limit: 120 }),
     base44.entities.AttendanceRecord.filter({ course_id: { $in: ids } }, { limit: 400 }),
+    base44.entities.CourseModule.filter({ course_id: { $in: ids } }, { limit: 200 }),
+    base44.entities.ModuleProgress.filter({ course_id: { $in: ids } }, { limit: 400 }),
   ]);
 
   return {
@@ -97,6 +99,8 @@ export async function loadTeaching(professorId, courses) {
     quizzes: items(quizzes),
     threads: items(threads),
     attendance: items(attendance),
+    modules: items(modules),
+    progress: items(progress),
   };
 }
 

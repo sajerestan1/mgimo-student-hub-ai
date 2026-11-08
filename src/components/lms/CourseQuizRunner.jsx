@@ -28,6 +28,7 @@ export default function CourseQuizRunner({ course, quizzes, questions, attempts,
     setBusy(true);
     try {
       const current = answersRef.current;
+      const needsReview = quizQuestions.some((q) => !isObjective(q));
       const possible = quizQuestions.reduce((sum, q) => sum + (q.points || 1), 0);
       let earned = 0;
       let correct = 0;
@@ -62,9 +63,10 @@ export default function CourseQuizRunner({ course, quizzes, questions, attempts,
         answers: storedAnswers,
         score,
         max_score: 100,
+        review_status: needsReview ? 'pending_review' : 'auto',
         submitted_at: new Date().toISOString().slice(0, 10),
       });
-      setResult({ score, correct, possible, answers: { ...current } });
+      setResult({ score, correct, possible, needsReview, answers: { ...current } });
       await onRefresh();
     } finally {
       setBusy(false);
@@ -140,8 +142,13 @@ export default function CourseQuizRunner({ course, quizzes, questions, attempts,
                     <ul className="mt-2 space-y-0.5">
                       {own.map((attempt) => (
                         <li key={attempt.id} className="text-[11px] text-ink/70">
-                          Attempt — {attempt.score}% ({attempt.score >= (quiz.pass_mark || 60) ? 'pass' : 'below pass mark'}) on{' '}
-                          {shortDate(attempt.submitted_at)}
+                          Attempt — {attempt.score}% (
+                          {attempt.review_status === 'pending_review'
+                            ? 'written answers awaiting professor review'
+                            : attempt.score >= (quiz.pass_mark || 60)
+                              ? 'pass'
+                              : 'below pass mark'}{' '}
+                          ) on {shortDate(attempt.submitted_at)}
                         </li>
                       ))}
                     </ul>
@@ -231,10 +238,16 @@ export default function CourseQuizRunner({ course, quizzes, questions, attempts,
 
                         {result && (
                           <div className="mt-2 rounded-md bg-canvas px-2.5 py-2">
-                            <p className={`text-[11px] font-medium ${wasCorrect ? 'text-positive' : 'text-critical'}`}>
-                              {wasCorrect ? 'Correct' : 'Incorrect'}
+                            <p
+                              className={`text-[11px] font-medium ${
+                                !isObjective(question) ? 'text-warning' : wasCorrect ? 'text-positive' : 'text-critical'
+                              }`}
+                            >
+                              {!isObjective(question) ? 'Written answer — awaiting professor review' : wasCorrect ? 'Correct' : 'Incorrect'}
                             </p>
-                            <p className="mt-0.5 text-[11px] leading-relaxed text-mutedink">{question.explanation}</p>
+                            {question.explanation && (
+                              <p className="mt-0.5 text-[11px] leading-relaxed text-mutedink">{question.explanation}</p>
+                            )}
                           </div>
                         )}
                       </div>
@@ -247,8 +260,9 @@ export default function CourseQuizRunner({ course, quizzes, questions, attempts,
                         Score: {result.score}% ({result.correct} of {quizQuestions.length} correct)
                       </p>
                       <p className="mt-1 text-[11.5px] text-mutedink">
-                        {result.score >= (quiz.pass_mark || 60) ? 'Passed. ' : 'Below the pass mark. '}
-                        Your attempt has been recorded and is visible to your professor.
+                        {result.needsReview
+                          ? 'Written answers are not scored automatically — your professor marks them and the result is added to your gradebook once reviewed.'
+                          : `${result.score >= (quiz.pass_mark || 60) ? 'Passed. ' : 'Below the pass mark. '}Your attempt has been recorded and is visible to your professor.`}
                       </p>
                       <Button type="button" size="sm" variant="outline" className="mt-2" onClick={close}>
                         Close

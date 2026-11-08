@@ -3,9 +3,12 @@ import { Link } from 'react-router-dom';
 import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
 import StatusChip from '@/components/shell/StatusChip';
+import CourseGradebookTable from '@/components/professor/CourseGradebookTable';
+import QuizReviewPanel from '@/components/professor/QuizReviewPanel';
 import { base44 } from '@/api/base44Client';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { useProfessorContext, dateLabel, todayIso } from '@/lib/professorData';
+import { loadCourseGradebook } from '@/lib/academicRecords';
 
 const field = 'w-full rounded-lg border border-line bg-white px-3 py-2 text-[12px] text-ink focus:border-royal/40 focus:outline-none focus:ring-2 focus:ring-royal/10';
 
@@ -19,6 +22,8 @@ export default function ProfessorGradingPage() {
   const [busy, setBusy] = useState(false);
   const params = new URLSearchParams(window.location.search);
   const [assignmentFilter, setAssignmentFilter] = useState(params.get('assignment') || 'all');
+  const [courseId, setCourseId] = useState('');
+  const [courseData, setCourseData] = useState(null);
 
   const load = async () => {
     if (!professor) return;
@@ -33,6 +38,25 @@ export default function ProfessorGradingPage() {
   useEffect(() => {
     load();
   }, [professor?.id]);
+
+  useEffect(() => {
+    if (!courseId && courses.length) setCourseId(courses[0].id);
+  }, [courses, courseId]);
+
+  const loadCourse = async () => {
+    if (!courseId) return;
+    const data = await loadCourseGradebook(courseId);
+    const pending = data.attempts.filter((a) => a.review_status === 'pending_review');
+    const quizIds = [...new Set(pending.map((a) => a.quiz_id))];
+    const questionPage = quizIds.length
+      ? await base44.entities.QuizQuestion.filter({ quiz_id: { $in: quizIds } }, { sort: 'order', limit: 200 })
+      : { items: [] };
+    setCourseData({ ...data, pending, questions: questionPage.items || [] });
+  };
+
+  useEffect(() => {
+    loadCourse();
+  }, [courseId]);
 
   const rows = useMemo(() => submissions.filter((s) => {
     if (assignmentFilter !== 'all' && s.assignment_id !== assignmentFilter) return false;
@@ -63,6 +87,7 @@ export default function ProfessorGradingPage() {
       });
       setSelected(null);
       await load();
+      await loadCourse();
     } finally {
       setBusy(false);
     }
@@ -78,9 +103,16 @@ export default function ProfessorGradingPage() {
         description="Review student work, enter a score and return written feedback — the result appears in the student workspace straight away."
         meta={[`${submissions.filter((s) => s.status === 'submitted').length} awaiting`, `${submissions.filter((s) => typeof s.score === 'number').length} graded`]}
         actions={
-          <Link to={P.professor.assignments} className="btn-quiet">
-            Manage assignments
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <select value={courseId} onChange={(e) => setCourseId(e.target.value)} className="rounded-lg border border-line bg-white px-2.5 py-1.5 text-[11.5px] text-ink">
+              {courses.map((course) => (
+                <option key={course.id} value={course.id}>{course.code} · {course.title}</option>
+              ))}
+            </select>
+            <Link to={P.professor.assignments} className="btn-quiet">
+              Manage assignments
+            </Link>
+          </div>
         }
       />
 
@@ -164,6 +196,19 @@ export default function ProfessorGradingPage() {
           )}
         </Surface>
       </div>
+
+      {courseData && (
+        <div className="mt-4 space-y-4">
+          <CourseGradebookTable data={courseData} />
+          <QuizReviewPanel
+            attempts={courseData.pending}
+            quizzes={courseData.quizzes}
+            questions={courseData.questions}
+            professor={professor}
+            onReviewed={loadCourse}
+          />
+        </div>
+      )}
     </div>
   );
 }

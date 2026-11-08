@@ -8,7 +8,7 @@ export async function loadCourseWorkspace(courseId, userId) {
   const course = await base44.entities.Course.get(courseId);
 
   const [modulePage, resourcePage, assignmentPage, quizPage] = await Promise.all([
-    base44.entities.CourseModule.filter({ course_id: courseId }, { sort: 'module_number', limit: 40 }),
+    base44.entities.CourseModule.filter({ course_id: courseId, status: { $ne: 'draft' } }, { sort: 'module_number', limit: 40 }),
     base44.entities.LearningResource.filter({ course_id: courseId, visible_to_students: true }, { sort: 'module_number', limit: 100 }),
     base44.entities.Assignment.filter({ course_id: courseId }, { sort: 'due_date', limit: 20 }),
     base44.entities.Quiz.filter({ course_id: courseId, status: 'published' }, { limit: 10 }),
@@ -58,22 +58,37 @@ export const letterFor = (score) => {
 };
 
 const daysBetween = (a, b) => Math.round((new Date(a) - new Date(b)) / 86400000);
+const round1 = (value) => Math.round(value * 10) / 10;
 
-// Weighted gradebook. A category is only counted once it has an actual result:
-// missing work is displayed as missing and never averaged in as zero.
+export const ASSESSMENT_LABELS = {
+  coursework: 'Coursework',
+  essay: 'Essay',
+  project: 'Project',
+  presentation: 'Presentation',
+  problem_set: 'Problem set',
+  exam: 'Examination',
+  case_analysis: 'Case analysis',
+  policy_brief: 'Policy brief',
+  research_paper: 'Research paper',
+  comparative_analysis: 'Comparative analysis',
+  seminar_prep: 'Seminar preparation',
+};
+
+// Single source of truth for course grades: the student course page, the
+// Grades & Transcript page, the student dashboard and the professor gradebook
+// all read the result of this function.
+//
+// A category is only counted once it has an actual result. Missing work is
+// displayed as missing and never averaged in as zero, and a quiz attempt that
+// still needs manual marking counts as awaiting grading, not as a result.
 export function buildGradebook({ course, assignments, submissions, quizzes, attempts }) {
   const today = new Date().toISOString().slice(0, 10);
-  const ordered = [...assignments].sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-  const midterm = ordered[1];
-  const finalWork = ordered[2];
-  const coursework = ordered[0];
-
   const submissionFor = (assignmentId) => submissions.find((s) => s.assignment_id === assignmentId);
 
-  const assignmentRow = (assignment, category) => {
-    if (!assignment) return null;
+  const assignmentRow = (assignment) => {
     const submission = submissionFor(assignment.id);
     const graded = submission && typeof submission.score === 'number';
+    const max = assignment.max_score || 100;
     const overdue = assignment.due_date && assignment.due_date < today;
     const status = graded
       ? 'graded'
@@ -84,82 +99,109 @@ export function buildGradebook({ course, assignments, submissions, quizzes, atte
           : 'not_submitted';
     return {
       id: assignment.id,
+      kind: 'assignment',
       title: assignment.title,
-      category,
-      max: assignment.max_score || 100,
+      categoryLabel: ASSESSMENT_LABELS[assignment.assessment_type] || 'Assignment',
+      max,
       score: graded ? submission.score : null,
+      percent: graded ? round1((submission.score / max) * 100) : null,
       status,
       feedback: submission?.feedback || '',
+      gradedAt: submission?.graded_at || null,
       dueDate: assignment.due_date,
       submittedAt: submission?.submitted_at || null,
       late: submission && assignment.due_date ? daysBetween(submission.submitted_at, assignment.due_date) > 0 : false,
     };
   };
 
-  const quizRows = quizzes.map((quiz) => {
+  const quizRow = (quiz) => {
     const attempt = bestAttempt(attempts, quiz.id);
+    const pending = Boolean(attempt && attempt.review_status === 'pending_review');
+    const overdue = quiz.available_until && quiz.available_until < today;
     return {
       id: quiz.id,
+      kind: 'quiz',
       title: quiz.title,
-      category: 'Quizzes',
+      categoryLabel: 'Quiz',
       max: 100,
       score: attempt ? attempt.score : null,
-      status: attempt ? 'graded' : quiz.available_until && quiz.available_until < today ? 'missing' : 'not_submitted',
-      feedback: attempt ? `Best attempt: ${attempt.score}% on ${attempt.submitted_at}` : '',
+      percent: attempt && !pending ? attempt.score : null,
+      status: pending
+        ? 'awaiting_grading'
+        : attempt
+          ? 'graded'
+          : overdue
+            ? 'missing'
+            : 'not_submitted',
+      feedback: attempt?.feedback || (attempt ? `${attempt.score}% on ${attempt.submitted_at}` : ''),
+      gradedAt: attempt?.submitted_at || null,
       dueDate: quiz.available_until,
+      pendingReview: pending,
     };
-  });
+  };
 
-  const quizAverage = quizRows.filter((r) => r.score !== null);
-  const quizScore = quizAverage.length
-    ? quizAverage.reduce((sum, r) => sum + r.score, 0) / quizAverage.length
-    : null;
+  const examAssignments = assignments.filter((a) => a.assessment_type === 'exam');
+  const courseworkAssignments = assignments.filter((a) => a.assessment_type !== 'exam');
 
   const categories = [
     {
       key: 'assignments',
       label: 'Assignments',
       weight: course.weight_assignments ?? 30,
-      items: [assignmentRow(coursework, 'Assignments')].filter(Boolean),
-      score: assignmentRow(coursework, 'Assignments')?.score ?? null,
+      items: courseworkAssignments.map(assignmentRow),
     },
     {
       key: 'quizzes',
       label: 'Quizzes',
       weight: course.weight_quizzes ?? 20,
-      items: quizRows,
-      score: quizScore,
+      items: quizzes.map(quizRow),
     },
     {
-      key: 'midterm',
-      label: 'Midterm assessment',
-      weight: course.weight_midterm ?? 20,
-      items: [assignmentRow(midterm, 'Midterm assessment')].filter(Boolean),
-      score: assignmentRow(midterm, 'Midterm assessment')?.score ?? null,
-    },
-    {
-      key: 'final',
-      label: 'Final examination',
-      weight: course.weight_final ?? 30,
-      items: [assignmentRow(finalWork, 'Final examination')].filter(Boolean),
-      score: assignmentRow(finalWork, 'Final examination')?.score ?? null,
+      key: 'exams',
+      label: 'Examinations',
+      weight: (course.weight_midterm ?? 20) + (course.weight_final ?? 30),
+      items: examAssignments.map(assignmentRow),
     },
   ];
 
-  const scored = categories.filter((c) => c.score !== null);
-  const weightScored = scored.reduce((sum, c) => sum + c.weight, 0);
+  categories.forEach((category) => {
+    const counted = category.items.filter((item) => item.status === 'graded' && item.percent !== null);
+    category.counted = counted.length;
+    category.score = counted.length
+      ? round1(counted.reduce((sum, item) => sum + item.percent, 0) / counted.length)
+      : null;
+    category.average = category.score;
+  });
+
+  const scored = categories.filter((category) => category.score !== null);
+  const weightScored = scored.reduce((sum, category) => sum + category.weight, 0);
   const weighted = weightScored
-    ? scored.reduce((sum, c) => sum + c.score * c.weight, 0) / weightScored
+    ? round1(scored.reduce((sum, category) => sum + category.score * category.weight, 0) / weightScored)
     : null;
+
+  categories.forEach((category) => {
+    category.items.forEach((item) => {
+      item.contribution =
+        item.status === 'graded' && item.percent !== null && weightScored
+          ? round1((item.percent * (category.weight / Math.max(1, category.counted))) / weightScored)
+          : null;
+    });
+  });
+
+  const allItems = categories.flatMap((category) => category.items);
+  const totalWeight = categories.reduce((sum, category) => sum + category.weight, 0);
 
   return {
     categories,
+    rows: allItems,
     weighted,
     letter: letterFor(weighted),
     weightScored,
-    missing: categories.flatMap((c) => c.items).filter((i) => i.status === 'missing').length,
-    awaiting: categories.flatMap((c) => c.items).filter((i) => i.status === 'awaiting_grading').length,
-    totalWeight: categories.reduce((sum, c) => sum + c.weight, 0),
+    totalWeight,
+    missing: allItems.filter((item) => item.status === 'missing').length,
+    awaiting: allItems.filter((item) => item.status === 'awaiting_grading').length,
+    graded: allItems.filter((item) => item.status === 'graded').length,
+    pendingReview: allItems.filter((item) => item.pendingReview).length,
   };
 }
 
@@ -173,3 +215,9 @@ export function courseProgress(modules, progress) {
     percent: modules.length ? Math.round((completed / modules.length) * 100) : 0,
   };
 }
+
+export const completionStatus = (modulePercent, hasActivity) => {
+  if (modulePercent >= 100) return 'completed';
+  if (modulePercent > 0 || hasActivity) return 'in_progress';
+  return 'not_started';
+};

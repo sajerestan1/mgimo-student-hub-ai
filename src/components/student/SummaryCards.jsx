@@ -1,59 +1,62 @@
 import { BookOpen, CalendarCheck, ClipboardList, GraduationCap } from 'lucide-react';
-import { SUMMARY, daysUntil } from '@/lib/studentWorkspace';
 
-const CARDS = [
-  {
-    key: 'average',
-    label: 'Average mark',
-    icon: GraduationCap,
-    tile: 'bg-[#EEEBFE] text-[#5B4DEB]',
-    value: `${SUMMARY.averageMark.toFixed(1)}`,
-    suffix: '/ 100',
-    hint: `${SUMMARY.averageLetter} · weighted across ${SUMMARY.activeCourses} courses`,
-    delta: '+6.2 vs Spring 26',
-    deltaTone: 'text-positive',
-  },
-  {
-    key: 'courses',
-    label: 'Active courses',
-    icon: BookOpen,
-    tile: 'bg-[#EAF1FF] text-[#4F75FF]',
-    value: String(SUMMARY.activeCourses),
-    suffix: '',
-    hint: 'Fall Semester 2026 · 19 credits',
-    delta: 'Week 10 of 16',
-    deltaTone: 'text-mutedink',
-  },
-  {
-    key: 'assignments',
-    label: 'Assignments due',
-    icon: ClipboardList,
-    tile: 'bg-[#FEF3E6] text-[#C77C14]',
-    value: String(SUMMARY.assignmentsDue),
-    suffix: '',
-    hint: SUMMARY.nextDeadline
-      ? `Closest in ${daysUntil(SUMMARY.nextDeadline.dueDate)} days`
-      : 'Nothing outstanding',
-    delta: SUMMARY.nextDeadline ? SUMMARY.nextDeadline.courseId : 'All clear',
-    deltaTone: 'text-warning',
-  },
-  {
-    key: 'attendance',
-    label: 'Attendance',
-    icon: CalendarCheck,
-    tile: 'bg-[#E6F5F1] text-[#16A085]',
-    value: `${SUMMARY.attendanceRate}`,
-    suffix: '%',
-    hint: 'Requirement is 85% per course',
-    delta: 'All courses above 80%',
-    deltaTone: 'text-positive',
-  },
-];
+// Every figure is passed in from the student's own LMS records.
+export default function SummaryCards({ summary }) {
+  const next = summary.openAssignments[0];
+  const days = next ? Math.round((new Date(next.dueDate) - new Date()) / 86400000) : 0;
 
-export default function SummaryCards() {
+  const cards = [
+    {
+      key: 'average',
+      label: 'Average mark',
+      icon: GraduationCap,
+      tile: 'bg-[#EEEBFE] text-[#5B4DEB]',
+      value: summary.average === null ? '—' : summary.average.toFixed(1),
+      suffix: '/ 100',
+      hint: `${summary.averageLetter} · credit-weighted across ${summary.courseCount} courses`,
+      delta: `${summary.assessmentsRecorded} graded assessment${summary.assessmentsRecorded === 1 ? '' : 's'}`,
+      deltaTone: 'text-mutedink',
+    },
+    {
+      key: 'courses',
+      label: 'Active courses',
+      icon: BookOpen,
+      tile: 'bg-[#EAF1FF] text-[#4F75FF]',
+      value: String(summary.courseCount),
+      suffix: '',
+      hint: `${summary.credits} credits this semester`,
+      delta: `${summary.modulesCompleted}/${summary.modulesTotal} modules completed`,
+      deltaTone: 'text-mutedink',
+    },
+    {
+      key: 'assignments',
+      label: 'Assignments due',
+      icon: ClipboardList,
+      tile: 'bg-[#FEF3E6] text-[#C77C14]',
+      value: String(summary.openAssignments.length),
+      suffix: '',
+      hint: next
+        ? `Next in ${days} day${days === 1 ? '' : 's'} · ${next.courseId}`
+        : 'Everything recorded so far has been submitted',
+      delta: next ? next.title.slice(0, 34) : 'All clear',
+      deltaTone: next ? 'text-warning' : 'text-positive',
+    },
+    {
+      key: 'quizzes',
+      label: 'Quiz completion',
+      icon: CalendarCheck,
+      tile: 'bg-[#E6F5F1] text-[#16A085]',
+      value: `${summary.quizCompletion}`,
+      suffix: '%',
+      hint: `${summary.quizAttempted} of ${summary.quizTotal} course quizzes attempted`,
+      delta: summary.quizAverage === null ? 'No attempts yet' : `Average ${summary.quizAverage}%`,
+      deltaTone: 'text-positive',
+    },
+  ];
+
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      {CARDS.map((card) => {
+      {cards.map((card) => {
         const Icon = card.icon;
         return (
           <section key={card.key} className="card-surface flex flex-col gap-3 p-4">
@@ -70,7 +73,7 @@ export default function SummaryCards() {
               </p>
               <p className="mt-1.5 text-[11px] leading-snug text-mutedink">{card.hint}</p>
             </div>
-            <p className={`mt-auto text-[10.5px] font-medium ${card.deltaTone}`}>{card.delta}</p>
+            <p className={`mt-auto truncate text-[10.5px] font-medium ${card.deltaTone}`}>{card.delta}</p>
           </section>
         );
       })}

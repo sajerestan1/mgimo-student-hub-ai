@@ -32,6 +32,46 @@
     "max_score": {
       "type": "number"
     },
+    "review_status": {
+      "type": "string",
+      "enum": [
+        "auto",
+        "pending_review",
+        "reviewed"
+      ],
+      "enumColors": [
+        "green",
+        "yellow",
+        "blue"
+      ],
+      "default": "auto"
+    },
+    "manual_grades": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "number"
+          },
+          "points": {
+            "type": "number"
+          },
+          "feedback": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "feedback": {
+      "type": "string"
+    },
+    "reviewed_by": {
+      "type": "string"
+    },
+    "reviewed_at": {
+      "type": "string"
+    },
     "submitted_at": {
       "type": "string"
     },

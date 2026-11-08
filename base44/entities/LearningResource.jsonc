@@ -53,6 +53,12 @@
         "type": "string"
       }
     },
+    "file_url": {
+      "type": "string"
+    },
+    "file_name": {
+      "type": "string"
+    },
     "published_date": {
       "type": "string"
     },

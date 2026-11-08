@@ -14,13 +14,14 @@ function Bar({ label, value, hint, tone = 'bg-brand' }) {
   );
 }
 
+// Course indicators computed from the LMS records of each course.
 export default function CoursePerformancePanel({ rows }) {
   return (
-    <Surface title="Course performance" subtitle="Average marks, completion and engagement by course">
+    <Surface title="Course performance" subtitle="Average marks, module completion and engagement, from your live course records">
       {rows.length === 0 ? (
         <p className="py-4 text-[11.5px] text-mutedink">No graded work recorded yet.</p>
       ) : (
-        <div className="space-y-4">
+        <div className="grid gap-4 lg:grid-cols-2">
           {rows.map((row) => (
             <div key={row.id} className="rounded-lg border border-line px-3 py-2.5">
               <div className="mb-2 flex items-center justify-between gap-2">
@@ -28,10 +29,11 @@ export default function CoursePerformancePanel({ rows }) {
                 <span className="shrink-0 text-[10.5px] text-mutedink">{row.students} students</span>
               </div>
               <div className="space-y-2">
-                <Bar label="Average mark" value={row.mark} hint={`${row.mark}%`} />
-                <Bar label="Assignment completion" value={row.completion} hint={`${row.completion}%`} tone="bg-royal" />
-                <Bar label="Attendance" value={row.attendance} hint={`${row.attendance}%`} tone="bg-positive" />
-                <Bar label="Quiz average" value={row.quiz} hint={row.quiz ? `${row.quiz}%` : 'No attempts'} tone="bg-navy" />
+                <Bar label="Average assessment mark" value={row.mark ?? 0} hint={row.mark === null ? 'No marks' : `${row.mark}%`} />
+                <Bar label="Submissions received" value={row.completion} hint={`${row.completion}%`} tone="bg-violet" />
+                <Bar label="Modules completed" value={row.modules} hint={`${row.modules}%`} tone="bg-positive" />
+                <Bar label="Quiz participation" value={row.quiz} hint={`${row.quiz}%`} tone="bg-warning" />
+                <Bar label="Student discussion posts" value={row.participation} hint={`${row.participation}% of students`} tone="bg-navy" />
               </div>
             </div>
           ))}

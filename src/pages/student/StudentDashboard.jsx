@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarDays, Sparkles } from 'lucide-react';
 import AiSummaryCard from '@/components/student/AiSummaryCard';
@@ -12,12 +13,23 @@ import MentorsCard from '@/components/student/MentorsCard';
 import AnnouncementsCard from '@/components/student/AnnouncementsCard';
 import CourseAnnouncementsCard from '@/components/student/CourseAnnouncementsCard';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
-import { STUDENT } from '@/lib/studentWorkspace';
 import { useAuth } from '@/lib/AuthContext';
+import { loadStudentAcademics } from '@/lib/academicRecords';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
-  const accountName = user?.full_name || user?.email?.split('@')[0] || STUDENT.fullName;
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let alive = true;
+    loadStudentAcademics(user.id).then((result) => {
+      if (alive) setData(result);
+    });
+    return () => { alive = false; };
+  }, [user?.id]);
+
+  const accountName = user?.full_name || user?.email?.split('@')[0] || 'Student';
   const firstName = accountName.split(' ')[0];
   const initials = accountName
     .split(' ')
@@ -26,6 +38,12 @@ export default function StudentDashboard() {
     .map((part) => part[0])
     .join('')
     .toUpperCase();
+
+  if (!data) {
+    return <div className="card-surface p-6 text-[12.5px] text-mutedink">Loading your academic overview…</div>;
+  }
+
+  const { student, courses, summary } = data;
 
   return (
     <div className="space-y-4">
@@ -39,14 +57,16 @@ export default function StudentDashboard() {
               Welcome back, {firstName}!
             </h1>
             <p className="mt-0.5 text-[12px] text-mutedink">
-              Here is your academic overview for {STUDENT.semester.toLowerCase()}.
+              Here is your academic overview for {student?.program || 'this semester'}.
             </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-md border border-line bg-white px-2 py-1 text-[10.5px] text-mutedink">
-            {STUDENT.group} · Year {STUDENT.year}
-          </span>
+          {student && (
+            <span className="rounded-md border border-line bg-white px-2 py-1 text-[10.5px] text-mutedink">
+              {student.group_name || 'No group'} · Year {student.year || '—'}
+            </span>
+          )}
           <Link to={P.student.timetable} className="btn-quiet">
             <CalendarDays className="h-3.5 w-3.5" /> Timetable
           </Link>
@@ -56,17 +76,17 @@ export default function StudentDashboard() {
         </div>
       </header>
 
-      <AiSummaryCard />
-      <SummaryCards />
+      <AiSummaryCard summary={summary} />
+      <SummaryCards summary={summary} />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <DeadlinesCard />
+        <DeadlinesCard items={summary.openAssignments} />
         <TodayScheduleCard />
-        <RecentGradesCard />
+        <RecentGradesCard grades={summary.recentGrades} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <ProgressCard />
+        <ProgressCard courses={courses} summary={summary} />
         <WellbeingCard />
       </div>
 

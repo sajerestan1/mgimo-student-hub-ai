@@ -50,27 +50,59 @@ export default function ProfessorDashboard() {
     const performance = courses.filter((c) => data.enrollments.some((e) => e.course_id === c.id)).map((c) => {
       const courseSubs = data.submissions.filter((s) => s.course_id === c.id);
       const graded = courseSubs.filter((s) => typeof s.score === 'number');
-      const courseAssignments = data.assignments.filter((a) => a.course_id === c.id && a.status === 'published');
+      const courseAssignments = data.assignments.filter((a) => a.course_id === c.id && a.status !== 'draft');
       const roster = data.enrollments.filter((e) => e.course_id === c.id).length;
-      const courseAtt = data.attendance.filter((r) => r.course_id === c.id);
-      const present = courseAtt.filter((r) => r.status === 'present' || r.status === 'late').length;
       const courseAttempts = data.attempts.filter((a) => a.course_id === c.id && typeof a.score === 'number');
+      const courseModules = data.modules.filter((m) => m.course_id === c.id);
+      const courseProgress = data.progress.filter((p) => p.course_id === c.id && p.completed);
+      const coursePosts = data.threads.filter((t) => t.course_id === c.id && t.author_role === 'student');
       const mark = graded.length
         ? Math.round(graded.reduce((sum, s) => {
           const max = data.assignments.find((a) => a.id === s.assignment_id)?.max_score || 100;
           return sum + (s.score / max) * 100;
         }, 0) / graded.length)
-        : 0;
+        : null;
       return {
         id: c.id,
         code: `${c.code} · ${c.title}`,
         students: roster,
         mark,
-        completion: pct(courseSubs.length, roster * Math.max(1, courseAssignments.length)),
-        attendance: pct(present, courseAtt.length),
-        quiz: courseAttempts.length ? Math.round(courseAttempts.reduce((s, a) => s + a.score, 0) / courseAttempts.length) : 0,
+        completion: pct(courseSubs.length, Math.max(1, roster * Math.max(1, courseAssignments.length))),
+        modules: pct(courseProgress.length, Math.max(1, roster * Math.max(1, courseModules.length))),
+        quiz: pct(courseAttempts.length, Math.max(1, roster * Math.max(1, data.quizzes.filter((q) => q.course_id === c.id && q.status === 'published').length))),
+        participation: pct(new Set(coursePosts.map((p) => p.author_user_id || p.author_name)).size, Math.max(1, roster)),
       };
     });
+
+    const gradedSubs = data.submissions.filter((s) => typeof s.score === 'number');
+    const assignmentSlots = data.enrollments.reduce(
+      (sum, e) => sum + data.assignments.filter((a) => a.course_id === e.course_id && a.status !== 'draft').length,
+      0
+    );
+    const outstanding = data.assignments
+      .filter((a) => a.status !== 'draft' && a.due_date && a.due_date < today)
+      .reduce((sum, a) => {
+        const roster = data.enrollments.filter((e) => e.course_id === a.course_id).length;
+        const submitted = new Set(data.submissions.filter((s) => s.assignment_id === a.id).map((s) => s.student_id || s.student_name)).size;
+        return sum + Math.max(0, roster - submitted);
+      }, 0);
+    const averageMark = gradedSubs.length
+      ? Math.round(
+          gradedSubs.reduce((sum, s) => {
+            const max = data.assignments.find((a) => a.id === s.assignment_id)?.max_score || 100;
+            return sum + (s.score / max) * 100;
+          }, 0) / gradedSubs.length
+        )
+      : null;
+    const scoredAttempts = data.attempts.filter((a) => typeof a.score === 'number');
+    const quizSlots = data.enrollments.reduce(
+      (sum, e) => sum + data.quizzes.filter((q) => q.course_id === e.course_id && q.status === 'published').length,
+      0
+    );
+    const moduleSlots = data.enrollments.reduce(
+      (sum, e) => sum + data.modules.filter((m) => m.course_id === e.course_id).length,
+      0
+    );
 
     const unanswered = data.threads.filter(
       (t) => !t.parent_id && !data.threads.some((r) => r.parent_id === t.id && r.author_role === 'professor')
@@ -117,6 +149,14 @@ export default function ProfessorDashboard() {
         pending: pending.length,
         attendanceDue,
         upcoming: upcoming.length,
+        submissionRate: pct(data.submissions.length, Math.max(1, assignmentSlots)),
+        outstanding,
+        averageMark,
+        quizParticipation: pct(data.attempts.length, Math.max(1, quizSlots)),
+        quizAverage: scoredAttempts.length
+          ? Math.round(scoredAttempts.reduce((sum, a) => sum + (a.score || 0), 0) / scoredAttempts.length)
+          : null,
+        moduleCompletion: pct(data.progress.filter((p) => p.completed).length, Math.max(1, moduleSlots)),
       },
       queue,
       performance,
@@ -141,7 +181,7 @@ export default function ProfessorDashboard() {
         eyebrow="Professor workspace"
         title={`Welcome back, ${professor?.full_name || 'Professor'}`}
         description={`${professor?.title || 'Professor'} · ${facultyName} · ${departmentName}`}
-        meta={[SEMESTER, professor?.full_name ? `${professor.full_name.split(' ').slice(-1)[0]} teaching load` : 'Teaching load', 'Fictional demonstration data']}
+        meta={[SEMESTER, professor?.full_name ? `${professor.full_name.split(' ').slice(-1)[0]} teaching load` : 'Teaching load', 'Live LMS records']}
         actions={
           <>
             <Link to={P.professor.ai} className="btn-quiet">
@@ -177,9 +217,10 @@ export default function ProfessorDashboard() {
           subtitle="Your workspace reads and writes the same academic records as the student workspace"
         >
           <p className="text-[11.5px] leading-relaxed text-mutedink">
-            Grading a submission writes the score and feedback straight to the student record, attendance sessions you
-            complete appear in the student's attendance history, and published materials, assignments and quizzes are
-            visible to enrolled students immediately.
+            Every figure on this page is calculated from your live course records: enrolments, submissions, quiz
+            attempts, module progress and discussion posts. No performance number is hardcoded. Grading a submission
+            writes the score and feedback straight to the student record, and published resources, assignments and
+            quizzes are visible to enrolled students immediately.
           </p>
         </Surface>
 

@@ -2,14 +2,16 @@ export default function TeachingKpis({ stats }) {
   const rows = [
     ['Courses taught', stats.courses, 'This semester'],
     ['Students enrolled', stats.students, 'Across your courses'],
-    ['Classes today', stats.today, 'Scheduled sessions'],
-    ['To grade', stats.pending, 'Submissions waiting'],
-    ['Attendance due', stats.attendanceDue, 'Sessions not completed'],
-    ['Upcoming assessments', stats.upcoming, 'Published, not yet due'],
+    ['Submission rate', `${stats.submissionRate}%`, 'Work submitted'],
+    ['Outstanding submissions', stats.outstanding, 'Past due, not submitted'],
+    ['Average assessment', stats.averageMark === null ? '—' : `${stats.averageMark}%`, 'Graded work'],
+    ['Quiz participation', `${stats.quizParticipation}%`, 'Students who attempted'],
+    ['Quiz average', stats.quizAverage === null ? '—' : `${stats.quizAverage}%`, 'All attempts'],
+    ['Module completion', `${stats.moduleCompletion}%`, 'Marked complete'],
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {rows.map(([label, value, hint]) => (
         <div key={label} className="card-surface px-4 py-3.5">
           <p className="text-[11px] text-mutedink">{label}</p>
