@@ -217,7 +217,7 @@ export default function UserManagement() {
 
       {selected && (
         <UserRecordPanel
-          key={selected.id + selected.account_status + String(version)}
+          key={selected.id}
           account={selected}
           faculties={data.faculties}
           departments={data.departments}

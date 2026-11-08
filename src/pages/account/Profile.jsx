@@ -81,13 +81,9 @@ export default function Profile() {
       <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
         <Surface title="Identity" subtitle="Personal details you may keep up to date">
           <div className="mb-4 flex items-center gap-3">
-            {user?.photo_uri ? (
-              <span className="text-[13px] text-mutedink">Your photo is set.</span>
-            ) : (
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand/10 text-[15px] font-semibold text-brand">
-                {initialsOf(displayName)}
-              </span>
-            )}
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand/10 text-[15px] font-semibold text-brand">
+              {initialsOf(displayName)}
+            </span>
             <div className="min-w-0">
               <p className="truncate text-[16px] font-semibold tracking-tight text-ink">{displayName}</p>
               <p className="truncate text-[14px] text-mutedink">{user?.email || 'No email on this account'}</p>
