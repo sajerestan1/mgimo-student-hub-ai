@@ -1,65 +1,98 @@
+import { useEffect, useState } from 'react';
 import PageTitle from '@/components/shell/PageTitle';
-import ProgressBar from '@/components/shell/ProgressBar';
+import Surface from '@/components/shell/Surface';
 import StatusChip from '@/components/shell/StatusChip';
 import CourseQuizzesPanel from '@/components/student/CourseQuizzesPanel';
-import { upcomingAssessments, courseById, formatDate, daysUntil } from '@/lib/studentWorkspace';
+import { daysUntil, dueLabel, loadStudentPortal, shortDate } from '@/lib/studentPortal';
 
 export default function QuizzesPage() {
+  const [context, setContext] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    loadStudentPortal()
+      .then(setContext)
+      .catch(() => setError('Your assessments could not be loaded. Please refresh the page.'));
+  }, []);
+
+  if (error) return <p className="card-surface px-5 py-6 text-[15px] text-critical">{error}</p>;
+  if (!context) return <div className="h-64 animate-pulse rounded-xl bg-white" />;
+
+  const quizzes = context.quizzes || [];
+  const attempted = quizzes.filter((quiz) => quiz.attempts > 0);
+  const closing = quizzes
+    .filter((quiz) => quiz.state !== 'graded' && daysUntil(quiz.availableUntil) !== null && daysUntil(quiz.availableUntil) >= 0)
+    .sort((a, b) => daysUntil(a.availableUntil) - daysUntil(b.availableUntil));
+
+  if (!context.linked) {
+    return (
+      <div>
+        <PageTitle eyebrow="Student workspace" title="Quizzes & exams" />
+        <p className="card-surface px-5 py-8 text-[15px] text-mutedink">
+          {context.scopeNote || 'Your account is not linked to a student record yet.'}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageTitle
         eyebrow="Student workspace"
         title="Quizzes & exams"
-        description="Scheduled assessments for your courses, their format, and how far your preparation has progressed."
-        meta={[`${upcomingAssessments.length} scheduled`, 'Next three weeks', 'Fall Semester 2026']}
+        description="Published assessments for your courses, with availability, your attempts and the result recorded for each."
+        meta={[`${quizzes.length} published`, `${attempted.length} attempted`, `${closing.length} closing soon`]}
       />
+
+      <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[
+          ['Published', String(quizzes.length), 'in your courses'],
+          ['Attempted', String(attempted.length), 'with a recorded attempt'],
+          ['Closing soon', String(closing.length), 'still open'],
+          ['Graded', String(quizzes.filter((quiz) => quiz.state === 'graded').length), 'results recorded'],
+        ].map(([label, value, hint]) => (
+          <div key={label} className="card-surface px-4 py-3.5">
+            <p className="text-[13px] text-mutedink">{label}</p>
+            <p className="mt-1 text-[26px] font-semibold leading-none tracking-[-0.02em] tabular-nums text-ink">{value}</p>
+            <p className="mt-1.5 text-[13px] text-mutedink">{hint}</p>
+          </div>
+        ))}
+      </div>
+
+      {quizzes.length === 0 && (
+        <p className="card-surface mb-4 px-5 py-6 text-[15px] text-mutedink">
+          No quizzes have been published for your courses yet.
+        </p>
+      )}
 
       <CourseQuizzesPanel />
 
-      <div className="card-surface divide-y divide-line overflow-hidden">
-        {upcomingAssessments.map((assessment) => {
-          const course = courseById(assessment.courseId);
-          const days = daysUntil(assessment.date);
-          return (
-            <div key={assessment.id} className="px-5 py-4">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+      {attempted.length > 0 && (
+        <Surface title="Your attempt record" subtitle="Attempts used and the result recorded for each quiz" bodyClassName="px-0 pb-0 pt-0">
+          <ul className="divide-y divide-line">
+            {attempted.map((quiz) => (
+              <li key={quiz.id} className="flex flex-col gap-1.5 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded bg-royal/10 px-1.5 py-0.5 text-[10px] font-medium text-royal">
-                      {assessment.kind}
-                    </span>
-                    <p className="text-[12.5px] font-semibold text-ink">{assessment.title}</p>
-                  </div>
-                  <p className="mt-1 text-[11px] text-mutedink">
-                    {course.code} · {course.title} · {assessment.weight}
+                  <p className="text-[15px] font-medium text-ink">{quiz.title}</p>
+                  <p className="mt-0.5 text-[13px] text-mutedink">
+                    {quiz.courseCode} · attempts {quiz.attempts}/{quiz.attemptLimit} · pass mark {quiz.passMark}%
+                    {quiz.availableUntil ? ` · closes ${shortDate(quiz.availableUntil)}` : ''}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-mutedink">
-                    {formatDate(assessment.date, { weekday: 'short', day: 'numeric', month: 'short' })} · {assessment.start} ·{' '}
-                    {assessment.room}
-                  </p>
-                  <p className="mt-1 text-[10.5px] text-mutedink">{assessment.format}</p>
                 </div>
-                <div className="flex shrink-0 flex-col items-start gap-1 sm:items-end">
-                  <StatusChip tone={days <= 7 ? 'warning' : 'neutral'}>
-                    {days === 0 ? 'Today' : `In ${days} days`}
-                  </StatusChip>
-                  <span className="text-[10.5px] text-mutedink">{assessment.preparation}% prepared</span>
-                </div>
-              </div>
-              <ProgressBar
-                value={assessment.preparation}
-                tone={assessment.preparation >= 60 ? 'positive' : assessment.preparation >= 35 ? 'brand' : 'warning'}
-                className="mt-3 h-1"
-              />
-            </div>
-          );
-        })}
-      </div>
+                <StatusChip tone={quiz.score === null ? 'warning' : quiz.score >= quiz.passMark ? 'positive' : 'critical'}>
+                  {quiz.score === null ? 'Awaiting grade' : `${quiz.score}%`}
+                </StatusChip>
+              </li>
+            ))}
+          </ul>
+        </Surface>
+      )}
 
-      <p className="mt-4 rounded-lg border border-line bg-white px-4 py-3 text-[11px] leading-relaxed text-mutedink">
-        Dates and rooms are final for the demonstration semester. Preparation percentages are the student’s own
-        tracker entries, not an automatic estimate.
-      </p>
+      {closing.length > 0 && (
+        <p className="mt-4 rounded-lg border border-line bg-white px-4 py-3 text-[14px] leading-relaxed text-mutedink">
+          Still open: {closing.map((quiz) => `${quiz.courseCode} — ${dueLabel(quiz.availableUntil).toLowerCase()}`).join(', ')}.
+        </p>
+      )}
     </div>
   );
 }

@@ -134,13 +134,13 @@ export async function buildStudentContext(base44, user) {
 
   const [assignmentPage, submissionPage, quizPage, attemptPage, modulePage] = await Promise.all([
     svc.entities.Assignment.filter({ course_id: { $in: ids }, status: { $in: ['published', 'closed'] } }, { sort: 'due_date', limit: 200 }),
-    svc.entities.Submission.filter({ student_user_id: user.id }, { limit: 300 }),
+    svc.entities.Submission.filter({ $or: [{ student_user_id: user.id }, { student_id: student.id }] }, { limit: 300 }),
     svc.entities.Quiz.filter({ course_id: { $in: ids }, status: 'published' }, { limit: 60 }),
-    svc.entities.QuizAttempt.filter({ student_user_id: user.id }, { limit: 200 }),
+    svc.entities.QuizAttempt.filter({ $or: [{ student_user_id: user.id }, { student_id: student.id }] }, { limit: 200 }),
     svc.entities.CourseModule.filter({ course_id: { $in: ids }, status: { $ne: 'draft' } }, { sort: 'module_number', limit: 300 }),
   ]);
   const [progressPage, attendancePage, sessionPage, announcementPage] = await Promise.all([
-    svc.entities.ModuleProgress.filter({ student_user_id: user.id }, { limit: 300 }),
+    svc.entities.ModuleProgress.filter({ $or: [{ student_user_id: user.id }, { student_id: student.id }] }, { limit: 300 }),
     svc.entities.AttendanceRecord.filter({ student_id: student.id }, { limit: 2000 }),
     svc.entities.ClassSession.filter({ course_id: { $in: ids } }, { sort: 'session_date', limit: 300 }),
     svc.entities.Announcement.filter({ status: 'published' }, { sort: '-publish_date', limit: 100 }),
@@ -294,7 +294,12 @@ export async function buildStudentContext(base44, user) {
       ? round1(scoredCourses.reduce((sum, course) => sum + course.weighted, 0) / scoredCourses.length)
       : null;
 
-  context.courses = courses.map(({ rows, ...course }) => course);
+  context.courses = courses.map((course) => ({
+    ...course,
+    gradedItems: course.rows
+      .filter((row) => row.status === 'graded')
+      .map((row) => ({ title: row.title, score: row.score, max: row.max })),
+  }));
   context.assignments = assignmentRows;
   context.quizzes = quizRows;
   context.recentGrades = recentGrades;

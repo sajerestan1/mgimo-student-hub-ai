@@ -1,78 +1,104 @@
+import { useEffect, useState } from 'react';
 import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
-import ProgressBar from '@/components/shell/ProgressBar';
-import {
-  ATTENDANCE,
-  ATTENDANCE_REQUIREMENT,
-  COURSES,
-  STUDENT,
-  attendanceRate,
-  courseAttendance,
-} from '@/lib/studentWorkspace';
+import { loadStudentPortal } from '@/lib/studentPortal';
+
+const STATS = [
+  ['present', 'Present', 'text-positive'],
+  ['late', 'Late', 'text-warning'],
+  ['excused', 'Excused', 'text-brand'],
+  ['absent', 'Absent', 'text-critical'],
+];
 
 export default function AttendancePage() {
+  const [context, setContext] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    loadStudentPortal()
+      .then(setContext)
+      .catch(() => setError('Your attendance record could not be loaded. Please refresh the page.'));
+  }, []);
+
+  if (error) return <p className="card-surface px-5 py-6 text-[15px] text-critical">{error}</p>;
+  if (!context) return <div className="h-64 animate-pulse rounded-xl bg-white" />;
+
+  const { overall, held, byCourse } = context.attendance;
+  const recorded = byCourse.filter((course) => course.total > 0);
+
+  if (!context.linked || !held) {
+    return (
+      <div>
+        <PageTitle eyebrow="Student workspace" title="Attendance" />
+        <p className="card-surface px-5 py-8 text-[15px] leading-relaxed text-mutedink">
+          {context.linked
+            ? 'No attendance has been registered for you yet. Your rate appears here once a session register is recorded.'
+            : context.scopeNote || 'Your account is not linked to a student record yet.'}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageTitle
         eyebrow="Student workspace"
         title="Attendance"
-        description="Your register for each course this semester. The requirement is 85% per course to sit the assessment."
-        meta={[`${attendanceRate}% overall`, `${ATTENDANCE_REQUIREMENT}% required`, STUDENT.semester]}
+        description="Sessions registered by your instructors, counted from the official class register."
+        meta={[`${held} sessions registered`, `${byCourse.length} courses in scope`]}
       />
 
-      <div className="card-surface mb-4 flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-[11px] text-mutedink">Overall attendance</p>
-          <p className="mt-1 text-[26px] font-semibold leading-none tabular-nums text-ink">
-            {attendanceRate}
-            <span className="text-[13px] font-medium text-mutedink">%</span>
+      <div className="mb-4 grid gap-4 lg:grid-cols-[1fr_1.4fr]">
+        <div className="card-surface flex flex-col justify-center px-5 py-6">
+          <p className="text-[13px] font-medium text-mutedink">Attendance rate</p>
+          <p className="mt-1 text-[32px] font-semibold leading-none tracking-[-0.02em] tabular-nums text-ink">
+            {overall}%
+          </p>
+          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-line">
+            <div
+              className={`h-full rounded-full ${overall >= 80 ? 'bg-positive' : overall >= 60 ? 'bg-warning' : 'bg-critical'}`}
+              style={{ width: `${overall}%` }}
+            />
+          </div>
+          <p className="mt-3 text-[13px] leading-relaxed text-mutedink">
+            Late and excused sessions count as attended; absences do not.
           </p>
         </div>
-        <div className="w-full sm:max-w-md">
-          <ProgressBar
-            value={attendanceRate}
-            tone={attendanceRate >= ATTENDANCE_REQUIREMENT ? 'positive' : 'warning'}
-          />
-          <p className="mt-1.5 text-[10.5px] text-mutedink">
-            Present, late and excused sessions all count as attendance. Absences without a document do not.
-          </p>
+
+        <div className="card-surface overflow-hidden">
+          <div className="grid grid-cols-2 gap-px bg-line sm:grid-cols-4">
+            {STATS.map(([key, label, tone]) => (
+              <div key={key} className="bg-white px-4 py-4">
+                <p className="text-[13px] text-mutedink">{label}</p>
+                <p className={`mt-1 text-[22px] font-semibold tabular-nums ${tone}`}>
+                  {byCourse.reduce((sum, course) => sum + (course[key] || 0), 0)}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      <Surface title="By course" subtitle="Counters from the course register" bodyClassName="px-0 pb-0 pt-1">
-        <ul className="divide-y divide-line">
-          {COURSES.map((course) => {
-            const record = ATTENDANCE[course.id];
-            const rate = courseAttendance(course.id);
-            const below = rate < ATTENDANCE_REQUIREMENT;
-            return (
-              <li key={course.id} className="px-5 py-4">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-[12.5px] font-semibold text-ink">
-                      {course.code} · {course.title}
-                    </p>
-                    <p className="mt-0.5 text-[10.5px] text-mutedink">
-                      {record.present} present · {record.late} late · {record.absent} absent · {record.excused} excused
-                    </p>
-                  </div>
-                  <p
-                    className={`text-[15px] font-semibold tabular-nums ${below ? 'text-warning' : 'text-positive'}`}
-                  >
-                    {rate}%
+      <Surface title="By course" subtitle="Only courses with a recorded register are listed" bodyClassName="px-0 pb-0 pt-0">
+        {recorded.length ? (
+          <ul className="divide-y divide-line">
+            {recorded.map((course) => (
+              <li key={course.code} className="flex items-center justify-between gap-3 px-5 py-3">
+                <div className="min-w-0">
+                  <p className="truncate text-[15px] font-medium text-ink">
+                    {course.code} · {course.title}
+                  </p>
+                  <p className="mt-0.5 text-[13px] text-mutedink">
+                    {course.present} present · {course.late} late · {course.excused} excused · {course.absent} absent
                   </p>
                 </div>
-                <ProgressBar value={rate} tone={below ? 'warning' : 'positive'} className="mt-2 h-1" />
-                {below && (
-                  <p className="mt-2 rounded-md bg-[#FEF3E6] px-2 py-1.5 text-[10.5px] leading-relaxed text-[#8A5A11]">
-                    Below the {ATTENDANCE_REQUIREMENT}% requirement — speak to the course lecturer before the
-                    assessment period.
-                  </p>
-                )}
+                <p className="shrink-0 text-[15px] font-semibold tabular-nums text-ink">{course.rate}%</p>
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ul>
+        ) : (
+          <p className="px-5 py-6 text-[15px] text-mutedink">No course-level register has been recorded yet.</p>
+        )}
       </Surface>
     </div>
   );

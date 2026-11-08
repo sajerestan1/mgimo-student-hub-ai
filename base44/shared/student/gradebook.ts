@@ -119,6 +119,15 @@ export function buildGradebook({ course, assignments, submissions, quizzes, atte
     ? round1(scored.reduce((sum, category) => sum + category.score * category.weight, 0) / weightScored)
     : null;
 
+  categories.forEach((category) => {
+    category.items.forEach((item) => {
+      item.contribution =
+        item.status === 'graded' && item.percent !== null && weightScored
+          ? round1((item.percent * (category.weight / Math.max(1, category.counted))) / weightScored)
+          : null;
+    });
+  });
+
   const allItems = categories.flatMap((category) => category.items);
 
   return {

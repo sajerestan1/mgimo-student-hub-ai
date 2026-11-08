@@ -14,7 +14,8 @@ import { useAuth } from '@/lib/AuthContext';
 import { useWorkspace } from '@/lib/workspaceRole';
 import { NAV_BY_ROLE } from '@/lib/workspaceNav';
 import { NOTIFICATIONS } from '@/lib/demoUniversity';
-import { STUDENT } from '@/lib/studentWorkspace';
+import useStudentProfile from '@/hooks/useStudentProfile';
+import { loadStudentPortal } from '@/lib/studentPortal';
 
 const initials = (name) =>
   name
@@ -49,7 +50,30 @@ export default function TopBar({ onOpenMobile }) {
   const title = activeItem?.label || workspace.title;
   const notificationsPath = workspace.role === 'student' ? '/student/notifications' : '/notifications';
   const isStudent = workspace.role === 'student';
-  const context = isStudent ? `${STUDENT.programme} · Group ${STUDENT.group}` : workspace.title;
+  const studentProfile = useStudentProfile(isStudent);
+  const studentYear = studentProfile
+    ? [studentProfile.year ? `Year ${studentProfile.year}` : '', studentProfile.group_name].filter(Boolean).join(' · ')
+    : '';
+  const context =
+    (isStudent
+      ? [studentProfile?.program, studentProfile?.group_name ? `Group ${studentProfile.group_name}` : '']
+          .filter(Boolean)
+          .join(' · ')
+      : '') || workspace.title;
+
+  // The dropdown shows this student's own announcements, never a sample feed.
+  const [studentUpdates, setStudentUpdates] = useState([]);
+  const loadUpdates = () => {
+    if (!isStudent) return;
+    loadStudentPortal()
+      .then((data) => setStudentUpdates((data.announcements || []).slice(0, 3).map((item) => ({
+        id: item.id,
+        title: item.title,
+        time: `${item.author} · ${item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}`,
+      }))))
+      .catch(() => {});
+  };
+  const notificationRows = isStudent ? studentUpdates : NOTIFICATIONS;
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur">
@@ -96,7 +120,7 @@ export default function TopBar({ onOpenMobile }) {
           <LifeBuoy className="h-[18px] w-[18px]" />
         </button>
 
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={(open) => { if (open) loadUpdates(); }}>
           <DropdownMenuTrigger asChild>
             <button type="button" className="icon-btn relative" aria-label="Notifications">
               <Bell className="h-[18px] w-[18px]" />
@@ -117,7 +141,7 @@ export default function TopBar({ onOpenMobile }) {
               </button>
             </div>
             <DropdownMenuSeparator />
-            {NOTIFICATIONS.map((item) => (
+            {notificationRows.map((item) => (
               <DropdownMenuItem key={item.id} onSelect={() => navigate(notificationsPath)} className="items-start gap-2.5 py-2">
                 <span className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', toneDot[item.tone] || 'bg-brand')} />
                 <span className="min-w-0">
@@ -151,7 +175,7 @@ export default function TopBar({ onOpenMobile }) {
                   {displayName}
                 </span>
                 <span className="block truncate text-[13px] leading-tight text-mutedink">
-                  {isStudent ? `Year ${STUDENT.year} · ${STUDENT.group}` : workspace.label}
+                  {isStudent ? studentYear || workspace.label : workspace.label}
                 </span>
               </span>
             </button>

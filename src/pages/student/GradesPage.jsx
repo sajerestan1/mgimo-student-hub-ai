@@ -6,8 +6,7 @@ import StatusChip from '@/components/shell/StatusChip';
 import AssessmentRows from '@/components/student/AssessmentRows';
 import TranscriptTable from '@/components/student/TranscriptTable';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
-import { useAuth } from '@/lib/AuthContext';
-import { loadStudentAcademics } from '@/lib/academicRecords';
+import { loadStudentPortal } from '@/lib/studentPortal';
 import { letterFor } from '@/lib/lms';
 
 const COMPLETION = {
@@ -24,21 +23,43 @@ const standingFor = (summary) => {
 };
 
 export default function GradesPage() {
-  const { user } = useAuth();
-  const [data, setData] = useState(null);
+  const [context, setContext] = useState(null);
 
   useEffect(() => {
-    if (!user?.id) return;
     let alive = true;
-    loadStudentAcademics(user.id).then((result) => {
-      if (alive) setData(result);
+    loadStudentPortal().then((data) => {
+      if (alive) setContext(data);
     });
     return () => { alive = false; };
-  }, [user?.id]);
+  }, []);
 
-  if (!data) return <p className="py-10 text-center text-[12px] text-mutedink">Loading your academic record…</p>;
+  if (!context) return <p className="py-10 text-center text-[15px] text-mutedink">Loading your academic record…</p>;
 
-  const { student, courses, summary } = data;
+  // One shape, one source: the same gradebook result the dashboard reads.
+  const student = context.profile;
+  const courses = context.courses.map((course) => ({
+    course: { id: course.id, code: course.code, title: course.title },
+    professor: course.professor,
+    credits: course.credits,
+    gradebook: {
+      rows: course.rows,
+      weighted: course.weighted,
+      awaiting: course.awaiting,
+      missing: course.missing,
+      weightScored: course.weightScored,
+      graded: course.graded,
+    },
+    moduleProgress: course.moduleProgress,
+    completion: course.completion,
+  }));
+  const summary = {
+    ...context.summary,
+    assessmentsRecorded: context.summary.graded,
+    missing: context.courses.reduce((sum, course) => sum + course.missing, 0),
+    modulePercent: context.summary.modulesTotal
+      ? Math.round((context.summary.modulesCompleted / context.summary.modulesTotal) * 100)
+      : 0,
+  };
 
   if (!student) {
     return (

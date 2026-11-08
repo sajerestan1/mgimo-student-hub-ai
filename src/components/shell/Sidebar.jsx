@@ -40,7 +40,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 import { NAV_BY_ROLE } from '@/lib/workspaceNav';
 import { useWorkspace } from '@/lib/workspaceRole';
-import { STUDENT } from '@/lib/studentWorkspace';
+import useStudentProfile from '@/hooks/useStudentProfile';
 import BrandMark from './BrandMark';
 
 const ICONS = {
@@ -168,7 +168,8 @@ export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollap
     .map((group) => ({ ...group, items: group.items.filter((item) => !item.adminOnly || isAdmin) }))
     .filter((group) => group.items.length);
   const isStudent = workspace.role === 'student';
-  const secondary = isStudent ? STUDENT.programme : workspace.title;
+  const studentProfile = useStudentProfile(isStudent);
+  const secondary = isStudent ? studentProfile?.program || 'Student workspace' : workspace.title;
 
   return (
     <>

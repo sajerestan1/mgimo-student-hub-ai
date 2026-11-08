@@ -1,102 +1,77 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarDays, Sparkles } from 'lucide-react';
-import AiSummaryCard from '@/components/student/AiSummaryCard';
-import SummaryCards from '@/components/student/SummaryCards';
-import DeadlinesCard from '@/components/student/DeadlinesCard';
-import TodayScheduleCard from '@/components/student/TodayScheduleCard';
-import RecentGradesCard from '@/components/student/RecentGradesCard';
-import ProgressCard from '@/components/student/ProgressCard';
-import WellbeingCard from '@/components/student/WellbeingCard';
-import ExamPrepCard from '@/components/student/ExamPrepCard';
-import MentorsCard from '@/components/student/MentorsCard';
-import AnnouncementsCard from '@/components/student/AnnouncementsCard';
-import CourseAnnouncementsCard from '@/components/student/CourseAnnouncementsCard';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
-import { useAuth } from '@/lib/AuthContext';
-import { loadStudentAcademics } from '@/lib/academicRecords';
+import { loadStudentPortal } from '@/lib/studentPortal';
+import WelcomeHeader from '@/components/student/dashboard/WelcomeHeader';
+import SnapshotStrip from '@/components/student/dashboard/SnapshotStrip';
+import TodaysClasses from '@/components/student/dashboard/TodaysClasses';
+import PriorityTasks from '@/components/student/dashboard/PriorityTasks';
+import RecentActivity from '@/components/student/dashboard/RecentActivity';
+import AcademicBriefing from '@/components/student/dashboard/AcademicBriefing';
 
 export default function StudentDashboard() {
-  const { user } = useAuth();
-  const [data, setData] = useState(null);
+  const [context, setContext] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!user?.id) return;
     let alive = true;
-    loadStudentAcademics(user.id).then((result) => {
-      if (alive) setData(result);
-    });
-    return () => { alive = false; };
-  }, [user?.id]);
+    loadStudentPortal()
+      .then((data) => alive && setContext(data))
+      .catch(() => alive && setError('Your academic record could not be loaded. Please refresh the page.'));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
-  const accountName = user?.full_name || user?.email?.split('@')[0] || 'Student';
-  const firstName = accountName.split(' ')[0];
-  const initials = accountName
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
-
-  if (!data) {
-    return <div className="card-surface p-6 text-[12.5px] text-mutedink">Loading your academic overview…</div>;
+  if (error) {
+    return <p className="card-surface px-5 py-6 text-[15px] text-critical">{error}</p>;
   }
 
-  const { student, courses, summary } = data;
+  if (!context) {
+    return (
+      <div className="space-y-4">
+        <div className="h-16 animate-pulse rounded-xl bg-white" />
+        <div className="h-24 animate-pulse rounded-xl bg-white" />
+        <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+          <div className="h-64 animate-pulse rounded-xl bg-white" />
+          <div className="h-64 animate-pulse rounded-xl bg-white" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!context.linked) {
+    return (
+      <div className="card-surface px-5 py-10 text-center">
+        <h1 className="text-[length:var(--type-section)] font-semibold tracking-[-0.02em] text-ink">
+          Your student record is not linked yet
+        </h1>
+        <p className="mx-auto mt-2 max-w-md text-[15px] leading-relaxed text-mutedink">
+          {context.scopeNote || 'The student office links your account to the academic register.'} Once it is linked,
+          your courses, timetable and results appear here.
+        </p>
+        <Link to={P.student.profile} className="btn-quiet mt-4 inline-flex">
+          View account details
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-royal/10 text-[13px] font-semibold text-royal">
-            {initials}
-          </span>
-          <div className="min-w-0">
-            <h1 className="truncate text-[22px] font-semibold leading-tight tracking-[-0.03em] text-ink sm:text-[26px]">
-              Welcome back, {firstName}!
-            </h1>
-            <p className="mt-0.5 text-[12px] text-mutedink">
-              Here is your academic overview for {student?.program || 'this semester'}.
-            </p>
-          </div>
+    <div>
+      <WelcomeHeader profile={context.profile} />
+      <SnapshotStrip summary={context.summary} />
+
+      <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+        <div className="space-y-4">
+          <TodaysClasses sessions={context.sessions} />
+          <PriorityTasks context={context} />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {student && (
-            <span className="rounded-md border border-line bg-white px-2 py-1 text-[10.5px] text-mutedink">
-              {student.group_name || 'No group'} · Year {student.year || '—'}
-            </span>
-          )}
-          <Link to={P.student.timetable} className="btn-quiet">
-            <CalendarDays className="h-3.5 w-3.5" /> Timetable
-          </Link>
-          <Link to={P.student.ai} className="btn-primary">
-            <Sparkles className="h-3.5 w-3.5" /> Study companion
-          </Link>
+        <div className="space-y-4">
+          <AcademicBriefing context={context} />
+          <RecentActivity context={context} />
         </div>
-      </header>
-
-      <AiSummaryCard summary={summary} />
-      <SummaryCards summary={summary} />
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <DeadlinesCard items={summary.openAssignments} />
-        <TodayScheduleCard />
-        <RecentGradesCard grades={summary.recentGrades} />
       </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ProgressCard courses={courses} summary={summary} />
-        <WellbeingCard />
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ExamPrepCard />
-        <MentorsCard />
-      </div>
-
-      <CourseAnnouncementsCard />
-      <AnnouncementsCard />
     </div>
   );
 }

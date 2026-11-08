@@ -1,117 +1,92 @@
-import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import PageTitle from '@/components/shell/PageTitle';
-import StatusChip from '@/components/shell/StatusChip';
-import CourseAssignmentsPanel from '@/components/student/CourseAssignmentsPanel';
-import { ASSIGNMENTS, openAssignments, gradedAssignments, formatDate, daysUntil, courseById } from '@/lib/studentWorkspace';
+import AssignmentList from '@/components/student/AssignmentList';
+import { loadStudentPortal } from '@/lib/studentPortal';
 
 const FILTERS = [
-  { key: 'open', label: 'Open', items: openAssignments },
-  { key: 'graded', label: 'Graded', items: gradedAssignments },
-  { key: 'all', label: 'All', items: [...ASSIGNMENTS].sort((a, b) => daysUntil(a.dueDate) - daysUntil(b.dueDate)) },
+  { key: 'todo', label: 'To do', match: (row) => row.state === 'pending' || row.state === 'overdue' },
+  { key: 'submitted', label: 'Submitted', match: (row) => row.state === 'submitted' },
+  { key: 'graded', label: 'Graded', match: (row) => row.state === 'graded' },
+  { key: 'all', label: 'All', match: () => true },
 ];
 
-const STATUS = {
-  not_started: { label: 'Not started', tone: 'warning' },
-  in_progress: { label: 'In progress', tone: 'brand' },
-  graded: { label: 'Graded', tone: 'positive' },
-};
-
-function dueLabel(dueDate) {
-  const days = daysUntil(dueDate);
-  if (days < 0) return `Due ${formatDate(dueDate)}`;
-  if (days === 0) return 'Due today';
-  if (days === 1) return 'Due tomorrow';
-  return `Due in ${days} days`;
-}
-
 export default function AssignmentsPage() {
-  const [filter, setFilter] = useState('open');
-  const [expanded, setExpanded] = useState(null);
-  const active = FILTERS.find((item) => item.key === filter);
+  const [context, setContext] = useState(null);
+  const [filter, setFilter] = useState('todo');
+  const [error, setError] = useState('');
+
+  const load = useCallback(
+    () =>
+      loadStudentPortal({ fresh: true })
+        .then(setContext)
+        .catch(() => setError('Your assignments could not be loaded. Please refresh the page.')),
+    []
+  );
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (error) return <p className="card-surface px-5 py-6 text-[15px] text-critical">{error}</p>;
+  if (!context) return <div className="h-64 animate-pulse rounded-xl bg-white" />;
+
+  const rows = context.assignments || [];
+  const todoCount = (context.summary.pending || 0) + (context.summary.overdue || 0);
+  const gradedCount = rows.filter((row) => row.state === 'graded').length;
+
+  if (!context.linked) {
+    return (
+      <div>
+        <PageTitle eyebrow="Student workspace" title="Assignments" />
+        <p className="card-surface px-5 py-8 text-[15px] text-mutedink">
+          {context.scopeNote || 'Your account is not linked to a student record yet.'}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>
       <PageTitle
         eyebrow="Student workspace"
         title="Assignments"
-        description="Coursework for your enrolled courses, with the brief, the weighting and where each submission stands."
-        meta={[`${openAssignments.length} open`, `${gradedAssignments.length} graded`, 'Fall Semester 2026']}
+        description="Every piece of coursework set for your enrolled courses, with its deadline and where your submission stands."
+        meta={[`${todoCount} to do`, `${gradedCount} graded`, `${context.summary.overdue} overdue`]}
       />
 
-      <CourseAssignmentsPanel />
-
       <div className="mb-4 flex flex-wrap gap-1.5">
-        {FILTERS.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => setFilter(item.key)}
-            className={`rounded-lg px-3 py-1.5 text-[11.5px] font-medium transition-colors ${
-              filter === item.key
-                ? 'bg-royal text-white'
-                : 'border border-line bg-white text-ink hover:bg-canvas'
-            }`}
-          >
-            {item.label}
-            <span className={`ml-1.5 ${filter === item.key ? 'text-white/70' : 'text-mutedink'}`}>
-              {item.items.length}
-            </span>
-          </button>
-        ))}
+        {FILTERS.map((item) => {
+          const count = rows.filter(item.match).length;
+          const active = filter === item.key;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setFilter(item.key)}
+              className={`rounded-lg px-3 py-1.5 text-[14px] font-medium transition-colors ${
+                active ? 'bg-royal text-white' : 'border border-line bg-white text-ink hover:bg-canvas'
+              }`}
+            >
+              {item.label}
+              <span className={`ml-1.5 ${active ? 'text-white/70' : 'text-mutedink'}`}>{count}</span>
+            </button>
+          );
+        })}
       </div>
 
-      <div className="card-surface divide-y divide-line overflow-hidden">
-        {active.items.length === 0 ? (
-          <p className="px-5 py-10 text-center text-[12px] text-mutedink">Nothing in this list.</p>
+      <div className="card-surface overflow-hidden">
+        {rows.length === 0 ? (
+          <p className="px-5 py-8 text-center text-[15px] text-mutedink">
+            No assignments have been published for your courses yet.
+          </p>
         ) : (
-          active.items.map((item) => {
-            const course = courseById(item.courseId);
-            const status = STATUS[item.status];
-            const isOpen = expanded === item.id;
-            return (
-              <div key={item.id} className="px-5 py-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="text-[12.5px] font-semibold text-ink">{item.title}</p>
-                    <p className="mt-1 text-[11px] text-mutedink">
-                      {course.code} · {course.title} · {item.weight}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <div className="text-right">
-                      <p className="text-[11px] font-medium text-ink">{formatDate(item.dueDate)}</p>
-                      <p className="text-[10.5px] text-mutedink">{dueLabel(item.dueDate)}</p>
-                    </div>
-                    <StatusChip tone={status.tone}>{status.label}</StatusChip>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setExpanded(isOpen ? null : item.id)}
-                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-brand transition-colors hover:text-brand-deep"
-                  aria-expanded={isOpen}
-                >
-                  {isOpen ? 'Hide brief' : 'View brief'}
-                  <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {isOpen && (
-                  <p className="mt-2 rounded-lg bg-canvas px-3 py-2.5 text-[11.5px] leading-relaxed text-ink/80">
-                    {item.brief}
-                  </p>
-                )}
-              </div>
-            );
-          })
+          <AssignmentList
+            rows={rows.filter(FILTERS.find((item) => item.key === filter).match)}
+            profile={context.profile}
+            onChanged={load}
+          />
         )}
       </div>
-
-      <p className="mt-4 rounded-lg border border-line bg-white px-4 py-3 text-[11px] leading-relaxed text-mutedink">
-        File upload and online submission are not connected in this prototype — the brief and status shown here come
-        from the demonstration academic record.
-      </p>
     </div>
   );
 }
