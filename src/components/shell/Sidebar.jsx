@@ -31,6 +31,7 @@ import {
   LogOut,
   PenLine,
   FileSpreadsheet,
+  Scale,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
@@ -68,6 +69,7 @@ const ICONS = {
   LogOut,
   PenLine,
   FileSpreadsheet,
+  Scale,
 };
 
 const initials = (name) =>

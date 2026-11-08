@@ -29,6 +29,7 @@ export const MODULE_PATHS = {
     gradeEntry: '/professor/grade-entry',
     attendance: '/professor/attendance',
     students: '/professor/student-performance',
+    compare: '/professor/compare',
     discussions: '/professor/discussions',
     ai: '/professor/ai-assistant',
     profile: '/profile',

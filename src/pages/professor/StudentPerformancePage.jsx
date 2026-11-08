@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Scale } from 'lucide-react';
 import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
 import StatusChip from '@/components/shell/StatusChip';
 import { base44 } from '@/api/base44Client';
 import { useProfessorContext, loadTeaching, pct } from '@/lib/professorData';
 import { GradeDistributionChart, CourseProgressChart } from '@/components/professor/PerformanceCharts';
+import { MODULE_PATHS } from '@/lib/moduleRoutes';
 
 export default function StudentPerformancePage() {
   const { professor, courses } = useProfessorContext();
@@ -69,10 +72,15 @@ export default function StudentPerformancePage() {
         description="Assessment results, completion and attendance for students enrolled in your courses. Lower averages are listed first."
         meta={[`${rows.length} enrolment records`, `${needsSupport.length} may need support`]}
         actions={
-          <select value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)} className="rounded-lg border border-line bg-white px-2.5 py-1.5 text-[11.5px] text-ink">
-            <option value="all">All my courses</option>
-            {courses.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}
-          </select>
+          <div className="flex items-center gap-2">
+            <select value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)} className="rounded-lg border border-line bg-white px-2.5 py-1.5 text-[11.5px] text-ink">
+              <option value="all">All my courses</option>
+              {courses.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}
+            </select>
+            <Link to={MODULE_PATHS.professor.compare} className="btn-quiet">
+              <Scale className="h-3.5 w-3.5" /> Compare students
+            </Link>
+          </div>
         }
       />
 

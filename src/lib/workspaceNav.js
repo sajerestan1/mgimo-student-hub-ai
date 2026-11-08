@@ -55,6 +55,7 @@ export const NAV_BY_ROLE = {
       label: 'Cohort & support',
       items: [
         { to: P.professor.students, label: 'Student Performance', icon: 'TrendingUp' },
+        { to: P.professor.compare, label: 'Comparative Analysis', icon: 'Scale' },
         { to: P.professor.discussions, label: 'Discussions', icon: 'MessagesSquare' },
         { to: P.professor.ai, label: 'AI Teaching Assistant', icon: 'Sparkles' },
         { to: P.professor.profile, label: 'Profile & Settings', icon: 'UserRound' },
