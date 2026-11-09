@@ -313,8 +313,10 @@ export async function buildStudentContext(base44, user) {
     moduleNumber: material.module_number || null,
     publishedDate: material.published_date || material.created_date || null,
   }));
+  // A course is taught separately to each class group, so the student's day
+  // list carries only their own cohort's meetings.
   context.sessions = sessions
-    .filter((session) => session.session_date)
+    .filter((session) => session.session_date && (!session.group_name || session.group_name === student.group_name))
     .map((session) => {
       const course = courseForRow(session.course_id);
       return {

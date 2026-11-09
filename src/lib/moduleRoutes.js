@@ -49,6 +49,7 @@ export const MODULE_PATHS = {
     timetable: '/dean/timetable',
     risk: '/dean/risk-radar',
     reports: '/dean/reports',
+    ai: '/dean/ai-assistant',
     profile: '/profile',
   },
 };

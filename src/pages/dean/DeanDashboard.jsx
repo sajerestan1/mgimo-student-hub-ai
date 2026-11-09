@@ -13,6 +13,7 @@ import { PerformanceTrendChart, AttendanceTrendChart, CompletionChart } from '@/
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { num } from '@/lib/deanApi';
 import { METRICS, UNIVERSITY } from '@/lib/demoUniversity';
+import AiAssistantButton from '@/components/shell/AiAssistantButton';
 
 const buildMetrics = (risk) => [
   { label: 'Students', value: METRICS.students.toLocaleString(), hint: '3 faculties · 9 departments' },
@@ -59,6 +60,7 @@ export default function DeanDashboard() {
         meta={[`${UNIVERSITY.academicYear} · ${UNIVERSITY.semester}`, 'Demonstration dataset', 'All faculties']}
         actions={
           <>
+            <AiAssistantButton to={P.dean.ai} />
             <span className="mr-1 hidden items-center gap-1.5 text-[11px] text-mutedink sm:inline-flex">
               <RefreshCw className="h-3 w-3" /> {UNIVERSITY.updated}
             </span>

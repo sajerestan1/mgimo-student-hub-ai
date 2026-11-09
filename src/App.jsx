@@ -65,6 +65,8 @@ import MyTeachingPage from '@/pages/professor/MyTeachingPage';
 import UserManagement from '@/pages/admin/UserManagement';
 import CompleteProfile from '@/pages/account/CompleteProfile';
 import AdminOnlyRoute from '@/components/shell/AdminOnlyRoute';
+import DeanAssistant from '@/pages/Assistant';
+import { AdminDataProvider } from '@/lib/AdminDataContext';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -292,6 +294,16 @@ const AuthenticatedApp = () => {
               }
             />
           ))}
+          <Route
+            path={MODULE_PATHS.dean.ai}
+            element={
+              <RoleRoute role="dean">
+                <AdminDataProvider>
+                  <DeanAssistant />
+                </AdminDataProvider>
+              </RoleRoute>
+            }
+          />
           <Route
             path={MODULE_PATHS.student.notifications}
             element={

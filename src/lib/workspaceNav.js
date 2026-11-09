@@ -90,6 +90,7 @@ export const NAV_BY_ROLE = {
     {
       label: 'Intelligence',
       items: [
+        { to: P.dean.ai, label: 'AI Assistant', icon: 'Sparkles' },
         { to: P.dean.performance, label: 'Academic Performance', icon: 'TrendingUp' },
         { to: P.dean.attendance, label: 'Attendance Analytics', icon: 'CalendarCheck' },
         { to: P.dean.risk, label: 'Academic Risk Radar', icon: 'Radar' },

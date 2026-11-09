@@ -107,6 +107,11 @@ export function seedAdminData(me) {
 }
 
 async function runSeed() {
+  // One authoritative demonstration dataset: if the demonstration seeder has
+  // already populated this workspace, this legacy generator must stay inert.
+  const marker = await base44.entities.AppSetting.filter({ key: 'demo_dataset' }, { limit: 1 });
+  if ((Array.isArray(marker) ? marker : marker?.items || []).length > 0) return { seeded: false };
+
   const existing = await base44.entities.Faculty.filter({}, { limit: 1 });
   const known = Array.isArray(existing) ? existing : existing?.items || [];
   if (known.length > 0) {

@@ -31,6 +31,26 @@ async function applyProvision(base44, record, provision) {
       : [];
 
   if (!existing.length && role === 'student') {
+    // A record that the student office already prepared for this address (the
+    // demonstration student) is adopted instead of duplicated, so the account
+    // opens with its full academic record, timetable and results.
+    const prepared = (await sr.entities.Student.filter({ email: provision.email })).find((row) => !row.user_id);
+    if (prepared) {
+      await sr.entities.Student.update(prepared.id, { user_id: record.id });
+      await sr.entities.AccountProvision.update(provision.id, {
+        status: 'applied',
+        applied_user_id: record.id,
+        applied_at: new Date().toISOString(),
+      });
+      await writeAudit(base44, {
+        actor: { full_name: 'Institutional provisioning', role: 'system', id: '' },
+        action: 'account_provisioned',
+        targetId: record.id,
+        target: provision.email,
+        details: `Role ${role} applied and an existing institutional student record was linked to the account.`,
+      });
+      return;
+    }
     await sr.entities.Student.create({
       user_id: record.id,
       full_name: provision.full_name || record.full_name || 'Student',

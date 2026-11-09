@@ -13,6 +13,7 @@ import StrugglingStudentsCard from '@/components/professor/StrugglingStudentsCar
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { useProfessorContext, loadTeaching, todayIso, dayDiff, pct, SEMESTER } from '@/lib/professorData';
 import { buildGradeTrend } from '@/lib/gradeTrends';
+import AiAssistantButton from '@/components/shell/AiAssistantButton';
 
 export default function ProfessorDashboard() {
   const { loading, professor, courses, facultyName, departmentName } = useProfessorContext();
@@ -184,10 +185,8 @@ export default function ProfessorDashboard() {
         meta={[SEMESTER, professor?.full_name ? `${professor.full_name.split(' ').slice(-1)[0]} teaching load` : 'Teaching load', 'Live LMS records']}
         actions={
           <>
-            <Link to={P.professor.ai} className="btn-quiet">
-              AI teaching assistant
-            </Link>
-            <Link to={P.professor.assignments} className="btn-primary">
+            <AiAssistantButton to={P.professor.ai} />
+            <Link to={P.professor.assignments} className="btn-quiet">
               New assignment
             </Link>
           </>

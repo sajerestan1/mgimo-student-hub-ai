@@ -56,12 +56,15 @@ export default async function (req) {
       const enrolments = list(await sr.entities.CourseEnrollment.filter({ student_id: student.id }, { limit: 150 }));
       const courseIds = [...new Set(enrolments.map((row) => row.course_id).filter(Boolean))];
       if (courseIds.length) {
-        rows = list(
+        const week = list(
           await sr.entities.ClassSession.filter(
             { course_id: { $in: courseIds }, session_date: range },
             { sort: 'session_date', limit: 150 },
           ),
         );
+        // A course is taught separately to each class group, so the student's
+        // week is their own group's meetings — never another cohort's.
+        rows = week.filter((row) => !row.group_name || row.group_name === student.group_name);
       }
       meta = {
         workspace: 'student',
