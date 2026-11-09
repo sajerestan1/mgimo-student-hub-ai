@@ -100,8 +100,13 @@ export default async function (req) {
     const sr = base44.asServiceRole;
     let record = await sr.entities.User.get(caller.id).catch((e) => (e.status === 404 ? null : Promise.reject(e)));
 
-    if (record && record.provisioned !== true) {
-      const email = String(caller.email || '').toLowerCase();
+    // A pending institutional provision is the authority: it is keyed by the
+    // verified sign-in address, applied once, and adopts the prepared record
+    // instead of creating a second one. Waiting on the provision rather than
+    // on the account's own flag means an account that was registered or edited
+    // outside the flow still receives its institutional placement.
+    if (record) {
+      const email = String(caller.email || record.email || '').toLowerCase();
       const pending = email ? await sr.entities.AccountProvision.filter({ email, status: 'pending' }) : [];
       if (pending.length) {
         await applyProvision(base44, record, pending[0]);
