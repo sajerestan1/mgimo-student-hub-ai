@@ -12,6 +12,19 @@ import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import { safeReturnTo } from "@/lib/authReturnTo";
 
+const WORKSPACE_LABELS = {
+  student: "Student",
+  professor: "Professor",
+  administration: "Administration",
+};
+
+// One message for every sign-in failure: a wrong password, an unknown address,
+// a suspended or an unprovisioned account all read exactly the same.
+const SIGN_IN_ERROR =
+  "Unable to sign in with these credentials. Please check your details or reset your password.";
+const ATTEMPT_LIMIT = 5;
+const LOCK_MS = 60 * 1000;
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,6 +32,12 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [mfaChallenge, setMfaChallenge] = useState(null);
+  const [failures, setFailures] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState(0);
+  // The welcome screen's role card names the chosen workspace. Presentation
+  // only: the account's real role is resolved server-side after sign-in.
+  const workspaceLabel =
+    WORKSPACE_LABELS[new URLSearchParams(window.location.search).get("workspace")] || "";
   // Post-login destination (e.g. the MCP OAuth consent page sends users here
   // with returnTo so the grant flow can resume). Same-origin paths only.
   // Landing visitors sign in to reach their role workspace, not the public site.
@@ -27,6 +46,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (Date.now() < lockedUntil) return;
     setError("");
     setLoading(true);
     try {
@@ -36,8 +56,16 @@ export default function Login() {
         return;
       }
       window.location.href = returnTo;
-    } catch (err) {
-      setError(err.message || "Invalid email or password");
+    } catch {
+      const next = failures + 1;
+      if (next >= ATTEMPT_LIMIT) {
+        setFailures(0);
+        setLockedUntil(Date.now() + LOCK_MS);
+        setError("Too many sign-in attempts. Please wait a minute before trying again, or reset your password.");
+      } else {
+        setFailures(next);
+        setError(SIGN_IN_ERROR);
+      }
     } finally {
       setLoading(false);
     }
@@ -55,7 +83,7 @@ export default function Login() {
     <AuthLayout
       icon={LogIn}
       title="Welcome back"
-      subtitle="Log in to your account"
+      subtitle={workspaceLabel ? `${workspaceLabel} sign-in` : "Log in to your account"}
       footer={
         <span>
           Accounts are issued by the university administration. Contact your faculty office if you need access.

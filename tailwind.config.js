@@ -30,6 +30,18 @@ module.exports = {
   				soft: '#EEF2FF',
   				deep: '#3B5AE0'
   			},
+  			// Welcome screen palette: neutral canvas, navy headings, and the
+  			// three workspace accents (student blue, professor red, admin navy).
+  			welcome: {
+  				canvas: '#F4F6F8',
+  				navy: '#1E293B',
+  				slate: '#64748B',
+  				blue: '#3B82F6',
+  				blueDeep: '#2A6CD8',
+  				red: '#C62828',
+  				redDeep: '#A91F1F',
+  				redSoft: '#FCEAEA'
+  			},
   			violet: '#7666F5',
   			positive: '#16A085',
   			warning: '#E6A23C',
