@@ -46,6 +46,7 @@ export const MODULE_PATHS = {
     courses: '/dean/courses',
     performance: '/dean/performance',
     attendance: '/dean/attendance',
+    timetable: '/dean/timetable',
     risk: '/dean/risk-radar',
     reports: '/dean/reports',
     profile: '/profile',

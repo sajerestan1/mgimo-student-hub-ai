@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
+import { clearAccount } from '@/lib/offline/store';
 
 const AuthContext = createContext();
 
@@ -103,6 +104,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = (shouldRedirect = true) => {
+    // Saved academic data belongs to this account only: drop it on sign-out.
+    // The offline owner key is kept, so a different account signing in next
+    // purges anything this write did not finish clearing.
+    if (user?.id) clearAccount(user.id);
     setUser(null);
     setIsAuthenticated(false);
     

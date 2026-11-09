@@ -6,9 +6,12 @@ import StatusChip from '@/components/shell/StatusChip';
 import { base44 } from '@/api/base44Client';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { useProfessorContext, dateLabel, dayDiff, todayIso } from '@/lib/professorData';
+import TimetableExportPanel from '@/components/timetable/TimetableExportPanel';
+import { useTimetable } from '@/lib/timetable/useTimetable';
 
 export default function MyTeachingPage() {
   const { professor, courses } = useProfessorContext();
+  const timetable = useTimetable('professor');
   const [sessions, setSessions] = useState(null);
 
   useEffect(() => {
@@ -54,6 +57,8 @@ export default function MyTeachingPage() {
       />
 
       <div className="space-y-4">
+        <TimetableExportPanel timetable={timetable} title="Teaching timetable" slug="teaching-timetable" />
+
         <Surface title="Today" subtitle={today.length ? 'Your classes for today' : 'No classes today'} bodyClassName="px-0 pb-0 pt-1">
           <ul className="divide-y divide-line">
             {today.map((s) => <Row key={s.id} session={s} />)}

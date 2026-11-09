@@ -38,6 +38,7 @@ import DeanPerformancePage from '@/pages/dean/PerformancePage';
 import DeanAttendancePage from '@/pages/dean/AttendanceAnalyticsPage';
 import DeanRiskPage from '@/pages/dean/RiskRadarPage';
 import DeanReportsPage from '@/pages/dean/ReportsPage';
+import DeanTimetablePage from '@/pages/dean/TimetablePage';
 import Profile from '@/pages/account/Profile';
 import UserSettings from '@/pages/account/UserSettings';
 import NotificationsPage from '@/pages/account/NotificationsPage';
@@ -277,6 +278,7 @@ const AuthenticatedApp = () => {
             [MODULE_PATHS.dean.courses, DeanCoursesPage],
             [MODULE_PATHS.dean.performance, DeanPerformancePage],
             [MODULE_PATHS.dean.attendance, DeanAttendancePage],
+            [MODULE_PATHS.dean.timetable, DeanTimetablePage],
             [MODULE_PATHS.dean.risk, DeanRiskPage],
             [MODULE_PATHS.dean.reports, DeanReportsPage],
           ].map(([path, Component]) => (

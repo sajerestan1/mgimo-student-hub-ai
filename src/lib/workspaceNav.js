@@ -76,6 +76,7 @@ export const NAV_BY_ROLE = {
         { to: P.dean.faculties, label: 'Faculties', icon: 'Building2' },
         { to: P.dean.departments, label: 'Departments', icon: 'Network' },
         { to: P.dean.programmes, label: 'Academic Programmes', icon: 'BookOpen' },
+        { to: P.dean.timetable, label: 'Timetable', icon: 'CalendarDays' },
       ],
     },
     {
