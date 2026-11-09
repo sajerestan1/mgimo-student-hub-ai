@@ -8,6 +8,7 @@ import { writeAudit } from '../accounts.ts';
 export const MESSAGE_LIMIT = 4000;
 export const ATTACHMENT_LIMIT_COUNT = 3;
 export const ATTACHMENT_LIMIT_BYTES = 5 * 1024 * 1024;
+export const VOICE_LIMIT_BYTES = 10 * 1024 * 1024;
 const MIME_ALLOWLIST = [
   'application/pdf',
   'image/png',
@@ -20,7 +21,17 @@ const MIME_ALLOWLIST = [
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  // Voice notes recorded in the composer. They stay in private storage and are
+  // only ever reached through a short-lived signed link issued to a participant.
+  'audio/webm',
+  'audio/ogg',
+  'audio/mp4',
+  'audio/mpeg',
+  'audio/wav',
+  'audio/x-m4a',
 ];
+
+export const isAudio = (mime) => String(mime || '').startsWith('audio/');
 
 export function sanitiseAttachments(input) {
   if (!Array.isArray(input) || !input.length) return { attachments: [], error: null };
@@ -32,9 +43,18 @@ export function sanitiseAttachments(input) {
     const uri = String(row?.file_uri || '');
     const mime = String(row?.mime || '');
     const size = Number(row?.size) || 0;
-    if (!uri.startsWith('private/')) return { attachments: [], error: 'Attachments must be uploaded to private storage' };
+    // Private storage references arrive as `private/…` from the browser client
+    // and with a storage prefix (`mp/private/…`) from the server transport.
+    // Either way they must be private: a public URL is refused.
+    if (!/(^|\/)private\//.test(uri)) {
+      return { attachments: [], error: 'Attachments must be uploaded to private storage' };
+    }
     if (!MIME_ALLOWLIST.includes(mime)) return { attachments: [], error: 'That file type is not accepted' };
-    if (size > ATTACHMENT_LIMIT_BYTES) return { attachments: [], error: 'Each file must be 5 MB or smaller' };
+    if (isAudio(mime)) {
+      if (size > VOICE_LIMIT_BYTES) return { attachments: [], error: 'A voice note must be 10 MB or smaller' };
+    } else if (size > ATTACHMENT_LIMIT_BYTES) {
+      return { attachments: [], error: 'Each file must be 5 MB or smaller' };
+    }
     attachments.push({
       file_uri: uri,
       name: plainText(row?.name || 'Attachment', 120),

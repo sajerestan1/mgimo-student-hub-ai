@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, BellOff, Bell, Paperclip, Pin, Send, ShieldAlert, X, Download, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { comm, formatStamp, formatSize, OFFICIAL_STATUSES, uploadAttachment, ATTACHMENT_LIMIT } from '@/lib/communication/api';
+import { comm, formatStamp, formatSize, isAudioMime, OFFICIAL_STATUSES, uploadAttachment, ATTACHMENT_LIMIT } from '@/lib/communication/api';
 import { usePolling } from '@/hooks/useCommunication';
+import MessageComposer from './MessageComposer';
+import MessageReactions from './MessageReactions';
+import AudioBubble from './AudioBubble';
+import AssistantPanel from './AssistantPanel';
 
 const ROLE_TONE = {
   student: 'bg-[#EDF1FE] text-[#3B5AE0]',
@@ -20,6 +24,7 @@ export default function ThreadView({ boot, threadId, onBack, onChanged }) {
   const [files, setFiles] = useState([]);
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState('');
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const [reportFor, setReportFor] = useState(null);
   const [reportReason, setReportReason] = useState('spam');
   const [reportNote, setReportNote] = useState('');
@@ -49,17 +54,21 @@ export default function ThreadView({ boot, threadId, onBack, onChanged }) {
     bottom.current?.scrollIntoView({ block: 'end' });
   }, [state.data?.messages?.length]);
 
-  const send = async () => {
+  // One send path for text, attachments, voice notes and AI transcripts: the
+  // recorder passes its own body and audio, the composer passes only the draft.
+  const send = async (override = {}) => {
     if (sending) return;
-    if (!draft.trim() && !files.length) return;
+    const body = override.body ?? draft;
+    const outgoing = [...files, ...(override.attachments || [])];
+    if (!body.trim() && !outgoing.length) return;
     setSending(true);
     setNotice('');
     try {
       await comm('send', {
         threadId,
-        body: draft,
+        body,
         replyToId: reply?.id || '',
-        attachments: files,
+        attachments: outgoing,
         clientKey: `${boot?.id || 'user'}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       });
       setDraft('');
@@ -69,8 +78,18 @@ export default function ThreadView({ boot, threadId, onBack, onChanged }) {
       onChanged?.();
     } catch (error) {
       setNotice(error.message);
+      throw error;
     } finally {
       setSending(false);
+    }
+  };
+
+  const react = async (message, emoji) => {
+    try {
+      await comm('react', { messageId: message.id, emoji });
+      await load();
+    } catch (error) {
+      setNotice(error.message);
     }
   };
 
@@ -235,6 +254,14 @@ export default function ThreadView({ boot, threadId, onBack, onChanged }) {
                 {!!message.attachments.length && (
                   <div className="mt-2 space-y-1">
                     {message.attachments.map((attachment) => (
+                      isAudioMime(attachment.mime) ? (
+                        <AudioBubble
+                          key={attachment.index}
+                          message={message}
+                          attachment={attachment}
+                          mine={message.mine}
+                        />
+                      ) : (
                       <button
                         key={attachment.index}
                         type="button"
@@ -248,6 +275,7 @@ export default function ThreadView({ boot, threadId, onBack, onChanged }) {
                         <span className="truncate">{attachment.name}</span>
                         <span className="ml-auto shrink-0 text-[11px] opacity-70">{formatSize(attachment.size)}</span>
                       </button>
+                      )
                     ))}
                   </div>
                 )}
@@ -268,6 +296,14 @@ export default function ThreadView({ boot, threadId, onBack, onChanged }) {
                     </button>
                   )}
                 </div>
+              )}
+              {message.kind !== 'system' && (
+                <MessageReactions
+                  reactions={message.reactions || []}
+                  mine={boot?.id}
+                  canReact={permissions.canPost}
+                  onReact={(emoji) => react(message, emoji)}
+                />
               )}
             </div>
           ))}
@@ -299,52 +335,30 @@ export default function ThreadView({ boot, threadId, onBack, onChanged }) {
           </div>
         )}
 
-        <div className="border-t border-line px-4 py-3">
-          {reply && (
-            <div className="mb-2 flex items-start gap-2 rounded-lg bg-[#F4F6FA] px-2 py-1.5">
-              <p className="min-w-0 flex-1 truncate text-[13px] text-mutedink">Replying to {reply.sender_name}: {reply.body}</p>
-              <button type="button" onClick={() => setReply(null)} className="icon-btn h-6 w-6"><X className="h-3.5 w-3.5" /></button>
-            </div>
-          )}
-          {!!files.length && (
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {files.map((file) => (
-                <span key={file.file_uri} className="inline-flex items-center gap-1 rounded-md bg-canvas px-2 py-1 text-[12px] text-mutedink">
-                  {file.name}
-                  <button type="button" onClick={() => setFiles((current) => current.filter((row) => row.file_uri !== file.file_uri))}>
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-          <div className="flex items-end gap-2">
-            <textarea
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault();
-                  send();
-                }
-              }}
-              rows={2}
-              placeholder={
-                permissions.canPost ? 'Write a message — plain text is sent, never HTML' : 'You can read this conversation but not post'
-              }
-              disabled={!permissions.canPost}
-              className="min-h-[46px] flex-1 resize-y rounded-lg border border-line px-3 py-2 text-[15px] outline-none focus:border-brand disabled:bg-[#F6F8FB]"
-            />
-            <label className={cn('btn-quiet cursor-pointer', (!permissions.canPost || files.length >= ATTACHMENT_LIMIT) && 'pointer-events-none opacity-50')}>
-              <Paperclip className="h-4 w-4" />
-              <input type="file" multiple hidden onChange={attach} />
-            </label>
-            <button type="button" onClick={send} disabled={sending || !permissions.canPost} className="btn-primary disabled:opacity-60">
-              <Send className="h-4 w-4" /> {sending ? 'Sending…' : 'Send'}
-            </button>
-          </div>
-          {notice && <p className="mt-2 text-[13px] text-[#A23B3B]">{notice}</p>}
-        </div>
+        {assistantOpen && (
+          <AssistantPanel
+            threadId={threadId}
+            draftText={draft}
+            onInsert={(text) => setDraft(text)}
+            onClose={() => setAssistantOpen(false)}
+          />
+        )}
+
+        <MessageComposer
+          value={draft}
+          onChange={setDraft}
+          canPost={permissions.canPost}
+          onSend={send}
+          onAttach={attach}
+          files={files}
+          onRemoveFile={(file) => setFiles((current) => current.filter((row) => row.file_uri !== file.file_uri))}
+          reply={reply}
+          onClearReply={() => setReply(null)}
+          sending={sending}
+          notice={notice}
+          threadId={threadId}
+          onAssistant={() => setAssistantOpen((current) => !current)}
+        />
       </div>
 
       <aside className="hidden space-y-3 xl:block">

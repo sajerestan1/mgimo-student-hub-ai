@@ -72,3 +72,39 @@ export function formatSize(bytes) {
   if (!bytes) return '';
   return bytes > 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
 }
+
+// ── Voice notes ────────────────────────────────────────────────────────────
+// The recorder produces webm/opus on Chrome and Android, mp4/m4a on Safari and
+// iOS, ogg on Firefox. All four are accepted by the backend allowlist and by the
+// platform's transcription service.
+export const VOICE_BYTES = 10 * 1024 * 1024;
+export const VOICE_SECONDS = 300;
+export const AUDIO_MIME = ['audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg', 'audio/wav', 'audio/x-m4a'];
+const AUDIO_EXT = {
+  'audio/webm': 'webm',
+  'audio/ogg': 'ogg',
+  'audio/mp4': 'm4a',
+  'audio/mpeg': 'mp3',
+  'audio/wav': 'wav',
+  'audio/x-m4a': 'm4a',
+};
+
+export const isAudioMime = (mime) => String(mime || '').startsWith('audio/');
+
+export function formatDuration(seconds) {
+  const total = Math.max(0, Math.round(Number(seconds) || 0));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+
+// Voice notes use the same private storage as every other attachment (stored
+// privately): the message carries only the storage reference, and playback goes
+// through a short-lived signed link issued to a verified participant.
+export async function uploadVoiceNote(blob, seconds) {
+  if (!blob || !blob.size) throw new Error('Nothing was recorded');
+  if (blob.size > VOICE_BYTES) throw new Error('A voice note must be 10 MB or smaller');
+  const mime = String(blob.type || 'audio/webm').split(';')[0];
+  if (!AUDIO_MIME.includes(mime)) throw new Error('That recording format is not supported');
+  const file = new File([blob], `voice-note.${AUDIO_EXT[mime] || 'webm'}`, { type: mime });
+  const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
+  return { file_uri, name: `Voice note · ${formatDuration(seconds)}`, mime, size: blob.size };
+}

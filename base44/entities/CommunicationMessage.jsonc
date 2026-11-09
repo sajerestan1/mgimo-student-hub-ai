@@ -58,6 +58,24 @@
         }
       }
     },
+    "reactions": {
+      "type": "array",
+      "description": "One unicode emoji reaction per participant per message",
+      "items": {
+        "type": "object",
+        "properties": {
+          "emoji": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "user_name": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "mentions": {
       "type": "array",
       "items": {

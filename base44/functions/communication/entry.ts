@@ -18,6 +18,7 @@ import {
   invitationState,
   addMember,
 } from '../../shared/communication/groups.ts';
+import { handleReact, handleTranscribe, handleAssistant } from '../../shared/communication/voiceAndAi.ts';
 import {
   loadThread,
   threadParticipants,
@@ -359,6 +360,11 @@ export default async function (req) {
             name: row.name,
             mime: row.mime,
             size: row.size,
+          })),
+          reactions: (message.reactions || []).map((row) => ({
+            emoji: row.emoji,
+            user_id: row.user_id,
+            user_name: row.user_name,
           })),
           pinned: Boolean(message.pinned),
         })),
@@ -1156,6 +1162,12 @@ export default async function (req) {
 
       return Response.json({ url: signed.signed_url, name: attachment.name, expires_in: 120 });
     }
+
+    // Reactions, voice-note transcription and the writing assistant each own
+    // their authorisation and provider call in one shared module.
+    if (action === 'react') return handleReact(base44, svc, identity, body);
+    if (action === 'transcribe') return handleTranscribe(base44, svc, identity, body);
+    if (action === 'assistant') return handleAssistant(base44, svc, identity, body);
 
     // ── notifications ───────────────────────────────────────────────────────
     if (action === 'notifications') {
