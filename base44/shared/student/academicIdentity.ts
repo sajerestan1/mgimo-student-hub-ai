@@ -58,13 +58,15 @@ export function academicFields(student) {
   };
 }
 
-// Deterministic choice when an account is linked to more than one record:
-// an active enrolment first, then the most recently updated record. Never a
-// random row, so every surface picks the same one.
+// Deterministic choice when an account is linked to more than one record: an
+// institutional record before a seeded demonstration one, then an active
+// enrolment, then the most recently updated record. Never a random row, so
+// every surface picks the same one.
 function rank(row) {
+  const institutional = row.is_demo === true ? 0 : 1;
   const active = !row.enrollment_status || row.enrollment_status === 'active' ? 1 : 0;
   const touched = new Date(row.updated_date || row.created_date || 0).getTime();
-  return active * 1e15 + touched;
+  return institutional * 1e16 + active * 1e15 + touched;
 }
 
 export function pickAuthoritativeStudent(rows) {

@@ -32,6 +32,7 @@ export default function UserRecordPanel({ account, faculties, departments, canMa
     faculty_id: account.faculty_id || '',
     department_id: account.department_id || '',
     group_name: account.group_name || '',
+    year: account.year == null ? '' : String(account.year),
     programme: account.programme || '',
     student_id: account.student_id || '',
     professor_id: account.professor_id || '',
@@ -156,6 +157,15 @@ export default function UserRecordPanel({ account, faculties, departments, canMa
               <div>
                 <label className={labelClass} htmlFor="edit-group">Class / group</label>
                 <input id="edit-group" className={field} value={form.group_name} onChange={set('group_name')} />
+              </div>
+              <div>
+                <label className={labelClass} htmlFor="edit-year">Academic year</label>
+                <select id="edit-year" className={field} value={form.year} onChange={set('year')}>
+                  <option value="">Not set</option>
+                  {[1, 2, 3, 4].map((level) => (
+                    <option key={level} value={level}>Year {level}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className={labelClass} htmlFor="edit-programme">Programme</label>

@@ -473,10 +473,53 @@ export default async function (req) {
         'admin_level',
       ];
 
+      // Academic placement is written to the authoritative Student record — the
+      // one record every student surface resolves — and it is compared against
+      // THAT record, not against the account's copy. Saving a form whose values
+      // match the account but disagree with the record therefore still repairs
+      // the record, which is what makes this work on data already out of step.
+      const academicInput = {};
+      for (const key of ['student_id', 'group_name', 'programme', 'faculty_id', 'department_id', 'year']) {
+        if (!(key in patch)) continue;
+        academicInput[key] = key === 'year' ? Number(patch.year) || null : String(patch[key] || '').trim();
+      }
+
+      let academicChanges = [];
+      let recordWritten = false;
+      if (Object.keys(academicInput).length) {
+        const identity = await resolveAcademicIdentity(sr, target, { adopt: false });
+        const record = identity?.student || null;
+        if (record) {
+          const recordPatch = {};
+          for (const [key, value] of Object.entries(academicInput)) {
+            if (key === 'year') {
+              if (value !== null && value !== record.year) recordPatch.year = value;
+              continue;
+            }
+            const studentField = MIRROR_TO_STUDENT_FIELD[key];
+            if (studentField && String(record[studentField] || '') !== String(value)) {
+              recordPatch[studentField] = value;
+            }
+          }
+          if (Object.keys(recordPatch).length) {
+            await sr.entities.Student.update(record.id, recordPatch);
+            recordWritten = true;
+            academicChanges = Object.entries(recordPatch).map(
+              ([key, value]) => `${key}: ${record[key] || '—'} → ${value || '—'}`,
+            );
+          }
+          // The account's copy always follows the record, never the other way.
+          const settled = await resolveAcademicIdentity(sr, target, { adopt: false });
+          await syncAccountMirror(sr, target.id, settled);
+        }
+      }
+
       const update = {};
-      const changes = [];
+      const changes = [...academicChanges];
       for (const key of editable) {
         if (!(key in patch)) continue;
+        // A mirrored academic field was just written to the record itself.
+        if (recordWritten && key in academicInput) continue;
         const next = typeof patch[key] === 'string' ? patch[key].trim() : patch[key];
         const current = target[key] || '';
         if (next === current) continue;
@@ -488,22 +531,12 @@ export default async function (req) {
         return Response.json({ error: 'Enter a valid email address' }, { status: 400 });
       }
 
-      if (!Object.keys(update).length) return Response.json({ ok: true, changed: 0 });
+      if (!Object.keys(update).length && !recordWritten) {
+        return Response.json({ ok: true, changed: changes.length });
+      }
 
-      await sr.entities.User.update(target.id, update);
-
-      // Academic placement edited here is written to the authoritative Student
-      // record first and only then mirrored onto the account, so the change the
-      // administrator makes is the one the student's own workspace shows.
-      const linkedStudent = (await sr.entities.Student.filter({ user_id: target.id }, { limit: 5 }))[0];
-      const academicPatch = {};
-      if (linkedStudent) {
-        for (const [mirrorField, studentField] of Object.entries(MIRROR_TO_STUDENT_FIELD)) {
-          if (mirrorField in update) academicPatch[studentField] = update[mirrorField];
-        }
-        if (Object.keys(academicPatch).length) {
-          await sr.entities.Student.update(linkedStudent.id, academicPatch);
-        }
+      if (Object.keys(update).length) {
+        await sr.entities.User.update(target.id, update);
       }
 
       if (update.full_name) {
@@ -520,9 +553,9 @@ export default async function (req) {
           ? 'status_changed'
           : 'contact_email' in update
           ? 'email_changed'
-          : 'faculty_id' in update
+          : 'faculty_id' in update || 'faculty_id' in academicInput
           ? 'faculty_assigned'
-          : 'group_name' in update
+          : 'group_name' in update || 'group_name' in academicInput
           ? 'group_assigned'
           : 'profile_updated';
 
