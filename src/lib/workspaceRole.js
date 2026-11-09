@@ -2,15 +2,31 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { MODULE_PATHS, modulePath } from '@/lib/moduleRoutes';
 
+// `portalLabel` is the short identity shown above the signed-in user in the
+// sidebar. It follows the workspace the account is actually working in, so a
+// professor never sees student branding.
 export const WORKSPACES = {
-  student: { role: 'student', label: 'Student', home: MODULE_PATHS.student.dashboard, title: 'Student Workspace' },
+  student: {
+    role: 'student',
+    label: 'Student',
+    home: MODULE_PATHS.student.dashboard,
+    title: 'Student Workspace',
+    portalLabel: 'Student portal',
+  },
   professor: {
     role: 'professor',
     label: 'Professor',
     home: MODULE_PATHS.professor.dashboard,
     title: 'Professor Workspace',
+    portalLabel: 'Professor portal',
   },
-  dean: { role: 'dean', label: 'Dean', home: MODULE_PATHS.dean.dashboard, title: "Dean's Command Center" },
+  dean: {
+    role: 'dean',
+    label: 'Dean',
+    home: MODULE_PATHS.dean.dashboard,
+    title: "Dean's Command Center",
+    portalLabel: "Dean's office",
+  },
 };
 
 // Roles that operate the institutional command centre. Professors keep the

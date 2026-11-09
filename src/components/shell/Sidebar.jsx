@@ -222,7 +222,7 @@ export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollap
           )}
         >
           <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-white/35">
-            {preview ? 'Dean view' : 'Student portal'}
+            {preview ? 'Dean view' : workspace.portalLabel}
           </p>
           <p className="mt-0.5 truncate text-[14px] font-medium text-white/85">
             {preview ? 'Inspecting the student workspace' : secondary}
