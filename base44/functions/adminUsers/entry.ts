@@ -66,6 +66,26 @@ const label = (key) =>
     account_status: 'Account status',
   })[key] || key;
 
+// Student identifiers are generated here — never accepted from a browser — and
+// continue the institutional sequence, so two administrators can never mint the
+// same identifier.
+async function nextStudentId(sr) {
+  const rows = await sr.entities.Student.list('-created_date', 500);
+  const highest = rows.reduce((max, row) => {
+    const match = String(row.student_id || '').match(/(\d+)\s*$/);
+    return match ? Math.max(max, Number(match[1])) : max;
+  }, 0);
+  const year = new Date().getFullYear();
+  let candidate = Math.max(highest + 1, 1);
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const id = `MG-${year}-${candidate}`;
+    const taken = await sr.entities.Student.filter({ student_id: id });
+    if (!taken.length) return id;
+    candidate += 1;
+  }
+  return `MG-${year}-${String(Date.now()).slice(-6)}`;
+}
+
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -192,6 +212,203 @@ export default async function (req) {
       });
 
       return Response.json({ provision });
+    }
+
+    // Email-only student provisioning. The administrator supplies an address;
+    // the server creates or adopts everything else — invitation, Student record,
+    // its generated identifier and the account link. Nothing identifying is read
+    // from the request, and an association that already exists is never moved.
+    if (action === 'provision_student') {
+      const email = String(body.email || '').trim().toLowerCase();
+      if (!EMAIL_RE.test(email)) return Response.json({ error: 'Enter a valid email address' }, { status: 400 });
+
+      const normEmail = (value) => String(value || '').toLowerCase().trim();
+      const [usersOnEmail, studentsOnEmail] = await Promise.all([
+        sr.entities.User.filter({ email }),
+        sr.entities.Student.filter({ email }),
+      ]);
+      const account = usersOnEmail.find((row) => normEmail(row.email) === email) || null;
+      const onEmail = (
+        studentsOnEmail.length ? studentsOnEmail : await sr.entities.Student.list('-created_date', 500)
+      ).filter((row) => normEmail(row.email) === email);
+
+      // A student record on this address that belongs to somebody else blocks
+      // the operation outright — nothing is reassigned.
+      const foreign = onEmail.find((row) => row.user_id && row.user_id !== account?.id);
+      if (foreign) {
+        await writeAudit(base44, {
+          actor: caller,
+          action: 'student_provision_conflict',
+          targetId: foreign.user_id,
+          target: email,
+          details: `Student record ${foreign.student_id || foreign.id} is already linked to another account.`,
+          outcome: 'denied',
+        });
+        return Response.json(
+          {
+            status: 'conflict',
+            conflict: 'A student record on this email is already linked to a different account. Resolve that link before provisioning.',
+          },
+          { status: 409 },
+        );
+      }
+
+      const linkedRecord = account ? onEmail.find((row) => row.user_id === account.id) : null;
+      if (linkedRecord) {
+        return Response.json({
+          status: 'linked',
+          unchanged: true,
+          message: 'This account is already linked to its student record. Nothing was changed.',
+          account: { exists: true, id: account.id, role: account.role || 'user' },
+          student: {
+            id: linkedRecord.id,
+            student_id: linkedRecord.student_id || '',
+            full_name: linkedRecord.full_name || '',
+            group_name: linkedRecord.group_name || '',
+          },
+          account_link: 'linked',
+          invitation: 'not_required',
+        });
+      }
+
+      // Only a student-facing account may be given a student record.
+      if (account && !['', 'user', 'student'].includes(String(account.role || '').toLowerCase())) {
+        await writeAudit(base44, {
+          actor: caller,
+          action: 'student_provision_conflict',
+          targetId: account.id,
+          target: email,
+          details: `Existing account holds the ${account.role} role and cannot be turned into a student account.`,
+          outcome: 'denied',
+        });
+        return Response.json(
+          {
+            status: 'conflict',
+            conflict: `An account with this email already exists with the ${label('role').toLowerCase()} "${account.role}". Student provisioning was stopped.`,
+          },
+          { status: 409 },
+        );
+      }
+
+      // An account is created and invited only when it does not exist; the
+      // platform owns the invitation and the password, this app never sees one.
+      let target = account;
+      let invitation = 'not_required';
+      if (!target) {
+        try {
+          await base44.users.inviteUser(email, 'user');
+          invitation = 'sent';
+        } catch (inviteError) {
+          const message = String(inviteError?.message || '');
+          const existing = inviteError?.status === 409 || /exist/i.test(message);
+          if (!existing) {
+            await writeAudit(base44, {
+              actor: caller,
+              action: 'student_provision_failed',
+              targetId: '',
+              target: email,
+              details: `Invitation failed: ${message}`,
+              outcome: 'failure',
+            });
+            return Response.json(
+              { status: 'failed', error: `The invitation could not be sent: ${message}` },
+              { status: 400 },
+            );
+          }
+          invitation = 'already_registered';
+        }
+        const found = await sr.entities.User.filter({ email });
+        target = found.find((row) => normEmail(row.email) === email) || null;
+      }
+
+      // The prepared record is adopted when it exists, so an address can never
+      // accumulate a second student profile.
+      let student = onEmail[0] || null;
+      let recordCreated = false;
+      if (!student) {
+        student = await sr.entities.Student.create({
+          email,
+          full_name: String(body.full_name || '').trim() || target?.full_name || email.split('@')[0],
+          student_id: await nextStudentId(sr),
+          faculty_id: body.faculty_id || '',
+          department_id: body.department_id || '',
+          group_name: String(body.group_name || '').trim(),
+          program: String(body.programme || '').trim(),
+          enrollment_status: 'active',
+          is_demo: false,
+        });
+        recordCreated = true;
+      }
+
+      // The association is established here, from the verified account email.
+      if (target && !student.user_id) {
+        await sr.entities.Student.update(student.id, { user_id: target.id });
+        await sr.entities.User.update(target.id, {
+          role: 'student',
+          account_status: target.account_status || 'active',
+          provisioned: true,
+          student_id: student.student_id || '',
+          contact_email: email,
+          faculty_id: target.faculty_id || student.faculty_id || '',
+          group_name: target.group_name || student.group_name || '',
+          programme: target.programme || student.program || '',
+        });
+      }
+      const linked = Boolean(target && (student.user_id === target.id || recordCreated));
+
+      const provisionPayload = {
+        email,
+        role: 'student',
+        account_status: 'active',
+        full_name: student.full_name || '',
+        faculty_id: student.faculty_id || '',
+        department_id: student.department_id || '',
+        group_name: student.group_name || '',
+        programme: student.program || '',
+        student_id: student.student_id || '',
+        created_by_name: caller.full_name || caller.email || '',
+        created_by_user_id: caller.id,
+      };
+      const pending = (await sr.entities.AccountProvision.filter({ email, status: 'pending' }))[0];
+      let provision = pending
+        ? await sr.entities.AccountProvision.update(pending.id, provisionPayload)
+        : await sr.entities.AccountProvision.create({ ...provisionPayload, status: 'pending' });
+
+      if (linked) {
+        provision = await sr.entities.AccountProvision.update(provision.id, {
+          status: 'applied',
+          applied_user_id: target.id,
+          applied_at: new Date().toISOString(),
+        });
+      }
+
+      const status = linked ? 'linked' : 'pending_invitation';
+      await writeAudit(base44, {
+        actor: caller,
+        action: 'student_provisioned',
+        targetId: target?.id || '',
+        target: email,
+        details: `Student record ${student.student_id || student.id} ${recordCreated ? 'created' : 'adopted'} · account ${
+          target ? 'linked' : 'not yet signed in'
+        } · ${status}.`,
+      });
+
+      return Response.json({
+        status,
+        message: linked
+          ? 'The student account is created and linked to its student record.'
+          : 'The student record is created and the invitation sent. The account links itself on first sign-in.',
+        account: { exists: Boolean(target), id: target?.id || '', role: target?.role || 'user' },
+        student: {
+          id: student.id,
+          student_id: student.student_id || '',
+          full_name: student.full_name || '',
+          group_name: student.group_name || '',
+        },
+        account_link: linked ? 'linked' : 'pending',
+        invitation,
+        provision: { id: provision.id, status: provision.status },
+      });
     }
 
     if (action === 'update') {

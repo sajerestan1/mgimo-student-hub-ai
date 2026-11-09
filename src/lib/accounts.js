@@ -35,6 +35,37 @@ export const ROLE_TONES = {
 
 export const ADMIN_ROLES = ['admin'];
 
+// Student provisioning vocabulary. The server decides the status; these only
+// label it for the administration screens.
+export const PROVISION_STATUS_LABELS = {
+  pending_invitation: 'Pending invitation',
+  provisioning: 'Provisioning',
+  provisioned: 'Provisioned',
+  linked: 'Linked',
+  conflict: 'Conflict',
+  failed: 'Failed',
+};
+
+export const PROVISION_STATUS_TONES = {
+  pending_invitation: 'warning',
+  provisioning: 'brand',
+  provisioned: 'positive',
+  linked: 'positive',
+  conflict: 'critical',
+  failed: 'critical',
+};
+
+export const LINK_LABELS = {
+  linked: 'Linked',
+  pending: 'Awaiting first sign-in',
+};
+
+export const INVITATION_LABELS = {
+  sent: 'Invitation sent',
+  already_registered: 'Account already registered',
+  not_required: 'Not required — account exists',
+};
+
 export function accountRoleLabel(account) {
   if (!account) return 'Unassigned';
   if (account.role === 'admin') {

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, Plus, RefreshCw, Search } from 'lucide-react';
+import { Loader2, Plus, RefreshCw, Search, UserPlus } from 'lucide-react';
 import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
 import UserRosterTable from '@/components/admin/users/UserRosterTable';
 import CreateAccountDialog from '@/components/admin/users/CreateAccountDialog';
+import CreateStudentAccountDialog from '@/components/admin/users/CreateStudentAccountDialog';
 import UserRecordPanel from '@/components/admin/users/UserRecordPanel';
 import AuditTrailPanel from '@/components/admin/users/AuditTrailPanel';
 
@@ -19,6 +20,7 @@ export default function UserManagement() {
   const [error, setError] = useState('');
   const [tab, setTab] = useState('accounts');
   const [creating, setCreating] = useState(false);
+  const [provisioning, setProvisioning] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [flash, setFlash] = useState('');
 
@@ -58,8 +60,11 @@ export default function UserManagement() {
             <button type="button" className="btn-quiet" onClick={refresh}>
               <RefreshCw className="h-3.5 w-3.5" /> Refresh
             </button>
-            <button type="button" className="btn-primary" onClick={() => setCreating(true)}>
+            <button type="button" className="btn-quiet" onClick={() => setCreating(true)}>
               <Plus className="h-3.5 w-3.5" /> New account
+            </button>
+            <button type="button" className="btn-primary" onClick={() => setProvisioning(true)}>
+              <UserPlus className="h-3.5 w-3.5" /> Create student account
             </button>
           </>
         }
@@ -210,6 +215,17 @@ export default function UserManagement() {
             setFlash(
               `Invitation sent to ${form.email}. The account activates with the ${form.role} role when it is first signed in.`
             );
+            refresh();
+          }}
+        />
+      )}
+
+      {provisioning && (
+        <CreateStudentAccountDialog
+          faculties={data.faculties}
+          onClose={() => setProvisioning(false)}
+          onProvisioned={(result) => {
+            setFlash(result.message || 'The student account was provisioned.');
             refresh();
           }}
         />
