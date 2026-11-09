@@ -3,7 +3,8 @@
   "type": "object",
   "properties": {
     "user_id": {
-      "type": "string"
+      "type": "string",
+      "description": "Recipient. Always the authenticated account the notification belongs to."
     },
     "title": {
       "type": "string"
@@ -35,10 +36,24 @@
       ]
     },
     "notification_type": {
-      "type": "string"
+      "type": "string",
+      "description": "private_message | group_message | ... derived server-side from the conversation type"
     },
     "link": {
-      "type": "string"
+      "type": "string",
+      "description": "In-app destination, e.g. /communication?thread=<id>&message=<id>"
+    },
+    "sender_name": {
+      "type": "string",
+      "description": "Display name of the sender, written server-side from the authenticated identity"
+    },
+    "conversation_name": {
+      "type": "string",
+      "description": "Group name, Dean's Office category or private conversation label"
+    },
+    "message_id": {
+      "type": "string",
+      "description": "CommunicationMessage this notification announces"
     },
     "dedupe_key": {
       "type": "string"

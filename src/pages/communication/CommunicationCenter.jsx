@@ -113,6 +113,7 @@ export default function CommunicationCenter({ tab = 'inbox' }) {
                   <ThreadView
                     boot={boot}
                     threadId={threadId}
+                    focusMessageId={searchParams.get('message') || ''}
                     onBack={() => openThread('')}
                     onChanged={() => setReloadKey((value) => value + 1)}
                   />

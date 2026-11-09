@@ -135,6 +135,11 @@ export async function notify(svc, rows) {
       notification_type: row.notification_type || 'communication',
       link: row.link || '',
       dedupe_key: row.dedupe_key || '',
+      // Sender and conversation metadata are written here, from the server-side
+      // identity and thread — never from anything the browser supplied.
+      sender_name: plainText(row.sender_name || '', 120),
+      conversation_name: plainText(row.conversation_name || '', 120),
+      message_id: row.message_id || '',
       is_read: false,
     })),
   );
@@ -237,8 +242,9 @@ export async function messageRecipients(svc, identity, thread) {
     .map((row) => ({ user_id: row.user_id, name: row.user_name }));
 }
 
-export function threadLink(thread) {
-  return `/communication?thread=${thread.id}`;
+// Deep link to a conversation, optionally anchored on the announced message.
+export function threadLink(thread, messageId) {
+  return `/communication?thread=${thread.id}${messageId ? `&message=${messageId}` : ''}`;
 }
 
 export async function markThreadRead(svc, identity, thread, participantRow, membershipRow) {

@@ -485,7 +485,18 @@ export default async function (req) {
               : preview(body.body || 'Attachment', 110),
           category: thread.type === 'official' ? 'official' : 'message',
           notification_type: thread.type === 'group' ? 'group_message' : 'private_message',
-          link: threadLink(thread),
+          // Sender and conversation metadata are resolved here, from the
+          // authenticated identity and the authorised thread — never from the
+          // request body.
+          sender_name: identity.name,
+          conversation_name:
+            thread.type === 'group'
+              ? group?.name || 'Group'
+              : thread.type === 'official'
+                ? `Dean\u2019s Office \u00b7 ${thread.category || 'Official'}`
+                : 'Private conversation',
+          message_id: result.message.id,
+          link: threadLink(thread, result.message.id),
           dedupe_key: `msg:${result.message.id}:${row.user_id}`,
         })),
       );
@@ -1186,10 +1197,15 @@ export default async function (req) {
           category: row.category || '',
           type: row.notification_type || '',
           link: row.link || '',
+          sender_name: row.sender_name || '',
+          conversation_name: row.conversation_name || '',
+          message_id: row.message_id || '',
           is_read: Boolean(row.is_read),
           created_date: row.created_date,
         })),
+        // The true unread total, not just the unread rows on this page.
         unread: rows.filter((row) => !row.is_read).length,
+        unreadTotal: await svc.entities.Notification.count({ user_id: identity.id, is_read: false }),
       });
     }
 

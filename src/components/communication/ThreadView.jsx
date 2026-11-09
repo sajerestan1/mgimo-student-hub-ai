@@ -17,7 +17,7 @@ const ROLE_TONE = {
 
 const toneFor = (role) => (['admin', 'dean', 'deputy_dean', 'academic_staff'].includes(role) ? 'staff' : role);
 
-export default function ThreadView({ boot, threadId, onBack, onChanged }) {
+export default function ThreadView({ boot, threadId, focusMessageId = '', onBack, onChanged }) {
   const [state, setState] = useState({ loading: true, error: '', data: null });
   const [draft, setDraft] = useState('');
   const [reply, setReply] = useState(null);
@@ -29,6 +29,9 @@ export default function ThreadView({ boot, threadId, onBack, onChanged }) {
   const [reportReason, setReportReason] = useState('spam');
   const [reportNote, setReportNote] = useState('');
   const bottom = useRef(null);
+  const listRef = useRef(null);
+  const focusedKey = useRef('');
+  const [highlightId, setHighlightId] = useState('');
 
   const load = useCallback(async () => {
     const data = await comm('thread', { threadId });
@@ -53,6 +56,27 @@ export default function ThreadView({ boot, threadId, onBack, onChanged }) {
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: 'end' });
   }, [state.data?.messages?.length]);
+
+  // A notification deep link (?thread=…&message=…) opens the conversation at
+  // the message it announced. Once per target, so polling never re-scrolls.
+  useEffect(() => {
+    if (!focusMessageId) return;
+    const key = `${threadId}:${focusMessageId}`;
+    if (focusedKey.current === key) return;
+    const messages = state.data?.messages || [];
+    if (!messages.some((message) => message.id === focusMessageId)) return;
+
+    focusedKey.current = key;
+    setHighlightId(focusMessageId);
+    const scroll = setTimeout(() => {
+      listRef.current?.querySelector(`[data-mid="${focusMessageId}"]`)?.scrollIntoView({ block: 'center' });
+    }, 80);
+    const clear = setTimeout(() => setHighlightId(''), 3200);
+    return () => {
+      clearTimeout(scroll);
+      clearTimeout(clear);
+    };
+  }, [focusMessageId, threadId, state.data]);
 
   // One send path for text, attachments, voice notes and AI transcripts: the
   // recorder passes its own body and audio, the composer passes only the draft.
@@ -214,12 +238,20 @@ export default function ThreadView({ boot, threadId, onBack, onChanged }) {
           </div>
         )}
 
-        <div className="scroll-thin flex-1 space-y-3 overflow-y-auto px-4 py-4">
+        <div ref={listRef} className="scroll-thin flex-1 space-y-3 overflow-y-auto px-4 py-4">
           {!messages.length && (
             <p className="py-8 text-center text-[14px] text-mutedink">No messages yet. Say hello.</p>
           )}
           {messages.map((message) => (
-            <div key={message.id} className={cn('flex flex-col', message.mine ? 'items-end' : 'items-start')}>
+            <div
+              key={message.id}
+              data-mid={message.id}
+              className={cn(
+                'flex flex-col rounded-lg',
+                message.mine ? 'items-end' : 'items-start',
+                message.id === highlightId && 'ring-2 ring-brand/40',
+              )}
+            >
               <div className="mb-1 flex items-center gap-1.5">
                 <span className="text-[13px] font-medium text-ink">{message.sender_name}</span>
                 <span className={cn('rounded px-1.5 py-px text-[11px] font-medium capitalize', ROLE_TONE[toneFor(message.sender_role)] || ROLE_TONE.system)}>

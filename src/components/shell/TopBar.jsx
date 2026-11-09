@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Menu, Search, LogOut, UserRound, Settings, LifeBuoy } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Menu, Search, LogOut, UserRound, Settings, LifeBuoy } from 'lucide-react';
+import NotificationBell from './NotificationBell';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,9 +13,7 @@ import {
 import { useAuth } from '@/lib/AuthContext';
 import { useWorkspace } from '@/lib/workspaceRole';
 import { NAV_BY_ROLE } from '@/lib/workspaceNav';
-import { NOTIFICATIONS } from '@/lib/demoUniversity';
 import useStudentProfile from '@/hooks/useStudentProfile';
-import { loadStudentPortal } from '@/lib/studentPortal';
 
 const initials = (name) =>
   name
@@ -25,19 +23,12 @@ const initials = (name) =>
     .map((part) => part[0]?.toUpperCase())
     .join('');
 
-const toneDot = {
-  critical: 'bg-critical',
-  warning: 'bg-warning',
-  info: 'bg-brand',
-};
-
 export default function TopBar({ onOpenMobile }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { displayName, workspace } = useWorkspace();
   const [searchOpen, setSearchOpen] = useState(false);
-  const [unread, setUnread] = useState(true);
   const blurTimer = useRef(null);
 
   useEffect(() => () => clearTimeout(blurTimer.current), []);
@@ -48,7 +39,6 @@ export default function TopBar({ onOpenMobile }) {
     .flatMap((group) => group.items)
     .find((item) => item.to === pathname);
   const title = activeItem?.label || workspace.title;
-  const notificationsPath = workspace.role === 'student' ? '/student/notifications' : '/notifications';
   const isStudent = workspace.role === 'student';
   const studentProfile = useStudentProfile(isStudent);
   const studentYear = studentProfile
@@ -60,20 +50,6 @@ export default function TopBar({ onOpenMobile }) {
           .filter(Boolean)
           .join(' · ')
       : '') || workspace.title;
-
-  // The dropdown shows this student's own announcements, never a sample feed.
-  const [studentUpdates, setStudentUpdates] = useState([]);
-  const loadUpdates = () => {
-    if (!isStudent) return;
-    loadStudentPortal()
-      .then((data) => setStudentUpdates((data.announcements || []).slice(0, 3).map((item) => ({
-        id: item.id,
-        title: item.title,
-        time: `${item.author} · ${item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}`,
-      }))))
-      .catch(() => {});
-  };
-  const notificationRows = isStudent ? studentUpdates : NOTIFICATIONS;
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur">
@@ -120,45 +96,7 @@ export default function TopBar({ onOpenMobile }) {
           <LifeBuoy className="h-[18px] w-[18px]" />
         </button>
 
-        <DropdownMenu onOpenChange={(open) => { if (open) loadUpdates(); }}>
-          <DropdownMenuTrigger asChild>
-            <button type="button" className="icon-btn relative" aria-label="Notifications">
-              <Bell className="h-[18px] w-[18px]" />
-              {unread && (
-                <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-critical ring-2 ring-white" />
-              )}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <div className="flex items-center justify-between px-2 py-1.5">
-              <DropdownMenuLabel className="p-0 text-[14px] text-ink">Notifications</DropdownMenuLabel>
-              <button
-                type="button"
-                onClick={() => setUnread(false)}
-                className="text-[13px] font-medium text-brand hover:text-brand-deep"
-              >
-                Mark all read
-              </button>
-            </div>
-            <DropdownMenuSeparator />
-            {notificationRows.map((item) => (
-              <DropdownMenuItem key={item.id} onSelect={() => navigate(notificationsPath)} className="items-start gap-2.5 py-2">
-                <span className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', toneDot[item.tone] || 'bg-brand')} />
-                <span className="min-w-0">
-                  <span className="block truncate text-[14px] font-medium text-ink">{item.title}</span>
-                  <span className="mt-0.5 block truncate text-[13px] text-mutedink">{item.time}</span>
-                </span>
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onSelect={() => navigate(notificationsPath)}
-              className="justify-center text-[14px] font-medium text-brand"
-            >
-              View all notifications
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <NotificationBell />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { comm, formatStamp } from '@/lib/communication/api';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,7 @@ const CATEGORIES = [
 ];
 
 export default function NotificationsPanel({ onChanged }) {
+  const navigate = useNavigate();
   const [state, setState] = useState({ loading: true, items: [], error: '' });
   const [category, setCategory] = useState('all');
 
@@ -35,6 +36,16 @@ export default function NotificationsPanel({ onChanged }) {
     await comm('notificationsRead', { notificationId: id });
     await load();
     onChanged?.();
+  };
+
+  // Opening a notification marks it read, then jumps to the conversation and
+  // the exact message it announced.
+  const openItem = async (item) => {
+    if (!item.is_read) {
+      await comm('notificationsRead', { notificationId: item.id }).catch(() => {});
+      onChanged?.();
+    }
+    if (item.link) navigate(item.link);
   };
 
   const items = state.items.filter((item) => category === 'all' || item.category === category);
@@ -74,6 +85,11 @@ export default function NotificationsPanel({ onChanged }) {
             <span className={cn('mt-1.5 h-2 w-2 shrink-0 rounded-full', item.is_read ? 'bg-line' : 'bg-brand')} />
             <div className="min-w-0 flex-1">
               <p className="text-[14px] font-medium text-ink">{item.title}</p>
+              {(item.sender_name || item.conversation_name) && (
+                <p className="mt-0.5 text-[12.5px] font-medium text-mutedink">
+                  {[item.sender_name, item.conversation_name].filter(Boolean).join(' · ')}
+                </p>
+              )}
               {item.body && <p className="mt-0.5 text-[13px] leading-relaxed text-mutedink">{item.body}</p>}
               <p className="mt-1 text-[12px] text-mutedink">{formatStamp(item.created_date)}</p>
             </div>
@@ -84,9 +100,13 @@ export default function NotificationsPanel({ onChanged }) {
                 </button>
               )}
               {item.link && (
-                <Link to={item.link} className="inline-flex items-center gap-0.5 text-[12px] font-medium text-brand">
+                <button
+                  type="button"
+                  onClick={() => openItem(item)}
+                  className="inline-flex items-center gap-0.5 text-[12px] font-medium text-brand"
+                >
                   Open <ChevronRight className="h-3 w-3" />
-                </Link>
+                </button>
               )}
             </div>
           </li>
