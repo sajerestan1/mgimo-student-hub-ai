@@ -41,7 +41,11 @@ export default async function (req) {
     const to = isoOf(addDays(weekStart, 6));
     const range = { $gte: from, $lte: to };
 
-    const role = String(user.role || '').toLowerCase();
+    // The account record decides the scope: an access token issued before the
+    // account was provisioned still carries the old role, so reading it would
+    // send a linked student down the wrong branch.
+    const account = await sr.entities.User.get(user.id).catch((e) => (e.status === 404 ? null : Promise.reject(e)));
+    const role = String(account?.role || user.role || '').toLowerCase();
     let rows = [];
     let meta = {};
 
@@ -105,11 +109,11 @@ export default async function (req) {
       let facultyId = '';
       let departmentId = '';
       let label = 'the whole institution';
-      if (role === 'faculty_admin' && user.faculty_id) {
-        facultyId = user.faculty_id;
+      if (role === 'faculty_admin' && account?.faculty_id) {
+        facultyId = account.faculty_id;
         label = 'your faculty';
-      } else if (role === 'department_head' && user.department_id) {
-        departmentId = user.department_id;
+      } else if (role === 'department_head' && account?.department_id) {
+        departmentId = account.department_id;
         label = 'your department';
       }
 
