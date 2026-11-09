@@ -10,6 +10,7 @@ export const MODULE_PATHS = {
     quizzes: '/student/quizzes',
     grades: '/student/grades',
     attendance: '/student/attendance',
+    intelligence: '/student/intelligence',
     applications: '/student/applications',
     library: '/student/library',
     notifications: '/student/notifications',

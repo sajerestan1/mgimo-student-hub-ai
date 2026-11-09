@@ -8,6 +8,7 @@ import TodaysClasses from '@/components/student/dashboard/TodaysClasses';
 import PriorityTasks from '@/components/student/dashboard/PriorityTasks';
 import RecentActivity from '@/components/student/dashboard/RecentActivity';
 import AcademicBriefing from '@/components/student/dashboard/AcademicBriefing';
+import AcademicPerformance from '@/components/student/dashboard/AcademicPerformance';
 
 export default function StudentDashboard() {
   const [context, setContext] = useState(null);
@@ -62,7 +63,11 @@ export default function StudentDashboard() {
       <WelcomeHeader profile={context.profile} />
       <SnapshotStrip summary={context.summary} />
 
-      <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+      <div className="mt-4">
+        <AcademicPerformance context={context} />
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-[1.35fr_1fr]">
         <div className="space-y-4">
           <TodaysClasses sessions={context.sessions} />
           <PriorityTasks context={context} />

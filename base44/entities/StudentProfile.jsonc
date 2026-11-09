@@ -22,13 +22,58 @@
       "type": "number"
     },
     "university": {
-      "type": "string"
+      "type": "string",
+      "description": "Institution the student has selected for policy and alert wording"
     },
     "email": {
       "type": "string"
     },
     "advisor": {
       "type": "string"
+    },
+    "preferences": {
+      "type": "object",
+      "description": "Academic alert preferences owned by the student. Essential account and security notifications are not controlled here.",
+      "properties": {
+        "course_performance_alerts": {
+          "type": "boolean",
+          "default": true
+        },
+        "overall_performance_alerts": {
+          "type": "boolean",
+          "default": true
+        },
+        "attendance_alerts": {
+          "type": "boolean",
+          "default": true
+        },
+        "threshold_alerts": {
+          "type": "boolean",
+          "default": true
+        },
+        "in_app_delivery": {
+          "type": "boolean",
+          "default": true
+        },
+        "email_delivery": {
+          "type": "boolean",
+          "default": false
+        },
+        "digest": {
+          "type": "string",
+          "enum": [
+            "off",
+            "daily",
+            "weekly"
+          ],
+          "enumColors": [
+            "gray",
+            "blue",
+            "green"
+          ],
+          "default": "off"
+        }
+      }
     }
   },
   "required": [

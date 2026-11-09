@@ -37,6 +37,7 @@ import {
   ShieldCheck,
   Inbox,
   ShieldAlert,
+  BrainCircuit,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
@@ -80,6 +81,7 @@ const ICONS = {
   ShieldCheck,
   Inbox,
   ShieldAlert,
+  BrainCircuit,
 };
 
 const initials = (name) =>

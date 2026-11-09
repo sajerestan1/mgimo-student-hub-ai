@@ -14,6 +14,7 @@ export const NAV_BY_ROLE = {
         { to: P.student.quizzes, label: 'Quizzes & Exams', icon: 'ClipboardCheck' },
         { to: P.student.grades, label: 'Grades & Transcript', icon: 'GraduationCap' },
         { to: P.student.attendance, label: 'Attendance', icon: 'CalendarCheck' },
+        { to: P.student.intelligence, label: 'Academic Intelligence', icon: 'BrainCircuit' },
         { to: P.student.applications, label: 'Applications & Certificates', icon: 'FileText' },
         { to: P.student.library, label: 'Library', icon: 'BookMarked' },
         { to: P.student.notifications, label: 'Notifications', icon: 'Bell' },

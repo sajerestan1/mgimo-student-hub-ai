@@ -8,6 +8,7 @@ import ProgressBar from '@/components/shell/ProgressBar';
 import DataTable from '@/components/dean/DataTable';
 import LoadPanel from '@/components/dean/LoadPanel';
 import StudentDetail from '@/components/dean/StudentDetail';
+import AttendancePolicyPanel from '@/components/intelligence/AttendancePolicyPanel';
 import { WeeklyAttendanceChart } from '@/components/dean/InstitutionCharts';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { nf, num, pct, rateTone, useDeanData } from '@/lib/deanApi';
@@ -72,6 +73,8 @@ export default function AttendanceAnalyticsPage() {
           </Link>
         }
       />
+
+      <AttendancePolicyPanel />
 
       <LoadPanel loading={loading} error={error} hasData={Boolean(data)}>
         {data && (

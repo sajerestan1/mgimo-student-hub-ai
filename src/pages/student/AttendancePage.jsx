@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
+import StatusChip from '@/components/shell/StatusChip';
 import { loadStudentPortal } from '@/lib/studentPortal';
+import { loadAcademicIntelligence, ATTENDANCE_LABEL, ATTENDANCE_TONE } from '@/lib/academicIntelligence';
+import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 
 const STATS = [
   ['present', 'Present', 'text-positive'],
@@ -12,12 +16,18 @@ const STATS = [
 
 export default function AttendancePage() {
   const [context, setContext] = useState(null);
+  const [intel, setIntel] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     loadStudentPortal()
       .then(setContext)
       .catch(() => setError('Your attendance record could not be loaded. Please refresh the page.'));
+    // The absence allowance is an addition: if it cannot be loaded, the register
+    // below still renders.
+    loadAcademicIntelligence()
+      .then(setIntel)
+      .catch(() => setIntel(null));
   }, []);
 
   if (error) return <p className="card-surface px-5 py-6 text-[15px] text-critical">{error}</p>;
@@ -47,6 +57,31 @@ export default function AttendancePage() {
         description="Sessions registered by your instructors, counted from the official class register."
         meta={[`${held} sessions registered`, `${byCourse.length} courses in scope`]}
       />
+
+      {intel?.attendance && (
+        <div className="card-surface mb-4 flex flex-wrap items-center justify-between gap-3 px-5 py-3.5">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <div>
+              <p className="text-[12.5px] text-mutedink">Missed classes</p>
+              <p className="text-[18px] font-semibold tabular-nums text-ink">{intel.attendance.allowance.used}</p>
+            </div>
+            <div>
+              <p className="text-[12.5px] text-mutedink">Remaining allowance</p>
+              <p className="text-[18px] font-semibold tabular-nums text-ink">{intel.attendance.allowance.remaining}</p>
+            </div>
+            <div>
+              <p className="text-[12.5px] text-mutedink">Permitted per semester</p>
+              <p className="text-[18px] font-semibold tabular-nums text-ink">{intel.attendance.allowance.limit}</p>
+            </div>
+            <StatusChip tone={ATTENDANCE_TONE[intel.attendance.allowance.status] || 'neutral'}>
+              {ATTENDANCE_LABEL[intel.attendance.allowance.status]}
+            </StatusChip>
+          </div>
+          <Link to={P.student.intelligence} className="text-[13px] font-medium text-brand hover:underline">
+            Absence allowance and alerts
+          </Link>
+        </div>
+      )}
 
       <div className="mb-4 grid gap-4 lg:grid-cols-[1fr_1.4fr]">
         <div className="card-surface flex flex-col justify-center px-5 py-6">

@@ -21,6 +21,7 @@ import AssignmentsPage from '@/pages/student/AssignmentsPage';
 import QuizzesPage from '@/pages/student/QuizzesPage';
 import GradesPage from '@/pages/student/GradesPage';
 import AttendancePage from '@/pages/student/AttendancePage';
+import AcademicIntelligence from '@/pages/student/AcademicIntelligence';
 import ApplicationsPage from '@/pages/student/ApplicationsPage';
 import LibraryPage from '@/pages/student/LibraryPage';
 import AiStudyCompanion from '@/pages/student/AiStudyCompanion';
@@ -184,6 +185,14 @@ const AuthenticatedApp = () => {
             element={
               <RoleRoute role="student">
                 <AttendancePage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.student.intelligence}
+            element={
+              <RoleRoute role="student">
+                <AcademicIntelligence />
               </RoleRoute>
             }
           />

@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { buildStudentContext, contextBrief } from '../../shared/student/context.ts';
+import { buildAcademicIntelligence, intelligenceBrief } from '../../shared/student/intelligence.ts';
 
 const clean = (value) => (typeof value === 'string' ? value.slice(0, 500) : '');
 
@@ -24,6 +25,11 @@ export default async function (req) {
       });
     }
 
+    // The performance and attendance figures are added from the same resolver
+    // the Academic Intelligence page uses, so the assistant cannot quote a
+    // different average from the one the student is looking at.
+    const intel = await buildAcademicIntelligence(base44, user);
+
     const history = Array.isArray(body.history) ? body.history.slice(-6) : [];
     const historyLines = history
       .map((turn) => `${turn && turn.role === 'assistant' ? 'Assistant' : 'Student'}: ${clean(turn && turn.text)}`)
@@ -38,6 +44,10 @@ export default async function (req) {
       '',
       'STUDENT RECORD',
       contextBrief(context),
+      '',
+      'ACADEMIC PERFORMANCE AND ATTENDANCE INTELLIGENCE',
+      'Use these figures when the student asks about performance, trends, study priorities or attendance. Recorded results and calculated averages are separate; the register uses its own marking scale. Never predict or guarantee a future grade.',
+      intelligenceBrief(intel),
       historyLines ? `\nRECENT CONVERSATION\n${historyLines}` : '',
       '',
       `STUDENT QUESTION: ${question}`,

@@ -6,6 +6,7 @@
 
 import { buildGradebook, courseProgress, completionStatus, letterFor, round1 } from './gradebook.ts';
 import { resolveStudentAccount } from './identity.ts';
+import { dedupeAttendanceRecords } from './attendance.ts';
 
 const list = (page) => (Array.isArray(page) ? page : page?.items || []);
 const isoDay = () => new Date().toISOString().slice(0, 10);
@@ -162,7 +163,9 @@ export async function buildStudentContext(base44, user) {
   const attempts = list(attemptPage);
   const modules = list(modulePage);
   const progress = list(progressPage);
-  const attendance = list(attendancePage);
+  // One entry per course per day: a duplicated register row must never count as
+  // a second class or a second absence.
+  const attendance = dedupeAttendanceRecords(list(attendancePage));
   const sessions = list(sessionPage);
   const announcements = list(announcementPage);
   const materials = list(materialPage);
