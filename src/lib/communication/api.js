@@ -19,7 +19,17 @@ export const ALLOWED_MIME = [
 // Every communication read and write goes through the backend function; the
 // browser never queries a communication entity directly.
 export async function comm(action, payload = {}) {
-  const response = await base44.functions.invoke('communication', { action, ...payload });
+  let response;
+  try {
+    response = await base44.functions.invoke('communication', { action, ...payload });
+  } catch (caught) {
+    // A non-2xx answer throws before the body can be read, so the backend's own
+    // message is lifted out of the error here: without it every failure would
+    // reach the user as "Request failed with status code 500".
+    const error = new Error(caught?.response?.data?.error || caught?.message || 'Communication is unavailable');
+    error.status = caught?.response?.status;
+    throw error;
+  }
   const data = response?.data || {};
   if (data.error) {
     const error = new Error(data.error);

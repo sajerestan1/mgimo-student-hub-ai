@@ -240,6 +240,8 @@ function canGovern(identity) {
 }
 
 export default async function (req) {
+  // Declared outside the try so a failure can still name the branch in the logs.
+  let action = '';
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
@@ -248,7 +250,7 @@ export default async function (req) {
     const svc = base44.asServiceRole;
     const identity = await resolveIdentity(svc, user);
     const body = await req.json().catch(() => ({}));
-    const action = String(body.action || '');
+    action = String(body.action || '');
 
     if (!canUseCommunication(identity)) {
       return Response.json(
@@ -295,7 +297,16 @@ export default async function (req) {
         if (filter === 'groups') return thread.type === 'group';
         return true;
       });
-      return Response.json({ items, counts: await unreadTotals(svc, identity) });
+      // Counts are taken from the sweep just built instead of listing every
+      // thread a second time, so one inbox load is one pass over the caller's
+      // conversations rather than two.
+      return Response.json({
+        items,
+        counts: {
+          unreadMessages: enriched.reduce((sum, thread) => sum + thread.unread, 0),
+          unreadNotifications: await svc.entities.Notification.count({ user_id: identity.id, is_read: false }),
+        },
+      });
     }
 
     if (action === 'groups') {
@@ -1539,6 +1550,9 @@ export default async function (req) {
 
     return Response.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error) {
+    // The response stays a generic 500, but the branch and the real exception go
+    // to the function's logs so a failure can be identified from them.
+    console.error(`communication ${action || 'request'} failed: ${error?.message}`, error?.stack || '');
     return Response.json({ error: error.message }, { status: 500 });
   }
 }

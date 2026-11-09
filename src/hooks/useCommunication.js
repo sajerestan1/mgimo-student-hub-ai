@@ -25,7 +25,7 @@ export function useCommunication() {
 
   useEffect(() => {
     load();
-    const timer = setInterval(load, 30000);
+    const timer = setInterval(load, 60000);
     return () => clearInterval(timer);
   }, [load]);
 

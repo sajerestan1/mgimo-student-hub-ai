@@ -29,7 +29,7 @@ export default function ThreadList({ boot, selectedId, onSelect }) {
       .catch((error) => setState({ items: [], loading: false, error: error.message }));
   }, [filter]);
 
-  usePolling(load, 15000);
+  usePolling(load, 30000);
 
   const items = state.items.filter((item) =>
     !query || `${item.title} ${item.preview}`.toLowerCase().includes(query.toLowerCase()),

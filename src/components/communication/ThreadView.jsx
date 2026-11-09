@@ -31,6 +31,7 @@ export default function ThreadView({ boot, threadId, focusMessageId = '', onBack
   const bottom = useRef(null);
   const listRef = useRef(null);
   const focusedKey = useRef('');
+  const lastSeen = useRef('');
   const [highlightId, setHighlightId] = useState('');
 
   const load = useCallback(async () => {
@@ -44,14 +45,23 @@ export default function ThreadView({ boot, threadId, focusMessageId = '', onBack
     setDraft('');
     setReply(null);
     load()
-      .then(() => comm('markRead', { threadId }))
+      .then((data) => {
+        lastSeen.current = data?.messages?.length ? data.messages[data.messages.length - 1].id : '';
+        return comm('markRead', { threadId });
+      })
       .catch((error) => setState({ loading: false, error: error.message, data: null }));
   }, [threadId, load]);
 
+  // The poll refreshes the conversation; the read receipt is written only when
+  // something new actually arrived, so an open conversation costs no writes.
   usePolling(async () => {
-    await load();
-    await comm('markRead', { threadId });
-  }, 12000);
+    const data = await load();
+    const newest = data?.messages?.length ? data.messages[data.messages.length - 1].id : '';
+    if (newest && newest !== lastSeen.current) {
+      lastSeen.current = newest;
+      await comm('markRead', { threadId });
+    }
+  }, 25000);
 
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: 'end' });

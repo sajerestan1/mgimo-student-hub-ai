@@ -5,10 +5,10 @@ import { comm } from '@/lib/communication/api';
 //
 // The list and the unread total both come from the communication function,
 // which scopes every row to the caller's own user_id — this hook never asks
-// for anybody else's notifications. Refreshes are polled (20s) and re-run when
-// the tab becomes visible again, so a message sent from another account shows
-// up without a manual reload.
-export function useNotifications({ pollMs = 20000 } = {}) {
+// for anybody else's notifications. Refreshes are polled (60s, and never while
+// the tab is hidden) and re-run when the tab becomes visible again, so a message
+// sent from another account shows up without a manual reload.
+export function useNotifications({ pollMs = 60000 } = {}) {
   const [state, setState] = useState({ items: [], unread: 0, loading: true, error: '' });
   const alive = useRef(true);
 
