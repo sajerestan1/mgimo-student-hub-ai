@@ -1,5 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { ASSIGNABLE_ROLES, isAdmin, isSuperAdmin, missingFields, writeAudit } from '../../shared/accounts.ts';
+import {
+  MIRROR_TO_STUDENT_FIELD,
+  resolveAcademicIdentity,
+  syncAccountMirror,
+} from '../../shared/student/academicIdentity.ts';
+import { ensureClassGroup, syncGroupMembership } from '../../shared/communication/groups.ts';
+
+const normEmail = (value) => String(value || '').toLowerCase().trim();
+const list = (page) => (Array.isArray(page) ? page : page?.items || []);
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const STATUSES = ['active', 'suspended', 'deactivated'];
@@ -16,15 +25,17 @@ const ALL_ROLES = [
 ];
 
 // Compulsory profile data may live on the administrator's User record or on the
-// linked Student / Professor profile; the roster resolves both.
+// linked Student / Professor profile. For a student the Student record is the
+// authority and the User fields are only its mirror, so this register can never
+// display a cohort the student's own workspace disagrees with.
 function resolvedProfile(record, student, professor) {
   return {
     full_name: record.full_name || student?.full_name || professor?.full_name || '',
-    faculty_id: record.faculty_id || student?.faculty_id || professor?.faculty_id || '',
-    department_id: record.department_id || professor?.department_id || '',
-    group_name: record.group_name || student?.group_name || '',
-    programme: record.programme || student?.program || '',
-    student_id: record.student_id || student?.student_id || '',
+    faculty_id: student?.faculty_id || record.faculty_id || professor?.faculty_id || '',
+    department_id: student?.department_id || record.department_id || professor?.department_id || '',
+    group_name: student?.group_name || record.group_name || '',
+    programme: student?.program || record.programme || '',
+    student_id: student?.student_id || record.student_id || '',
     professor_id: record.professor_id || '',
     contact_email: record.contact_email || record.email || '',
     phone: record.phone || '',
@@ -35,8 +46,18 @@ function resolvedProfile(record, student, professor) {
 function shape(record, student, professor) {
   const profile = resolvedProfile(record, student, professor);
   const missing = missingFields({ ...record, ...profile });
+  // Which source produced the academic placement, and whether the account's own
+  // copy still disagrees with it — reported, never silently averaged.
+  const identityMismatch = student
+    ? Object.entries(MIRROR_TO_STUDENT_FIELD)
+        .filter(([mirrorField, studentField]) => String(record[mirrorField] || '') !== String(student[studentField] || ''))
+        .map(([mirrorField]) => mirrorField)
+    : [];
   return {
     ...profile,
+    year: typeof student?.year === 'number' ? student.year : null,
+    identity_source: student ? 'student_record' : 'account',
+    identity_mismatch: identityMismatch,
     id: record.id,
     email: record.email,
     role: record.role || 'user',
@@ -349,9 +370,9 @@ export default async function (req) {
           provisioned: true,
           student_id: student.student_id || '',
           contact_email: email,
-          faculty_id: target.faculty_id || student.faculty_id || '',
-          group_name: target.group_name || student.group_name || '',
-          programme: target.programme || student.program || '',
+          faculty_id: student.faculty_id || target.faculty_id || '',
+          group_name: student.group_name || target.group_name || '',
+          programme: student.program || target.programme || '',
         });
       }
       const linked = Boolean(target && (student.user_id === target.id || recordCreated));
@@ -471,6 +492,20 @@ export default async function (req) {
 
       await sr.entities.User.update(target.id, update);
 
+      // Academic placement edited here is written to the authoritative Student
+      // record first and only then mirrored onto the account, so the change the
+      // administrator makes is the one the student's own workspace shows.
+      const linkedStudent = (await sr.entities.Student.filter({ user_id: target.id }, { limit: 5 }))[0];
+      const academicPatch = {};
+      if (linkedStudent) {
+        for (const [mirrorField, studentField] of Object.entries(MIRROR_TO_STUDENT_FIELD)) {
+          if (mirrorField in update) academicPatch[studentField] = update[mirrorField];
+        }
+        if (Object.keys(academicPatch).length) {
+          await sr.entities.Student.update(linkedStudent.id, academicPatch);
+        }
+      }
+
       if (update.full_name) {
         for (const entity of ['Student', 'Professor']) {
           const page = await sr.entities[entity].filter({ user_id: target.id });
@@ -500,6 +535,212 @@ export default async function (req) {
       });
 
       return Response.json({ ok: true, changed: changes.length });
+    }
+
+    // Read-only diagnosis: what every surface actually resolves for a named
+    // account (register row, student record, class group, membership, timetable
+    // scope, enrolments, duplicates). No record is written — not even an
+    // adoption — so an administrator can see disagreement before repairing it.
+    if (action === 'identityReport') {
+      const emails = (Array.isArray(body.emails) ? body.emails : [body.email])
+        .filter(Boolean)
+        .slice(0, 5)
+        .map(normEmail);
+      if (!emails.length) return Response.json({ error: 'At least one email address is required' }, { status: 400 });
+
+      const [users, students, groups, members, enrolments, sessions] = await Promise.all([
+        sr.entities.User.list('-created_date', 300),
+        sr.entities.Student.list('-created_date', 800),
+        sr.entities.CommunicationGroup.list('-created_date', 200),
+        sr.entities.CommunicationGroupMember.list('-created_date', 400),
+        sr.entities.CourseEnrollment.list('-created_date', 800),
+        sr.entities.ClassSession.list('-created_date', 400),
+      ]);
+
+      const items = [];
+      for (const email of emails) {
+        const account = list(users).find((row) => normEmail(row.email) === email) || null;
+        const linkedRecords = account ? list(students).filter((row) => row.user_id === account.id) : [];
+        const recordsOnEmail = list(students).filter((row) => normEmail(row.email) === email);
+        const identity = account ? await resolveAcademicIdentity(sr, account, { adopt: false }) : null;
+        const registerRow = account ? shape(account, identity?.student || null, null) : null;
+        const group = identity?.groupName
+          ? list(groups).find((row) => row.group_type === 'class' && row.academic_group_id === identity.groupName) || null
+          : null;
+        const membership = account && group
+          ? list(members).find((row) => row.group_id === group.id && row.user_id === account.id) || null
+          : null;
+        const ownEnrolments = identity?.student
+          ? list(enrolments).filter((row) => row.student_id === identity.student.id)
+          : [];
+        const courseIds = [...new Set(ownEnrolments.map((row) => row.course_id).filter(Boolean))];
+        const cohortSessions = list(sessions).filter(
+          (row) => courseIds.includes(row.course_id) && (!row.group_name || row.group_name === identity?.groupName),
+        );
+        const activeMembers = group
+          ? list(members).filter((row) => row.group_id === group.id && row.membership_status === 'active').length
+          : 0;
+
+        items.push({
+          email,
+          account: account
+            ? {
+                id: account.id,
+                role: account.role || 'user',
+                status: account.account_status || 'active',
+                mirror: {
+                  student_id: account.student_id || '',
+                  group_name: account.group_name || '',
+                  programme: account.programme || '',
+                  faculty_id: account.faculty_id || '',
+                },
+              }
+            : null,
+          student: identity?.student
+            ? {
+                id: identity.student.id,
+                student_id: identity.studentId,
+                group_name: identity.groupName,
+                year: identity.year,
+                programme: identity.programme,
+                faculty_id: identity.facultyId,
+                department_id: identity.departmentId,
+                enrollment_status: identity.student.enrollment_status || 'active',
+                source: identity.source,
+              }
+            : null,
+          register: registerRow
+            ? {
+                group_name: registerRow.group_name,
+                student_id: registerRow.student_id,
+                year: registerRow.year,
+                identity_source: registerRow.identity_source,
+                identity_mismatch: registerRow.identity_mismatch,
+              }
+            : null,
+          communication: group
+            ? {
+                group_id: group.id,
+                group_name: group.name,
+                academic_group_id: group.academic_group_id,
+                membership_status: membership?.membership_status || 'none',
+                member_count: activeMembers,
+                stored_member_count: group.member_count || 0,
+              }
+            : null,
+          timetable: { group: identity?.groupName || '', cohort_sessions: cohortSessions.length },
+          enrolments: { count: ownEnrolments.length, courses: courseIds.length },
+          duplicates: {
+            linked_student_records: linkedRecords.length,
+            records_on_email: recordsOnEmail.length,
+          },
+          conflicts: identity?.conflicts || [],
+        });
+      }
+
+      return Response.json({ items });
+    }
+
+    // Repair: make the account mirror and the class-group membership follow the
+    // authoritative student record, and reconcile member counts. Nothing is
+    // deleted and no identifier, link, enrolment, grade or submission is touched.
+    if (action === 'reconcileIdentities') {
+      const emails = (Array.isArray(body.emails) ? body.emails : []).map(normEmail).filter(Boolean).slice(0, 50);
+      const users = list(await sr.entities.User.list('-created_date', 300));
+      const targets = emails.length
+        ? users.filter((row) => emails.includes(normEmail(row.email)))
+        : users.filter((row) => normEmail(row.role) === 'student');
+
+      const results = [];
+      let repaired = 0;
+      let conflicts = 0;
+
+      for (const account of targets) {
+        if (normEmail(account.role) !== 'student') {
+          results.push({ email: account.email, status: 'skipped', reason: 'Not a student account' });
+          continue;
+        }
+        const before = await resolveAcademicIdentity(sr, account, { adopt: false });
+        if (!before.student) {
+          conflicts += (before.conflicts || []).length;
+          results.push({
+            email: account.email,
+            status: 'no_record',
+            conflicts: before.conflicts || [],
+          });
+          continue;
+        }
+
+        const identity = await resolveAcademicIdentity(sr, account);
+        const mirror = await syncAccountMirror(sr, account.id, identity);
+        let group = null;
+        let membership = null;
+        if (identity.groupName) {
+          group = await ensureClassGroup(sr, identity.groupName, identity.programme);
+          if (group) {
+            membership = await syncGroupMembership(sr, group);
+            // A student whose record moved cohort may still sit in the old class
+            // group; that stale row is closed here, so the two never disagree.
+            const stale = list(
+              await sr.entities.CommunicationGroupMember.filter(
+                { user_id: account.id, membership_status: 'active' },
+                { limit: 30 },
+              ),
+            ).filter((row) => row.group_id !== group.id);
+            for (const row of stale) {
+              const owner = list(await sr.entities.CommunicationGroup.filter({ id: row.group_id }, { limit: 1 }))[0];
+              if (owner && owner.group_type === 'class') {
+                await sr.entities.CommunicationGroupMember.update(row.id, {
+                  membership_status: 'left',
+                  left_at: new Date().toISOString(),
+                });
+                const count = await sr.entities.CommunicationGroupMember.count({
+                  group_id: owner.id,
+                  membership_status: 'active',
+                });
+                await sr.entities.CommunicationGroup.update(owner.id, { member_count: count });
+              }
+            }
+          }
+        }
+
+        conflicts += (identity.conflicts || []).length;
+        if (mirror.length) repaired += 1;
+        results.push({
+          email: account.email,
+          status: mirror.length || identity.source === 'adopted' ? 'repaired' : 'already_consistent',
+          before: {
+            mirror: {
+              group_name: account.group_name || '',
+              student_id: account.student_id || '',
+              programme: account.programme || '',
+            },
+          },
+          after: {
+            group_name: identity.groupName,
+            student_id: identity.studentId,
+            year: identity.year,
+            programme: identity.programme,
+            faculty_id: identity.facultyId,
+            source: identity.source,
+          },
+          mirror_changes: mirror,
+          class_group: group
+            ? { id: group.id, name: group.name, members: membership?.count ?? null, added: membership?.added ?? null, removed: membership?.removed ?? null }
+            : null,
+          conflicts: identity.conflicts || [],
+        });
+      }
+
+      await writeAudit(base44, {
+        actor: caller,
+        action: 'academic_identities_reconciled',
+        targetId: '',
+        target: emails.length ? emails.join(', ') : 'All student accounts',
+        details: `${targets.length} account(s) inspected · ${repaired} aligned with their student record · ${conflicts} conflict(s) reported. No academic record was deleted.`,
+      });
+
+      return Response.json({ inspected: targets.length, repaired, conflicts, results });
     }
 
     if (action === 'setStatus') {

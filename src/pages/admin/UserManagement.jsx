@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, Plus, RefreshCw, Search, UserPlus } from 'lucide-react';
+import { Loader2, Plus, RefreshCw, Search, ShieldCheck, UserPlus } from 'lucide-react';
 import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
 import UserRosterTable from '@/components/admin/users/UserRosterTable';
@@ -21,6 +21,7 @@ export default function UserManagement() {
   const [tab, setTab] = useState('accounts');
   const [creating, setCreating] = useState(false);
   const [provisioning, setProvisioning] = useState(false);
+  const [repairing, setRepairing] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [flash, setFlash] = useState('');
 
@@ -46,6 +47,27 @@ export default function UserManagement() {
   }, [filters, version]);
 
   const refresh = () => setVersion((value) => value + 1);
+
+  // Aligns every student account with its authoritative student record and
+  // reconciles class-group membership. Safe to run repeatedly.
+  const reconcile = async () => {
+    setRepairing(true);
+    setFlash('');
+    try {
+      const response = await base44.functions.invoke('adminUsers', { action: 'reconcileIdentities' });
+      const payload = response?.data || {};
+      if (payload.error) throw new Error(payload.error);
+      setFlash(
+        `Academic identities reconciled: ${payload.inspected} account${payload.inspected === 1 ? '' : 's'} inspected, ` +
+          `${payload.repaired} aligned with their student record, ${payload.conflicts} conflict${payload.conflicts === 1 ? '' : 's'} reported.`
+      );
+      refresh();
+    } catch (repairError) {
+      setFlash(repairError?.message || 'The academic identities could not be reconciled.');
+    } finally {
+      setRepairing(false);
+    }
+  };
   const selected = data.users.find((account) => account.id === selectedId) || null;
   const groups = [...new Set(data.users.map((account) => account.group_name).filter(Boolean))].sort();
 
@@ -59,6 +81,10 @@ export default function UserManagement() {
           <>
             <button type="button" className="btn-quiet" onClick={refresh}>
               <RefreshCw className="h-3.5 w-3.5" /> Refresh
+            </button>
+            <button type="button" className="btn-quiet" onClick={reconcile} disabled={repairing}>
+              {repairing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+              Reconcile identities
             </button>
             <button type="button" className="btn-quiet" onClick={() => setCreating(true)}>
               <Plus className="h-3.5 w-3.5" /> New account

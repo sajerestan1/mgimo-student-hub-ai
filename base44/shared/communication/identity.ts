@@ -3,6 +3,7 @@
 // the browser supplied: the request body carries resource ids only, and every
 // one of them is checked against this resolved identity.
 import { list } from './util.ts';
+import { resolveAcademicIdentity } from '../student/academicIdentity.ts';
 
 export const STAFF_ROLES = ['admin', 'dean', 'deputy_dean', 'academic_staff'];
 export const MODERATOR_ROLES = ['admin', 'dean', 'deputy_dean'];
@@ -31,9 +32,17 @@ export async function resolveIdentity(svc, user) {
     coordinatorScopes: [],
   };
 
+  // The academic group is never read from the browser and never from a second
+  // source: the same resolver the administration register and every student
+  // page use decides it, so the cohort shown here cannot disagree with them.
   if (role === 'student') {
-    identity.student = list(await svc.entities.Student.filter({ user_id: user.id }, { limit: 2 }))[0] || null;
-    identity.academicGroup = identity.student?.group_name || '';
+    const academic = await resolveAcademicIdentity(svc, user);
+    identity.student = academic.student;
+    identity.academicGroup = academic.groupName;
+    identity.academicYear = academic.year;
+    identity.studentId = academic.studentId;
+    identity.programme = academic.programme;
+    identity.identityConflicts = academic.conflicts || [];
   }
   if (role === 'professor') {
     identity.professor = list(await svc.entities.Professor.filter({ user_id: user.id }, { limit: 2 }))[0] || null;

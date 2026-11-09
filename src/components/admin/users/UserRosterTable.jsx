@@ -46,7 +46,15 @@ export default function UserRosterTable({ users, faculties, onOpen }) {
                 <StatusChip tone={ROLE_TONES[account.role] || 'neutral'}>{accountRoleLabel(account)}</StatusChip>
               </td>
               <td className={cell}>{facultyName(account.faculty_id)}</td>
-              <td className={cell}>{account.group_name || '—'}</td>
+              <td className={cell}>
+                <span className="block">{account.group_name || '—'}</span>
+                {account.year ? <span className="block text-[13px] text-mutedink">Year {account.year}</span> : null}
+                {account.identity_mismatch?.length ? (
+                  <span className="mt-0.5 inline-flex">
+                    <StatusChip tone="warning">Account copy differs</StatusChip>
+                  </span>
+                ) : null}
+              </td>
               <td className={cell}>
                 <StatusChip tone={STATUS_TONES[account.account_status] || 'neutral'}>
                   {STATUS_LABELS[account.account_status] || account.account_status}

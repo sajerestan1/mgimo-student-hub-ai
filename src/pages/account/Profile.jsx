@@ -9,6 +9,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { useWorkspace, WORKSPACES } from '@/lib/workspaceRole';
 import { accountRoleLabel, initialsOf } from '@/lib/accounts';
+import { loadStudentPortal } from '@/lib/studentPortal';
 
 function Row({ label, value }) {
   return (
@@ -25,6 +26,22 @@ export default function Profile() {
 
   const [phone, setPhone] = useState(user?.phone || '');
   const [photo, setPhoto] = useState(user?.photo_uri || '');
+  // The academic block below reads the same authoritative student record the
+  // dashboard, timetable and register use — never the account's own copy.
+  const [academic, setAcademic] = useState(null);
+
+  useEffect(() => {
+    if (role !== 'student') return undefined;
+    let alive = true;
+    loadStudentPortal()
+      .then((data) => {
+        if (alive) setAcademic(data.profile || null);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [role]);
   const [faculties, setFaculties] = useState([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -122,11 +139,12 @@ export default function Profile() {
           <Surface title="Academic record" subtitle="Maintained by the university">
             <dl>
               <Row label="Role" value={accountRoleLabel(user)} />
-              <Row label="Student ID" value={user?.student_id} />
+              <Row label="Student ID" value={academic?.student_id || user?.student_id} />
               <Row label="Professor ID" value={user?.professor_id} />
               <Row label="Faculty" value={facultyName} />
-              <Row label="Class / group" value={user?.group_name} />
-              <Row label="Programme" value={user?.programme} />
+              <Row label="Class / group" value={academic?.group_name || user?.group_name} />
+              <Row label="Programme" value={academic?.program || user?.programme} />
+              {academic?.year ? <Row label="Academic year" value={`Year ${academic.year}`} /> : null}
             </dl>
             <p className="mt-3 flex items-start gap-2 rounded-lg bg-canvas px-3 py-2.5 text-[13px] leading-relaxed text-mutedink">
               <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
+import { resolveAcademicIdentity } from '../../shared/student/academicIdentity.ts';
 
 const list = (page) => (Array.isArray(page) ? page : page?.items || []);
 const sameEmail = (a, b) => Boolean(a) && Boolean(b) && String(a).toLowerCase() === String(b).toLowerCase();
@@ -19,16 +20,11 @@ async function findProfessor(svc, user) {
   return { ...byEmail, user_id: user.id };
 }
 
+// Identity comes from the one shared resolver, so course enrolment, timetable,
+// dashboard and the administration register always name the same student.
 async function findStudent(svc, user) {
-  const linked = list(await svc.entities.Student.filter({ user_id: user.id }, { limit: 2 }))[0];
-  if (linked) return linked;
-
-  const byEmail =
-    list(await svc.entities.Student.filter({ email: user.email }, { limit: 5 })).find((s) => sameEmail(s.email, user.email)) ||
-    list(await svc.entities.Student.list('-created_date', 300)).find((s) => sameEmail(s.email, user.email));
-  if (!byEmail) return null;
-  if (!byEmail.user_id) await svc.entities.Student.update(byEmail.id, { user_id: user.id });
-  return { ...byEmail, user_id: user.id };
+  const identity = await resolveAcademicIdentity(svc, user);
+  return identity.student;
 }
 
 async function claimProfessor(svc, user) {
@@ -43,24 +39,6 @@ async function claimProfessor(svc, user) {
   const target = spare[0];
   if (!target) return null;
   await svc.entities.Professor.update(target.id, { user_id: user.id });
-  return { ...target, user_id: user.id };
-}
-
-async function claimStudent(svc, user) {
-  const publishedIds = list(await svc.entities.Course.filter({ status: 'published' }, { limit: 200 })).map((c) => c.id);
-  const enrolments = publishedIds.length
-    ? list(await svc.entities.CourseEnrollment.filter({ course_id: { $in: publishedIds } }, { limit: 1000 }))
-    : [];
-  const load = new Map();
-  enrolments.forEach((row) => load.set(row.student_id, (load.get(row.student_id) || 0) + 1));
-
-  const spare = list(await svc.entities.Student.list('-created_date', 300))
-    .filter((s) => !s.user_id)
-    .sort((a, b) => (load.get(b.id) || 0) - (load.get(a.id) || 0));
-
-  const target = spare[0];
-  if (!target) return null;
-  await svc.entities.Student.update(target.id, { user_id: user.id });
   return { ...target, user_id: user.id };
 }
 
@@ -105,7 +83,8 @@ export default async function (req) {
     let student = readOnly
       ? list(await svc.entities.Student.list('-created_date', 300)).find((s) => sameEmail(s.email, user.email)) || null
       : await findStudent(svc, user);
-    if (!student && !readOnly && (role === 'student' || role === 'user')) student = await claimStudent(svc, user);
+    // A student record is only ever the one the shared resolver attributes to
+    // this account; no arbitrary unclaimed record is adopted here.
     if (!student) {
       return Response.json({ role: 'student', student: null, professor: null, courses: [], reason: 'no_profile' });
     }
