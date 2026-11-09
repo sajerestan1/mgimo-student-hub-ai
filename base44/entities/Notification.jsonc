@@ -18,15 +18,30 @@
         "schedule",
         "application",
         "reminder",
-        "deadline"
+        "deadline",
+        "message",
+        "official",
+        "security"
       ],
       "enumColors": [
         "blue",
         "purple",
         "green",
         "yellow",
-        "red"
+        "red",
+        "blue",
+        "yellow",
+        "pink"
       ]
+    },
+    "notification_type": {
+      "type": "string"
+    },
+    "link": {
+      "type": "string"
+    },
+    "dedupe_key": {
+      "type": "string"
     },
     "is_read": {
       "type": "boolean"

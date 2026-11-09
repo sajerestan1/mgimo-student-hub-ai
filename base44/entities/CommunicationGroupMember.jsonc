@@ -1,0 +1,102 @@
+{
+  "name": "CommunicationGroupMember",
+  "type": "object",
+  "properties": {
+    "group_id": {
+      "type": "string"
+    },
+    "conversation_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_role": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "member",
+        "coordinator"
+      ],
+      "enumColors": [
+        "gray",
+        "purple"
+      ],
+      "default": "member"
+    },
+    "membership_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "pending",
+        "left"
+      ],
+      "enumColors": [
+        "green",
+        "yellow",
+        "gray"
+      ],
+      "default": "active"
+    },
+    "membership_source": {
+      "type": "string",
+      "enum": [
+        "academic_group",
+        "invitation",
+        "coordinator",
+        "admin"
+      ],
+      "enumColors": [
+        "blue",
+        "green",
+        "purple",
+        "gray"
+      ],
+      "default": "academic_group"
+    },
+    "joined_at": {
+      "type": "string"
+    },
+    "left_at": {
+      "type": "string"
+    },
+    "last_read_at": {
+      "type": "string"
+    },
+    "muted": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "group_id",
+    "user_id"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

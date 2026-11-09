@@ -66,6 +66,8 @@ import UserManagement from '@/pages/admin/UserManagement';
 import CompleteProfile from '@/pages/account/CompleteProfile';
 import AdminOnlyRoute from '@/components/shell/AdminOnlyRoute';
 import DeanAssistant from '@/pages/Assistant';
+import CommunicationCenter from '@/pages/communication/CommunicationCenter';
+import InvitationJoin from '@/pages/communication/InvitationJoin';
 import { AdminDataProvider } from '@/lib/AdminDataContext';
 // Add page imports here
 
@@ -317,6 +319,16 @@ const AuthenticatedApp = () => {
           {COMING_SOON_ROUTES.map((path) => (
             <Route key={path} path={path} element={<ComingSoon />} />
           ))}
+
+          {/* Communication Center: one authorised surface, role-appropriate
+              tabs, every read and write decided by the communication function. */}
+          <Route path="/communication" element={<CommunicationCenter tab="inbox" />} />
+          <Route path="/communication/groups" element={<CommunicationCenter tab="groups" />} />
+          <Route path="/communication/directory" element={<CommunicationCenter tab="directory" />} />
+          <Route path="/communication/notifications" element={<CommunicationCenter tab="notifications" />} />
+          <Route path="/communication/moderation" element={<CommunicationCenter tab="moderation" />} />
+          <Route path="/communication/coordinators" element={<CommunicationCenter tab="coordinators" />} />
+          <Route path="/invite/:token" element={<InvitationJoin />} />
 
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<UserSettings />} />

@@ -23,6 +23,15 @@ export const NAV_BY_ROLE = {
       ],
     },
     {
+      label: 'Communication',
+      items: [
+        { to: '/communication', label: 'Inbox', icon: 'Inbox' },
+        { to: '/communication/groups', label: 'My Groups', icon: 'MessagesSquare' },
+        { to: '/communication/directory', label: 'Directory', icon: 'Users' },
+        { to: '/communication/notifications', label: 'Notifications', icon: 'Bell' },
+      ],
+    },
+    {
       label: 'Support',
       items: [
         { to: '/help', label: 'Help & Support', icon: 'LifeBuoy' },
@@ -64,6 +73,15 @@ export const NAV_BY_ROLE = {
       ],
     },
     {
+      label: 'Communication',
+      items: [
+        { to: '/communication', label: 'Inbox', icon: 'Inbox' },
+        { to: '/communication/groups', label: 'Course & class groups', icon: 'MessagesSquare' },
+        { to: '/communication/directory', label: 'Directory', icon: 'Users' },
+        { to: '/communication/notifications', label: 'Notifications', icon: 'Bell' },
+      ],
+    },
+    {
       label: 'Support',
       items: [{ to: '/help', label: 'Help & Support', icon: 'LifeBuoy' }],
     },
@@ -102,6 +120,17 @@ export const NAV_BY_ROLE = {
       label: 'Administration',
       items: [
         { to: '/admin/users', label: 'User management', icon: 'ShieldCheck', adminOnly: true },
+      ],
+    },
+    {
+      label: 'Communication',
+      items: [
+        { to: '/communication', label: 'Inbox & official mail', icon: 'Inbox' },
+        { to: '/communication/groups', label: 'Class & student groups', icon: 'MessagesSquare' },
+        { to: '/communication/directory', label: 'Directory', icon: 'Users' },
+        { to: '/communication/moderation', label: 'Moderation', icon: 'ShieldAlert', roles: ['admin', 'dean', 'deputy_dean'] },
+        { to: '/communication/coordinators', label: 'Coordinators', icon: 'ShieldCheck', roles: ['admin', 'dean'] },
+        { to: '/communication/notifications', label: 'Notifications', icon: 'Bell' },
       ],
     },
     {

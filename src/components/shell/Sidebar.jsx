@@ -35,6 +35,8 @@ import {
   BellRing,
   Lightbulb,
   ShieldCheck,
+  Inbox,
+  ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
@@ -76,6 +78,8 @@ const ICONS = {
   BellRing,
   Lightbulb,
   ShieldCheck,
+  Inbox,
+  ShieldAlert,
 };
 
 const initials = (name) =>
@@ -165,7 +169,14 @@ export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollap
   // server verifies the role again on every administrative action.
   const isAdmin = user?.role === 'admin';
   const groups = (NAV_BY_ROLE[workspace.role] || NAV_BY_ROLE.student)
-    .map((group) => ({ ...group, items: group.items.filter((item) => !item.adminOnly || isAdmin) }))
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => {
+        if (item.adminOnly && !isAdmin) return false;
+        if (item.roles && !item.roles.includes(user?.role)) return false;
+        return true;
+      }),
+    }))
     .filter((group) => group.items.length);
   const isStudent = workspace.role === 'student';
   const studentProfile = useStudentProfile(isStudent);

@@ -1,0 +1,111 @@
+{
+  "name": "CommunicationThread",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "private",
+        "official",
+        "group"
+      ],
+      "enumColors": [
+        "blue",
+        "yellow",
+        "green"
+      ],
+      "default": "private"
+    },
+    "title": {
+      "type": "string"
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    },
+    "participant_key": {
+      "type": "string",
+      "description": "Sorted user-id pair for private threads; guarantees one thread per pair"
+    },
+    "category": {
+      "type": "string",
+      "description": "Official channel subject category"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "assigned",
+        "in_progress",
+        "awaiting_student",
+        "resolved",
+        "closed"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "yellow",
+        "blue",
+        "green",
+        "gray"
+      ],
+      "default": "open"
+    },
+    "assigned_to_name": {
+      "type": "string"
+    },
+    "group_id": {
+      "type": "string"
+    },
+    "academic_group_id": {
+      "type": "string"
+    },
+    "course_id": {
+      "type": "string"
+    },
+    "last_message_at": {
+      "type": "string"
+    },
+    "last_message_preview": {
+      "type": "string"
+    },
+    "last_sender_name": {
+      "type": "string"
+    },
+    "message_count": {
+      "type": "number",
+      "default": 0
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

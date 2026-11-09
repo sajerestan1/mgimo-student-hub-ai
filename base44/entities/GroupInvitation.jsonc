@@ -1,0 +1,90 @@
+{
+  "name": "GroupInvitation",
+  "type": "object",
+  "properties": {
+    "group_id": {
+      "type": "string"
+    },
+    "group_name": {
+      "type": "string"
+    },
+    "conversation_id": {
+      "type": "string"
+    },
+    "academic_group_id": {
+      "type": "string"
+    },
+    "token_hash": {
+      "type": "string"
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    },
+    "expires_at": {
+      "type": "string"
+    },
+    "revoked_at": {
+      "type": "string"
+    },
+    "maximum_uses": {
+      "type": "number",
+      "default": 25
+    },
+    "usage_count": {
+      "type": "number",
+      "default": 0
+    },
+    "approval_required": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "revoked",
+        "expired",
+        "exhausted"
+      ],
+      "enumColors": [
+        "green",
+        "red",
+        "gray",
+        "yellow"
+      ],
+      "default": "active"
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "group_id",
+    "token_hash"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

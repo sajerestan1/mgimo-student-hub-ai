@@ -1,0 +1,93 @@
+{
+  "name": "CoordinatorAssignment",
+  "type": "object",
+  "properties": {
+    "coordinator_user_id": {
+      "type": "string"
+    },
+    "coordinator_name": {
+      "type": "string"
+    },
+    "scope_type": {
+      "type": "string",
+      "enum": [
+        "class",
+        "subgroup"
+      ],
+      "enumColors": [
+        "blue",
+        "green"
+      ],
+      "default": "class"
+    },
+    "academic_group_id": {
+      "type": "string"
+    },
+    "group_id": {
+      "type": "string"
+    },
+    "conversation_id": {
+      "type": "string"
+    },
+    "assigned_by": {
+      "type": "string"
+    },
+    "assigned_by_name": {
+      "type": "string"
+    },
+    "assigned_at": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "revoked_at": {
+      "type": "string"
+    },
+    "revoked_by": {
+      "type": "string"
+    },
+    "revoked_reason": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "revoked"
+      ],
+      "enumColors": [
+        "green",
+        "gray"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "coordinator_user_id",
+    "scope_type",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

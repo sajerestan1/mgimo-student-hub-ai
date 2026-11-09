@@ -1,0 +1,122 @@
+{
+  "name": "CommunicationGroup",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "group_type": {
+      "type": "string",
+      "enum": [
+        "class",
+        "subgroup"
+      ],
+      "enumColors": [
+        "blue",
+        "green"
+      ],
+      "default": "subgroup"
+    },
+    "academic_group_id": {
+      "type": "string",
+      "description": "Authoritative academic group name, e.g. IR-21A"
+    },
+    "parent_group_id": {
+      "type": "string"
+    },
+    "conversation_id": {
+      "type": "string"
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "group_only",
+        "discoverable",
+        "invite_only",
+        "private"
+      ],
+      "enumColors": [
+        "blue",
+        "green",
+        "yellow",
+        "gray"
+      ],
+      "default": "group_only"
+    },
+    "membership_policy": {
+      "type": "string",
+      "enum": [
+        "auto",
+        "invite",
+        "approval"
+      ],
+      "enumColors": [
+        "green",
+        "blue",
+        "yellow"
+      ],
+      "default": "auto"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "archived"
+      ],
+      "enumColors": [
+        "green",
+        "gray"
+      ],
+      "default": "active"
+    },
+    "member_count": {
+      "type": "number",
+      "default": 0
+    },
+    "coordinator_name": {
+      "type": "string"
+    },
+    "last_activity_at": {
+      "type": "string"
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "group_type"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

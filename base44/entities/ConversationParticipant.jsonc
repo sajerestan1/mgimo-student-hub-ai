@@ -1,0 +1,66 @@
+{
+  "name": "ConversationParticipant",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_role": {
+      "type": "string"
+    },
+    "joined_at": {
+      "type": "string"
+    },
+    "last_read_at": {
+      "type": "string"
+    },
+    "muted": {
+      "type": "boolean",
+      "default": false
+    },
+    "membership_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "left"
+      ],
+      "enumColors": [
+        "green",
+        "gray"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "conversation_id",
+    "user_id"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

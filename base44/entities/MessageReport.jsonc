@@ -1,0 +1,103 @@
+{
+  "name": "MessageReport",
+  "type": "object",
+  "properties": {
+    "message_id": {
+      "type": "string"
+    },
+    "conversation_id": {
+      "type": "string"
+    },
+    "group_id": {
+      "type": "string"
+    },
+    "reporter_user_id": {
+      "type": "string"
+    },
+    "reporter_name": {
+      "type": "string"
+    },
+    "accused_user_id": {
+      "type": "string"
+    },
+    "accused_name": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "spam",
+        "abuse",
+        "offensive",
+        "harassment",
+        "other"
+      ],
+      "enumColors": [
+        "yellow",
+        "red",
+        "red",
+        "red",
+        "gray"
+      ],
+      "default": "other"
+    },
+    "note": {
+      "type": "string"
+    },
+    "excerpt": {
+      "type": "string",
+      "description": "First 200 characters of the reported message, minimum evidence only"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "actioned",
+        "dismissed"
+      ],
+      "enumColors": [
+        "red",
+        "green",
+        "gray"
+      ],
+      "default": "open"
+    },
+    "reviewed_by": {
+      "type": "string"
+    },
+    "reviewed_at": {
+      "type": "string"
+    },
+    "resolution": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "message_id",
+    "conversation_id",
+    "reporter_user_id",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
