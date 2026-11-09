@@ -2,110 +2,40 @@
   "name": "Conversation",
   "type": "object",
   "properties": {
-    "type": {
-      "type": "string",
-      "enum": [
-        "private",
-        "official",
-        "group"
-      ],
-      "enumColors": [
-        "blue",
-        "yellow",
-        "green"
-      ],
-      "default": "private"
+    "user_id": {
+      "type": "string"
     },
     "title": {
       "type": "string"
     },
-    "created_by": {
+    "preview": {
       "type": "string"
-    },
-    "created_by_name": {
-      "type": "string"
-    },
-    "participant_key": {
-      "type": "string",
-      "description": "Sorted user-id pair for private conversations; guarantees one thread per pair"
-    },
-    "category": {
-      "type": "string",
-      "description": "Official channel subject category"
-    },
-    "status": {
-      "type": "string",
-      "enum": [
-        "open",
-        "assigned",
-        "in_progress",
-        "awaiting_student",
-        "resolved",
-        "closed"
-      ],
-      "enumColors": [
-        "blue",
-        "purple",
-        "yellow",
-        "orange",
-        "green",
-        "gray"
-      ],
-      "default": "open"
-    },
-    "assigned_to_name": {
-      "type": "string"
-    },
-    "group_id": {
-      "type": "string"
-    },
-    "academic_group_id": {
-      "type": "string"
-    },
-    "course_id": {
-      "type": "string"
-    },
-    "last_message_at": {
-      "type": "string"
-    },
-    "last_message_preview": {
-      "type": "string"
-    },
-    "last_sender_name": {
-      "type": "string"
-    },
-    "message_count": {
-      "type": "number",
-      "default": 0
-    },
-    "is_demo": {
-      "type": "boolean",
-      "default": true
     }
   },
   "required": [
-    "type"
+    "user_id"
   ],
   "rls": {
     "read": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "create": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "data.user_id": "{{user.id}}"
     },
     "update": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "data.user_id": "{{user.id}}"
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "data.user_id": "{{user.id}}"
     }
   }
 }
