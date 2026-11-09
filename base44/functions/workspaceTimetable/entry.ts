@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { DEAN_ROLES } from '../../shared/dean/dataset.ts';
+import { resolveStudentAccount } from '../../shared/student/identity.ts';
 
 // The caller's own weekly schedule. Identity and role are resolved from the
 // authenticated session — never from the request body — so a browser cannot ask
@@ -50,7 +51,7 @@ export default async function (req) {
     let meta = {};
 
     if (role === 'student') {
-      const student = list(await sr.entities.Student.filter({ user_id: user.id }, { limit: 1 }))[0];
+      const student = await resolveStudentAccount(base44, user);
       if (!student) {
         return Response.json(
           { error: 'Your account is not linked to a student record yet. Contact the student office.' },

@@ -5,6 +5,7 @@
 // that belong to that student, so one student can never retrieve another's work.
 
 import { buildGradebook, courseProgress, completionStatus, letterFor, round1 } from './gradebook.ts';
+import { resolveStudentAccount } from './identity.ts';
 
 const list = (page) => (Array.isArray(page) ? page : page?.items || []);
 const isoDay = () => new Date().toISOString().slice(0, 10);
@@ -87,8 +88,9 @@ export async function buildStudentContext(base44, user) {
   const svc = base44.asServiceRole;
   const context = emptyContext();
 
-  const students = list(await svc.entities.Student.filter({ user_id: user.id }, { limit: 2 }));
-  const student = students[0];
+  // Same server-side resolution the rest of the student surfaces use, so the
+  // dashboard, profile, grades and timetable can never disagree about identity.
+  const student = await resolveStudentAccount(base44, user);
   if (!student) {
     context.scopeNote = 'Your account is not linked to a student record yet.';
     return context;
