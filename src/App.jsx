@@ -68,6 +68,7 @@ import CompleteProfile from '@/pages/account/CompleteProfile';
 import AdminOnlyRoute from '@/components/shell/AdminOnlyRoute';
 import DeanAssistant from '@/pages/Assistant';
 import CommunicationCenter from '@/pages/communication/CommunicationCenter';
+import WorkspaceAccess from '@/pages/WorkspaceAccess';
 import InvitationJoin from '@/pages/communication/InvitationJoin';
 import { AdminDataProvider } from '@/lib/AdminDataContext';
 // Add page imports here
@@ -122,6 +123,12 @@ const AuthenticatedApp = () => {
           <Route path="/student" element={<Navigate to={MODULE_PATHS.student.dashboard} replace />} />
           <Route path="/professor" element={<Navigate to={MODULE_PATHS.professor.dashboard} replace />} />
           <Route path="/dean" element={<Navigate to={MODULE_PATHS.dean.dashboard} replace />} />
+
+          {/* A requested workspace opens only when the role on the authenticated
+              account owns it; every other request is refused explicitly. */}
+          <Route path="/workspace/:key" element={<WorkspaceAccess />} />
+          <Route path="/administration" element={<WorkspaceAccess workspaceKey="administration" />} />
+          <Route path="/admin" element={<WorkspaceAccess workspaceKey="administration" />} />
 
           {/* Student workspace: dedicated pages, all owned by the student role. */}
           <Route

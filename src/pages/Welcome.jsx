@@ -3,8 +3,9 @@ import BrandPanel from '@/components/welcome/BrandPanel';
 import RoleCard from '@/components/welcome/RoleCard';
 import { useAuth } from '@/lib/AuthContext';
 
-// Each card opens the sign-in flow for that workspace. The card itself grants
-// nothing: after authentication the server resolves the account's real role.
+// Each card is a request to enter one workspace. It grants nothing: a signed-in
+// request is checked against the role on the authenticated account, and the
+// sign-in flow decides the role on the server for a new session.
 const WORKSPACES = [
   { key: 'student', label: 'Student', icon: GraduationCap, tone: 'blue' },
   { key: 'professor', label: 'Professor', icon: Presentation, tone: 'red' },
@@ -13,7 +14,7 @@ const WORKSPACES = [
 
 export default function Welcome() {
   const { user } = useAuth();
-  const destination = (key) => (user ? '/dashboard' : `/login?workspace=${key}`);
+  const destination = (key) => (user ? `/workspace/${key}` : `/login?workspace=${key}`);
 
   return (
     <main className="flex min-h-dvh flex-col items-center bg-welcome-canvas px-4 py-10 sm:px-6 sm:py-16">

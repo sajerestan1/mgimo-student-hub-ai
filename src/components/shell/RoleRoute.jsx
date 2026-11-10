@@ -1,13 +1,16 @@
-import { Navigate } from 'react-router-dom';
 import { useWorkspace } from '@/lib/workspaceRole';
+import AccessDenied from './AccessDenied';
+
+const LABELS = { student: 'Student', professor: 'Professor', dean: 'Administration' };
 
 /**
- * Route-level authorisation. A user whose role does not own the route is sent
- * to their own dashboard instead of seeing another workspace's data.
+ * Route-level authorisation. The target workspace is compared with the role on
+ * the authenticated account: authorised requests render, everything else is
+ * refused explicitly instead of being redirected into another workspace.
  */
 export default function RoleRoute({ role, children }) {
-  const { canView, workspace } = useWorkspace();
+  const { canView } = useWorkspace();
 
-  if (!canView(role)) return <Navigate to={workspace.home} replace />;
+  if (!canView(role)) return <AccessDenied requested={LABELS[role] || 'requested'} />;
   return children;
 }
