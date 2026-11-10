@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
+import { ListChecks } from 'lucide-react';
 import Surface from '@/components/shell/Surface';
 import StatusChip from '@/components/shell/StatusChip';
+import PanelTitle from './PanelTitle';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { dueLabel, daysUntil } from '@/lib/studentPortal';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -61,9 +63,13 @@ export default function PriorityTasks({ context }) {
 
   return (
     <Surface
-      title={t('student.dashboard.priorityTasks')}
+      className="h-full"
+      title={<PanelTitle icon={ListChecks} tone="warning">{t('student.dashboard.priorityTasks')}</PanelTitle>}
       action={
-        <Link to={P.student.assignments} className="link-quiet text-[14px]">
+        <Link
+          to={P.student.assignments}
+          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
+        >
           {t('student.dashboard.allWork')}
         </Link>
       }
@@ -73,12 +79,14 @@ export default function PriorityTasks({ context }) {
         <ul className="divide-y divide-line">
           {shown.map((row) => (
             <li key={row.id}>
-              <Link to={row.to} className="row-hover flex items-start justify-between gap-3 px-5 py-3">
+              <Link to={row.to} className="row-hover flex items-start justify-between gap-3 px-4 py-2.5">
                 <div className="min-w-0">
                   <p className="truncate text-[15px] font-medium text-ink">{row.title}</p>
-                  <p className="mt-0.5 text-[13px] text-mutedink">{row.meta}</p>
+                  <p className="mt-0.5 truncate text-[13px] text-mutedink">{row.meta}</p>
                 </div>
-                <StatusChip tone={row.chip.tone}>{row.chip.label}</StatusChip>
+                <StatusChip tone={row.chip.tone} className="shrink-0">
+                  {row.chip.label}
+                </StatusChip>
               </Link>
             </li>
           ))}

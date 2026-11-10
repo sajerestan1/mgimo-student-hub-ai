@@ -1,32 +1,70 @@
 import { Link } from 'react-router-dom';
-import { Bell, UserRound } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { firstName, greeting } from '@/lib/studentPortal';
 import AiAssistantButton from '@/components/shell/AiAssistantButton';
+import DashboardSearch from './DashboardSearch';
 import { useI18n } from '@/i18n/I18nProvider';
 
-export default function WelcomeHeader({ profile }) {
-  const { t } = useI18n();
+const initialsOf = (name) =>
+  (name || '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+
+export default function WelcomeHeader({ profile, context }) {
+  const { t, language } = useI18n();
+  const today = new Date().toLocaleDateString(language, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
-    <header className="mb-4 flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-      <div className="min-w-0">
-        <h1 className="text-[length:var(--type-title)] font-bold leading-[1.12] tracking-[-0.025em] text-ink">
-          {greeting(t)}, {firstName(profile, t)}
-        </h1>
-        <p className="mt-1 text-[15px] text-mutedink">
-          {profile?.program || t('student.dashboard.workspace')}
-          {profile?.group_name ? ` · ${profile.group_name}` : ''}
-        </p>
+    <header>
+      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#64748B]">{today}</p>
+
+      <div className="mt-1.5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <h1 className="truncate text-[length:var(--type-title)] font-bold leading-[1.12] tracking-[-0.03em] text-ink">
+            {greeting(t)}, {firstName(profile, t)}
+          </h1>
+          <p className="mt-1 truncate text-[14.5px] text-[#64748B]">
+            {profile?.program || t('student.dashboard.workspace')}
+            {profile?.group_name ? ` · ${profile.group_name}` : ''}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="hidden w-52 lg:block xl:w-64">
+            <DashboardSearch context={context} />
+          </div>
+          <AiAssistantButton
+            to={P.student.ai}
+            className="bg-none bg-[#2563EB] shadow-[0_8px_18px_-10px_rgba(37,99,235,0.85)] hover:bg-[#1D4ED8] hover:brightness-100"
+          />
+          <Link
+            to={P.student.notifications}
+            className="icon-btn h-10 w-10 shrink-0 border border-line bg-white text-[#2563EB] hover:bg-[#EFF6FF]"
+            aria-label={t('student.dashboard.notifications')}
+          >
+            <Bell className="h-[17px] w-[17px]" strokeWidth={1.9} />
+          </Link>
+          <Link
+            to={P.student.profile}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#14213D] text-[12.5px] font-semibold text-white transition-colors hover:bg-[#1B2C4F]"
+            aria-label={t('student.dashboard.profile')}
+          >
+            {initialsOf(profile?.full_name) || '·'}
+          </Link>
+        </div>
       </div>
-      <div className="flex shrink-0 items-center gap-1.5">
-        <AiAssistantButton to={P.student.ai} />
-        <Link to={P.student.notifications} className="icon-btn" aria-label={t('student.dashboard.notifications')}>
-          <Bell className="h-4 w-4" />
-        </Link>
-        <Link to={P.student.profile} className="icon-btn" aria-label={t('student.dashboard.profile')}>
-          <UserRound className="h-4 w-4" />
-        </Link>
+
+      <div className="mt-3 lg:hidden">
+        <DashboardSearch context={context} />
       </div>
     </header>
   );

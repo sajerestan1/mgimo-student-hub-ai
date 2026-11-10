@@ -11,6 +11,8 @@ import PriorityTasks from '@/components/student/dashboard/PriorityTasks';
 import RecentActivity from '@/components/student/dashboard/RecentActivity';
 import AcademicBriefing from '@/components/student/dashboard/AcademicBriefing';
 import AcademicPerformance from '@/components/student/dashboard/AcademicPerformance';
+import AttendancePanel from '@/components/student/dashboard/AttendancePanel';
+import CommunicationsPanel from '@/components/student/dashboard/CommunicationsPanel';
 
 export default function StudentDashboard() {
   const { preview, workspace } = useWorkspace();
@@ -38,12 +40,21 @@ export default function StudentDashboard() {
 
   if (!context) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="h-16 animate-pulse rounded-xl bg-white" />
-        <div className="h-24 animate-pulse rounded-xl bg-white" />
-        <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {[0, 1, 2, 3].map((key) => (
+            <div key={key} className="h-[86px] animate-pulse rounded-xl bg-white" />
+          ))}
+        </div>
+        <div className="grid gap-3 xl:grid-cols-2">
           <div className="h-64 animate-pulse rounded-xl bg-white" />
           <div className="h-64 animate-pulse rounded-xl bg-white" />
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          {[0, 1, 2, 3].map((key) => (
+            <div key={key} className="h-44 animate-pulse rounded-xl bg-white" />
+          ))}
         </div>
       </div>
     );
@@ -85,21 +96,37 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div>
-      <WelcomeHeader profile={context.profile} />
+    <div className="min-w-0 space-y-3">
+      <WelcomeHeader profile={context.profile} context={context} />
+
       <SnapshotStrip summary={context.summary} />
 
-      <div className="mt-4">
-        <AcademicPerformance context={context} />
+      <AcademicBriefing context={context} />
+
+      {/* Analytics sit side by side only once each panel keeps a readable chart width.
+          Each grid cell is min-w-0 so a long course code or message can never widen
+          the track past the viewport. */}
+      <div className="grid gap-3 xl:grid-cols-2">
+        <div className="min-w-0">
+          <AcademicPerformance context={context} />
+        </div>
+        <div className="min-w-0">
+          <AttendancePanel context={context} />
+        </div>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[1.35fr_1fr]">
-        <div className="space-y-4">
-          <TodaysClasses sessions={context.sessions} />
+      {/* Balanced two-column lower dashboard; equal heights come from h-full panels. */}
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="min-w-0">
+          <CommunicationsPanel />
+        </div>
+        <div className="min-w-0">
           <PriorityTasks context={context} />
         </div>
-        <div className="space-y-4">
-          <AcademicBriefing context={context} />
+        <div className="min-w-0">
+          <TodaysClasses sessions={context.sessions} />
+        </div>
+        <div className="min-w-0">
           <RecentActivity context={context} />
         </div>
       </div>

@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
+import { CalendarDays } from 'lucide-react';
 import Surface from '@/components/shell/Surface';
+import PanelTitle from './PanelTitle';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { clock, shortDate, todayISO } from '@/lib/studentPortal';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -24,14 +26,22 @@ export default function TodaysClasses({ sessions }) {
 
   return (
     <Surface
-      title={todays.length ? t('student.dashboard.todaySchedule') : t('student.dashboard.nextClasses')}
+      className="h-full"
+      title={
+        <PanelTitle icon={CalendarDays} tone="brand">
+          {todays.length ? t('student.dashboard.todaySchedule') : t('student.dashboard.nextClasses')}
+        </PanelTitle>
+      }
       subtitle={
         day
           ? shortDate(day, { weekday: 'long', day: 'numeric', month: 'long' }, language)
           : t('student.dashboard.noSessionsPublished')
       }
       action={
-        <Link to={P.student.timetable} className="link-quiet text-[14px]">
+        <Link
+          to={P.student.timetable}
+          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
+        >
           {t('student.dashboard.viewAll')}
         </Link>
       }
@@ -40,7 +50,7 @@ export default function TodaysClasses({ sessions }) {
       {shown.length ? (
         <ul className="divide-y divide-line">
           {shown.map((session) => (
-            <li key={session.id} className="flex items-start gap-3 px-5 py-3">
+            <li key={session.id} className="flex items-start gap-3 px-4 py-2.5">
               <div className="w-14 shrink-0 text-[14px] font-semibold tabular-nums text-ink">
                 {clock(session.start)}
                 {session.end && <p className="text-[12px] font-normal text-mutedink">{clock(session.end)}</p>}
@@ -49,7 +59,7 @@ export default function TodaysClasses({ sessions }) {
                 <p className="truncate text-[15px] font-medium text-ink">
                   {session.courseCode} · {session.courseTitle}
                 </p>
-                <p className="mt-0.5 text-[13px] text-mutedink">
+                <p className="mt-0.5 truncate text-[13px] text-mutedink">
                   {[kindLabel(session.kind), session.room || t('student.dashboard.roomNotSet')].join(' · ')}
                 </p>
               </div>

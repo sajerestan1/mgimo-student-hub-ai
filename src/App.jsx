@@ -66,6 +66,7 @@ import ProfessorDiscussionsPage from '@/pages/professor/DiscussionsPage';
 import ProfessorAiAssistant from '@/pages/professor/AiTeachingAssistant';
 import MyTeachingPage from '@/pages/professor/MyTeachingPage';
 import UserManagement from '@/pages/admin/UserManagement';
+import AcademicIntegrityPage from '@/pages/integrity/AcademicIntegrityPage';
 import CompleteProfile from '@/pages/account/CompleteProfile';
 import AdminOnlyRoute from '@/components/shell/AdminOnlyRoute';
 import DeanAssistant from '@/pages/Assistant';
@@ -115,6 +116,7 @@ const AuthenticatedApp = () => {
           <Route element={<AppShell />}>
           <Route path="/dashboard" element={<RoleDashboard />} />
           <Route path="/complete-profile" element={<CompleteProfile />} />
+          <Route path="/academic-integrity" element={<AcademicIntegrityPage />} />
           <Route
             path="/admin/users"
             element={
