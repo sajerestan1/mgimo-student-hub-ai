@@ -10,10 +10,37 @@ async function currentUser() {
   return me || {};
 }
 
+async function invoke(payload) {
+  const { data } = await base44.functions.invoke('academicIntegrity', payload);
+  if (!data || data.error) {
+    throw new Error((data && data.error) || 'The analysis could not be completed.');
+  }
+  return data;
+}
+
 /**
- * Runs the analysis on the server, then stores the report in the isolated
- * IntegrityAnalysis entity under the signed-in account, so the record is
- * private to that account by the entity's own access rules.
+ * Which detection engines genuinely exist right now. The server decides this
+ * from its own secrets; the browser only receives the outcome.
+ */
+export async function loadEngineStatus() {
+  const { data } = await base44.functions.invoke('academicIntegrity', { action: 'providers' });
+  return data || null;
+}
+
+async function runEngine(action, recordId) {
+  try {
+    const data = await invoke({ action, recordId });
+    return data.fields || {};
+  } catch (error) {
+    return action === 'plagiarism'
+      ? { external_status: 'failed', external_error: error.message, external_checked_at: new Date().toISOString() }
+      : { detector_status: 'failed', detector_error: error.message, detector_checked_at: new Date().toISOString() };
+  }
+}
+
+/**
+ * Runs the internal check, stores the report under the signed-in account, then
+ * asks each selected provider engine for its own result.
  */
 export async function runAnalysis(draft) {
   const me = await currentUser();
@@ -33,28 +60,33 @@ export async function runAnalysis(draft) {
       text: row.text,
     }));
 
-  const { data } = await base44.functions.invoke('academicIntegrity', {
+  const analysis = await invoke({
     action: 'analyze',
     title: draft.title,
     student_reference: draft.student_reference,
     text: draft.text,
-    ai_screening: draft.ai_screening === true,
-    ai_consent: draft.ai_consent === true,
     corpus,
   });
-  if (!data || data.error) {
-    throw new Error((data && data.error) || 'The analysis could not be completed.');
-  }
 
-  const record = await base44.entities.IntegrityAnalysis.create({
+  let record = await base44.entities.IntegrityAnalysis.create({
     user_id: me.id,
-    ...data.record,
+    ...analysis.record,
+    external_status: draft.external_similarity ? 'pending' : 'skipped',
+    detector_status: draft.ai_detection ? 'pending' : 'skipped',
   });
 
-  return { record, passages: data.passages };
+  if (draft.external_similarity) {
+    record = { ...record, ...(await runEngine('plagiarism', record.id)) };
+  }
+  if (draft.ai_detection) {
+    record = { ...record, ...(await runEngine('aiDetect', record.id)) };
+  }
+
+  return { record, passages: analysis.passages };
 }
 
-export async function loadAnalysis(id) {
+/** Re-reads a stored record (used while a provider scan is still processing). */
+export async function refreshAnalysis(id) {
   const me = await currentUser();
   const record = await base44.entities.IntegrityAnalysis.get(id);
   if (!record || (record.user_id && me.id && record.user_id !== me.id)) {
@@ -66,6 +98,10 @@ export async function loadAnalysis(id) {
     match_summary: record.match_summary,
   });
   return { record, passages: (data && data.passages) || [] };
+}
+
+export async function loadAnalysis(id) {
+  return refreshAnalysis(id);
 }
 
 export async function loadHistory() {
@@ -81,10 +117,12 @@ export async function loadHistory() {
     student_reference: row.student_reference || '',
     word_count: row.word_count || 0,
     similarity_percent: row.similarity_percent || 0,
-    matched_passage_count: row.matched_passage_count || 0,
-    repeated_passage_count: row.repeated_passage_count || 0,
-    ai_status: row.ai_status || 'skipped',
-    ai_indicator_level: row.ai_indicator_level || '',
+    external_status: row.external_status || 'skipped',
+    external_similarity_percent: row.external_similarity_percent,
+    external_provider_label: row.external_provider_label || '',
+    detector_status: row.detector_status || 'skipped',
+    detector_class: row.detector_class || '',
+    detector_provider_label: row.detector_provider_label || '',
     analyzed_at: row.analyzed_at || row.created_date || '',
   }));
   return { items };

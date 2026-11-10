@@ -18,18 +18,60 @@ function readTextFile(file) {
   });
 }
 
-export default function AnalysisForm({ onAnalyze, busy, error }) {
+function EngineOption({ engine, checked, onChange, busy }) {
+  const configured = engine.configured === true;
+  return (
+    <label className={cn('flex items-start gap-2.5', (!configured || busy) && 'opacity-90')}>
+      <input
+        type="checkbox"
+        checked={configured && checked}
+        disabled={!configured || busy}
+        onChange={(event) => onChange(event.target.checked)}
+        className="mt-0.5 h-4 w-4 rounded border-line accent-brand"
+      />
+      <span className="min-w-0">
+        <span className="block text-[13.5px] font-medium text-ink">
+          {engine.label}
+          {configured && engine.selectedProvider ? ` · ${engine.selectedProvider.label}` : ''}
+        </span>
+        <span className="mt-0.5 block text-[12.5px] leading-[1.5] text-mutedink">
+          {configured
+            ? engine.description
+            : `DETECTION ENGINE NOT CONFIGURED${
+                engine.waitingFor && engine.waitingFor.length
+                  ? ` — awaiting ${engine.waitingFor.join(', ')}`
+                  : ''
+              }`}
+        </span>
+      </span>
+    </label>
+  );
+}
+
+export default function AnalysisForm({ onAnalyze, busy, error, engines }) {
   const [title, setTitle] = useState('');
   const [reference, setReference] = useState('');
   const [text, setText] = useState('');
-  const [screening, setScreening] = useState(false);
+  const [external, setExternal] = useState(false);
+  const [aiDetection, setAiDetection] = useState(false);
   const [consent, setConsent] = useState(false);
   const [fileError, setFileError] = useState('');
   const fileRef = useRef(null);
 
   const words = useMemo(() => countWords(text), [text]);
   const tooLong = text.length > MAX_CHARS;
-  const needsConsent = screening && !consent;
+  const engineList = Array.isArray(engines) ? engines : [];
+  const externalEngine = engineList.find((row) => row.id === 'plagiarism');
+  const aiEngine = engineList.find((row) => row.id === 'ai_detection');
+  const usesExternal = external && Boolean(externalEngine?.configured);
+  const usesDetector = aiDetection && Boolean(aiEngine?.configured);
+  const sendsText = usesExternal || usesDetector;
+  const providerNames = [
+    usesExternal && externalEngine?.selectedProvider?.label,
+    usesDetector && aiEngine?.selectedProvider?.label,
+  ].filter(Boolean);
+
+  const needsConsent = sendsText && !consent;
   const ready = Boolean(title.trim()) && words >= MIN_WORDS && !tooLong && !needsConsent;
   const canSubmit = ready && !busy;
 
@@ -38,7 +80,8 @@ export default function AnalysisForm({ onAnalyze, busy, error }) {
     setReference('');
     setText('');
     setFileError('');
-    setScreening(false);
+    setExternal(false);
+    setAiDetection(false);
     setConsent(false);
     if (fileRef.current) fileRef.current.value = '';
   };
@@ -76,8 +119,9 @@ export default function AnalysisForm({ onAnalyze, busy, error }) {
       title: title.trim(),
       student_reference: reference.trim(),
       text,
-      ai_screening: screening,
-      ai_consent: consent,
+      external_similarity: usesExternal,
+      ai_detection: usesDetector,
+      consent,
     });
   };
 
@@ -150,28 +194,47 @@ export default function AnalysisForm({ onAnalyze, busy, error }) {
         </div>
       </div>
 
-      <div className="rounded-lg border border-line bg-canvas px-3 py-2.5">
+      <div className="space-y-2.5 rounded-lg border border-line bg-canvas px-3 py-2.5">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-mutedink">
+          Detection engines — the internal check always runs
+        </p>
+
         <label className="flex items-start gap-2.5">
-          <input
-            type="checkbox"
-            checked={screening}
-            disabled={busy}
-            onChange={(event) => {
-              setScreening(event.target.checked);
-              if (!event.target.checked) setConsent(false);
-            }}
-            className="mt-0.5 h-4 w-4 rounded border-line accent-brand"
-          />
+          <input type="checkbox" checked readOnly disabled className="mt-0.5 h-4 w-4 rounded border-line accent-brand" />
           <span className="min-w-0">
-            <span className="block text-[13.5px] font-medium text-ink">Also run AI-writing screening</span>
+            <span className="block text-[13.5px] font-medium text-ink">Internal similarity (always on)</span>
             <span className="mt-0.5 block text-[12.5px] leading-[1.5] text-mutedink">
-              Off by default. The similarity check never sends your text anywhere.
+              Compares the text only with submissions already analysed in this workspace. Nothing leaves the platform.
             </span>
           </span>
         </label>
 
-        {screening && (
-          <label className="mt-2.5 flex items-start gap-2.5 border-t border-line pt-2.5">
+        {externalEngine && (
+          <EngineOption
+            engine={externalEngine}
+            checked={external}
+            busy={busy}
+            onChange={(value) => {
+              setExternal(value);
+              if (!value && !aiDetection) setConsent(false);
+            }}
+          />
+        )}
+
+        {aiEngine && (
+          <EngineOption
+            engine={aiEngine}
+            checked={aiDetection}
+            busy={busy}
+            onChange={(value) => {
+              setAiDetection(value);
+              if (!value && !external) setConsent(false);
+            }}
+          />
+        )}
+
+        {sendsText && (
+          <label className="flex items-start gap-2.5 border-t border-line pt-2.5">
             <input
               type="checkbox"
               checked={consent}
@@ -180,9 +243,9 @@ export default function AnalysisForm({ onAnalyze, busy, error }) {
               className="mt-0.5 h-4 w-4 rounded border-line accent-brand"
             />
             <span className="min-w-0 text-[12.5px] leading-[1.55] text-ink">
-              I authorise sending this text to the platform’s language-model service for this screening step:{' '}
-              <span className="font-medium">Base44 Core integration — InvokeLLM</span>. The excerpt is used only to
-              produce the report below.
+              I authorise sending this submission text to{' '}
+              <span className="font-medium">{providerNames.join(' and ')}</span> for the selected checks. The provider
+              stores and processes it under its own academic-integrity terms.
             </span>
           </label>
         )}

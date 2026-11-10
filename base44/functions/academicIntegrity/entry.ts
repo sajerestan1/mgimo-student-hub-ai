@@ -1,39 +1,129 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
+import { secrets } from 'base44:runtime';
 import {
-  AI_TEXT_LIMIT,
   MAX_CHARS,
   MAX_CORPUS_CHARS,
   MAX_CORPUS_DOCUMENTS,
   MIN_WORDS,
-  SCREENING_SCHEMA,
   analyseSimilarity,
-  buildScreeningPrompt,
   countWords,
   documentPassages,
 } from '../../shared/integrity/analysis.ts';
-
-// The screening step is the platform's own LLM integration. It is named exactly
-// like this in the interface and in the stored record, so a reviewer can see
-// which service the text was sent to.
-const AI_PROVIDER = 'Base44 Core integration — InvokeLLM';
-const AI_MODEL = 'platform automatic model selection';
+import { detectAi, providerStatus, submitSimilarity, webhookFields } from '../../shared/integrity/providers/index.ts';
 
 const asList = (value) => (Array.isArray(value) ? value : []);
 const asText = (value, limit) => String(value === undefined || value === null ? '' : value).slice(0, limit);
 
-// Academic Integrity: internal similarity plus an optional LLM screening pass.
-// This function computes only; it reads no academic record and writes nothing.
-// The caller's identity comes from the session and the caller's own comparison
-// set is supplied by the interface it reads, so a report can never name a source
-// that was not really compared.
+function readSecret(name) {
+  try {
+    const value = secrets.get(name);
+    return typeof value === 'string' ? value.trim() : '';
+  } catch {
+    return '';
+  }
+}
+
+function safeEqual(left, right) {
+  const a = String(left);
+  const b = String(right);
+  if (!a || a.length !== b.length) return false;
+  let diff = 0;
+  for (let index = 0; index < a.length; index += 1) diff |= a.charCodeAt(index) ^ b.charCodeAt(index);
+  return diff === 0;
+}
+
+/**
+ * Provider completion webhook. Copyleaks posts here when an asynchronous
+ * similarity scan finishes; the shared secret in the query string is the only
+ * authentication, so it is checked before anything else happens and the update
+ * runs with the service role because the caller is the provider, not a user.
+ */
+async function handleWebhook(req, url) {
+  try {
+    const expected = readSecret('INTEGRITY_WEBHOOK_SECRET');
+    if (!expected) {
+      return Response.json({ error: 'Webhook secret is not configured for this app.' }, { status: 503 });
+    }
+    if (!safeEqual(url.searchParams.get('token') || '', expected)) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = await req.json().catch(() => null);
+    if (!payload || typeof payload !== 'object') {
+      return Response.json({ error: 'Unreadable webhook payload.' }, { status: 400 });
+    }
+
+    const base44 = createClientFromRequest(req);
+    const fields = webhookFields(payload, url.searchParams.get('status'));
+    const scanId = fields.scanId || asText(payload.scanId, 120);
+    if (!scanId) return Response.json({ error: 'No scan identifier in the payload.' }, { status: 400 });
+
+    const { items } = await base44.asServiceRole.entities.IntegrityAnalysis.filter(
+      { external_scan_id: scanId },
+      { limit: 1 },
+    );
+    const record = items && items[0];
+    if (!record) return Response.json({ error: 'No analysis matches that scan.' }, { status: 404 });
+
+    const { scanId: _ignored, ...update } = fields;
+    await base44.asServiceRole.entities.IntegrityAnalysis.update(record.id, update);
+    return Response.json({ ok: true });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+}
+
+/**
+ * Academic Integrity: internal similarity, external provider similarity and
+ * dedicated AI-writing detection. This function reads no academic record and
+ * writes nothing outside the IntegrityAnalysis entity of the calling account.
+ */
 export default async function (req) {
   try {
+    const url = new URL(req.url);
+    const body = await req.json().catch(() => ({}));
+    const action = String(body.action || url.searchParams.get('action') || 'analyze');
+
+    if (action === 'webhook') return await handleWebhook(req, url);
+
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const body = await req.json().catch(() => ({}));
-    const action = String(body.action || 'analyze');
+    // Which detection engines actually exist right now, and what each is
+    // waiting for. No secret value is ever returned.
+    if (action === 'providers') {
+      return Response.json(providerStatus());
+    }
+
+    if (action === 'plagiarism' || action === 'aiDetect') {
+      const recordId = asText(body.recordId, 80);
+      if (!recordId) return Response.json({ error: 'recordId is required' }, { status: 400 });
+
+      const record = await base44.entities.IntegrityAnalysis.get(recordId).catch((e) =>
+        e.status === 404 ? null : Promise.reject(e),
+      );
+      if (!record) return Response.json({ error: 'Analysis not found.' }, { status: 404 });
+      if (record.user_id && record.user_id !== user.id) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      if (!record.text) return Response.json({ error: 'That analysis has no stored text.' }, { status: 400 });
+
+      const fields =
+        action === 'plagiarism'
+          ? (
+              await submitSimilarity({
+                text: record.text,
+                title: record.title,
+                recordId,
+                origin: req.headers.get('X-Base44-App-Url') || url.origin,
+              })
+            ).fields
+          : (await detectAi({ text: record.text })).fields;
+
+      await base44.entities.IntegrityAnalysis.update(recordId, fields);
+      return Response.json({ fields });
+    }
 
     // Rebuilds the highlightable document for a stored record.
     if (action === 'reopen') {
@@ -61,8 +151,8 @@ export default async function (req) {
       );
     }
 
-    // The comparison set: submissions this account has already analysed. It is
-    // read through the caller's own access rules, so nothing else can appear.
+    // The comparison set: submissions this account has already analysed, read
+    // through the caller's own access rules so nothing else can appear.
     const corpus = [];
     let corpusChars = 0;
     let corpusWords = 0;
@@ -82,60 +172,6 @@ export default async function (req) {
       });
 
     const similarity = analyseSimilarity(text, corpus);
-
-    // The text leaves the platform only when the caller ticked the screening box
-    // and the consent box in the interface.
-    const wantsScreening = body.ai_screening === true && body.ai_consent === true;
-    let ai = { status: 'skipped' };
-
-    if (wantsScreening) {
-      const excerpt = text.slice(0, AI_TEXT_LIMIT);
-      const truncated = excerpt.length < text.length;
-      try {
-        const raw = await base44.integrations.Core.InvokeLLM({
-          prompt: buildScreeningPrompt(excerpt),
-          response_json_schema: SCREENING_SCHEMA,
-        });
-        if (!raw || typeof raw !== 'object') {
-          ai = {
-            status: 'failed',
-            truncated,
-            note: 'The screening service returned no structured result. The similarity analysis is unaffected.',
-          };
-        } else {
-          ai = {
-            status: 'completed',
-            indicator_level: ['low', 'moderate', 'elevated'].includes(raw.indicator_level)
-              ? raw.indicator_level
-              : 'low',
-            summary: asText(raw.summary, 1200),
-            observations: asList(raw.observations)
-              .slice(0, 6)
-              .map((row) => ({
-                signal: asText(row && row.signal, 120),
-                detail: asText(row && row.detail, 600),
-                quote: asText(row && row.quote, 300),
-              }))
-              .filter((row) => row.signal || row.detail),
-            flagged: asList(raw.flagged_passages)
-              .slice(0, 6)
-              .map((row) => ({
-                excerpt: asText(row && row.excerpt, 300),
-                reason: asText(row && row.reason, 400),
-              }))
-              .filter((row) => row.excerpt || row.reason),
-            human_review: raw.human_review_recommended === true,
-            truncated,
-          };
-        }
-      } catch (error) {
-        ai = {
-          status: 'failed',
-          truncated,
-          note: 'The screening service did not respond. The similarity analysis is unaffected.',
-        };
-      }
-    }
 
     const matchSummary = [];
     similarity.passages
@@ -164,16 +200,8 @@ export default async function (req) {
       corpus_documents: corpus.length,
       corpus_words: corpusWords,
       match_summary: matchSummary.slice(0, 60),
-      ai_status: ai.status,
-      ai_indicator_level: ai.indicator_level,
-      ai_summary: ai.summary,
-      ai_observations: ai.observations,
-      ai_flagged: ai.flagged,
-      ai_human_review: ai.human_review === true,
-      ai_provider: wantsScreening ? AI_PROVIDER : '',
-      ai_model: wantsScreening ? AI_MODEL : '',
-      ai_truncated: ai.truncated === true,
-      ai_note: ai.note || '',
+      ai_status: 'skipped',
+      ai_human_review: false,
       analyzed_at: new Date().toISOString(),
     };
 

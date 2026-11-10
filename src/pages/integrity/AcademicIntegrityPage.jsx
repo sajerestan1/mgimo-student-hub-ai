@@ -3,18 +3,22 @@ import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
 import AnalysisCards from '@/components/integrity/AnalysisCards';
 import AnalysisForm from '@/components/integrity/AnalysisForm';
+import EngineStatusPanel from '@/components/integrity/EngineStatusPanel';
 import IntegrityReport from '@/components/integrity/IntegrityReport';
 import HistoryList from '@/components/integrity/HistoryList';
-import { loadAnalysis, loadHistory, runAnalysis } from '@/lib/integrity/api';
+import { loadAnalysis, loadEngineStatus, loadHistory, refreshAnalysis, runAnalysis } from '@/lib/integrity/api';
 
 /**
- * Academic Integrity: an isolated workspace for internal similarity analysis and
- * an optional language-model screening pass. It reads and writes only its own
- * entity, and touches no academic record, grade or existing workspace module.
+ * Academic Integrity: an isolated workspace reporting three separate
+ * measurements — external provider similarity, internal similarity, and
+ * dedicated AI-writing detection. It reads and writes only its own entity and
+ * touches no academic record, grade or existing workspace module.
  */
 export default function AcademicIntegrityPage() {
   const [analysis, setAnalysis] = useState(null);
   const [history, setHistory] = useState([]);
+  const [status, setStatus] = useState(null);
+  const [statusError, setStatusError] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [historyError, setHistoryError] = useState('');
@@ -30,7 +34,17 @@ export default function AcademicIntegrityPage() {
 
   useEffect(() => {
     refreshHistory();
+    loadEngineStatus()
+      .then((data) => {
+        setStatus(data);
+        setStatusError('');
+      })
+      .catch((caught) => setStatusError(caught.message || 'Engine status could not be loaded.'));
   }, [refreshHistory]);
+
+  const engines = status?.engines || null;
+  const externalConfigured = engines?.find((row) => row.id === 'plagiarism')?.configured === true;
+  const detectorConfigured = engines?.find((row) => row.id === 'ai_detection')?.configured === true;
 
   const handleAnalyze = async (draft) => {
     setBusy(true);
@@ -59,38 +73,62 @@ export default function AcademicIntegrityPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    if (!analysis?.record?.id) return;
+    setError('');
+    try {
+      setAnalysis(await refreshAnalysis(analysis.record.id));
+    } catch (caught) {
+      setError(caught.message || 'The report could not be refreshed.');
+    }
+  };
+
   return (
     <div>
       <PageTitle
         eyebrow="Academic integrity"
         title="Academic Integrity"
-        description="Similarity analysis and AI-writing indicators for academic submissions."
+        description="External similarity, internal similarity and AI-writing detection reported separately, with the provider and status of each."
         meta={[
-          'Internal similarity check',
-          'AI-writing screening prototype',
+          externalConfigured ? 'External similarity · configured' : 'External similarity · engine not configured',
+          'Internal similarity · supplementary',
+          detectorConfigured ? 'AI detection · configured' : 'AI detection · engine not configured',
           'Private to your account',
         ]}
       />
 
-      <AnalysisCards />
+      <AnalysisCards engines={engines} />
 
       <Surface
+        title="Detection engines"
+        subtitle="Which engines are actually wired to a provider. Nothing here substitutes a language model for a detector."
+      >
+        <EngineStatusPanel status={status} error={statusError} />
+      </Surface>
+
+      <Surface
+        className="mt-4"
         title="Analyse a submission"
         subtitle="Nothing is analysed until you press Analyse. The text is stored with the report so it can be reproduced."
       >
-        <AnalysisForm onAnalyze={handleAnalyze} busy={busy} error={error} />
+        <AnalysisForm onAnalyze={handleAnalyze} busy={busy} error={error} engines={engines} />
       </Surface>
 
       {analysis?.record && (
         <div className="mt-4">
-          <IntegrityReport record={analysis.record} passages={analysis.passages} />
+          <IntegrityReport
+            record={analysis.record}
+            passages={analysis.passages}
+            onRefresh={handleRefresh}
+            busy={busy}
+          />
         </div>
       )}
 
       <Surface
         className="mt-4"
         title="Previous analyses"
-        subtitle="Stored for your account only, and used as the comparison set for the next submission"
+        subtitle="Stored for your account only, and used as the internal comparison set for the next submission"
       >
         <HistoryList
           items={history}

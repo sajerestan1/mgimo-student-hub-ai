@@ -145,6 +145,201 @@
     "ai_note": {
       "type": "string"
     },
+    "external_provider": {
+      "type": "string",
+      "description": "Identifier of the external similarity provider that performed the scan, e.g. copyleaks. Empty when no external scan ran."
+    },
+    "external_provider_label": {
+      "type": "string",
+      "description": "Provider name as shown to the reviewer"
+    },
+    "external_status": {
+      "type": "string",
+      "description": "Real state of the external similarity scan. completed only when the provider returned its own report.",
+      "enum": [
+        "skipped",
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+        "unavailable"
+      ],
+      "enumColors": [
+        "gray",
+        "gray",
+        "blue",
+        "green",
+        "red",
+        "yellow"
+      ],
+      "default": "skipped"
+    },
+    "external_mode": {
+      "type": "string",
+      "description": "live for a billable provider scan, sandbox for a provider simulated scan",
+      "enum": [
+        "live",
+        "sandbox"
+      ],
+      "enumColors": [
+        "green",
+        "yellow"
+      ]
+    },
+    "external_scan_id": {
+      "type": "string",
+      "description": "Provider scan identifier used to match the provider's completion notification to this record"
+    },
+    "external_similarity_percent": {
+      "type": "number",
+      "description": "Overall similarity exactly as reported by the external provider. Never computed or estimated by this app."
+    },
+    "external_sources": {
+      "type": "array",
+      "description": "Sources the provider reported. Fields the provider did not return stay null.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "result_id": {
+            "type": "string"
+          },
+          "matched_words": {
+            "type": "number"
+          },
+          "paraphrased_words": {
+            "type": "number"
+          },
+          "introduction": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "external_words": {
+      "type": "number",
+      "description": "Word count the provider reported for the submitted document"
+    },
+    "external_credits": {
+      "type": "number",
+      "description": "Credits the provider reported consuming"
+    },
+    "external_error": {
+      "type": "string"
+    },
+    "external_submitted_at": {
+      "type": "string"
+    },
+    "external_checked_at": {
+      "type": "string"
+    },
+    "detector_provider": {
+      "type": "string",
+      "description": "Identifier of the AI-writing detector that produced this result, e.g. gptzero. Empty when none ran."
+    },
+    "detector_provider_label": {
+      "type": "string"
+    },
+    "detector_status": {
+      "type": "string",
+      "description": "Real state of the AI-writing detection. completed only when a detector returned its own result.",
+      "enum": [
+        "skipped",
+        "completed",
+        "failed",
+        "unavailable"
+      ],
+      "enumColors": [
+        "gray",
+        "green",
+        "red",
+        "yellow"
+      ],
+      "default": "skipped"
+    },
+    "detector_mode": {
+      "type": "string",
+      "enum": [
+        "live",
+        "sandbox"
+      ],
+      "enumColors": [
+        "green",
+        "yellow"
+      ]
+    },
+    "detector_class": {
+      "type": "string",
+      "description": "Classification returned by the detector: human, ai, mixed, or unknown when the provider returned none.",
+      "enum": [
+        "human",
+        "ai",
+        "mixed",
+        "unknown"
+      ],
+      "enumColors": [
+        "green",
+        "red",
+        "yellow",
+        "gray"
+      ]
+    },
+    "detector_ai_share": {
+      "type": "number",
+      "description": "AI probability or AI share as returned by the detector, 0 to 1. Null when the provider returned none."
+    },
+    "detector_human_share": {
+      "type": "number"
+    },
+    "detector_confidence": {
+      "type": "string",
+      "description": "Confidence category as returned by the provider, verbatim"
+    },
+    "detector_message": {
+      "type": "string",
+      "description": "Result message as returned by the provider, verbatim"
+    },
+    "detector_sections": {
+      "type": "array",
+      "description": "Sentence or paragraph level indicators returned by the provider. Empty when the provider returned none.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "number"
+          },
+          "text": {
+            "type": "string"
+          },
+          "classification": {
+            "type": "string"
+          },
+          "probability": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "detector_model": {
+      "type": "string"
+    },
+    "detector_characters": {
+      "type": "number"
+    },
+    "detector_error": {
+      "type": "string"
+    },
+    "detector_checked_at": {
+      "type": "string"
+    },
     "analyzed_at": {
       "type": "string"
     }
