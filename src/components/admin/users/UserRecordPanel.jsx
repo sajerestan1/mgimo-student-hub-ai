@@ -29,6 +29,7 @@ export default function UserRecordPanel({ account, faculties, departments, canMa
     full_name: account.full_name || '',
     phone: account.phone || '',
     contact_email: account.contact_email || '',
+    username: account.username || '',
     faculty_id: account.faculty_id || '',
     department_id: account.department_id || '',
     group_name: account.group_name || '',
@@ -127,6 +128,19 @@ export default function UserRecordPanel({ account, faculties, departments, canMa
               <div>
                 <label className={labelClass} htmlFor="edit-email">Institutional email</label>
                 <input id="edit-email" type="email" className={field} value={form.contact_email} onChange={set('contact_email')} />
+              </div>
+              <div>
+                <label className={labelClass} htmlFor="edit-username">Username</label>
+                <input
+                  id="edit-username"
+                  className={field}
+                  value={form.username}
+                  onChange={set('username')}
+                  placeholder="e.g. stan1042"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                <p className="mt-1 text-[13px] text-mutedink">Lowercase and unique. Checked on the server; the account identity and password are unchanged.</p>
               </div>
               <div>
                 <label className={labelClass} htmlFor="edit-role">Role</label>

@@ -173,6 +173,39 @@
         }
       }
     },
+    "username": {
+      "type": "string",
+      "description": "Institutional account alias, stored lowercase and unique across every account. Assigned and changed by an administrator only; it never grants a role or permission.",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "username_updated_at": {
+      "type": "string",
+      "description": "When the alias was last assigned or changed",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "username_assigned_by": {
+      "type": "string",
+      "description": "Administrator who last assigned the alias",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
     "profile_completed": {
       "type": "boolean",
       "default": false

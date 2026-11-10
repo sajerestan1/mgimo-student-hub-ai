@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { ASSIGNABLE_ROLES, isAdmin, isSuperAdmin, missingFields, writeAudit } from '../../shared/accounts.ts';
+import { duplicateUsernames, normalizeUsername, usernameError, usernameOwner } from '../../shared/accounts/username.ts';
 import {
   MIRROR_TO_STUDENT_FIELD,
   resolveAcademicIdentity,
@@ -60,6 +61,9 @@ function shape(record, student, professor) {
     identity_mismatch: identityMismatch,
     id: record.id,
     email: record.email,
+    username: normalizeUsername(record.username),
+    username_updated_at: record.username_updated_at || '',
+    username_assigned_by: record.username_assigned_by || '',
     role: record.role || 'user',
     admin_level: record.admin_level || 'standard',
     account_status: record.account_status || 'active',
@@ -142,7 +146,7 @@ export default async function (req) {
           if (body.group_name && body.group_name !== 'all' && row.group_name !== body.group_name) return false;
           if (body.status && body.status !== 'all' && row.account_status !== body.status) return false;
           if (!search) return true;
-          return [row.full_name, row.email, row.student_id, row.professor_id]
+          return [row.full_name, row.email, row.username, row.student_id, row.professor_id]
             .filter(Boolean)
             .some((value) => String(value).toLowerCase().includes(search));
         });
@@ -152,6 +156,10 @@ export default async function (req) {
         faculties: faculties.map((f) => ({ id: f.id, name: f.name })),
         departments: departments.map((d) => ({ id: d.id, name: d.name, faculty_id: d.faculty_id })),
         canManageAdmins: isSuperAdmin(caller),
+        // Clashes already present in stored data are surfaced for an
+        // administrator to resolve; the assignment path refuses to add one.
+        username_conflicts: duplicateUsernames(rows),
+        username_missing: rows.filter((row) => !row.username).length,
       });
     }
 
@@ -459,6 +467,21 @@ export default async function (req) {
       }
       if (patch.role && patch.role !== 'admin' && patch.admin_level) delete patch.admin_level;
 
+      // A username is validated before anything is written, so a rejected alias
+      // cannot leave the account or its academic record half-saved. Matching is
+      // case-insensitive across every account.
+      if ('username' in patch) {
+        const candidate = normalizeUsername(patch.username);
+        if (candidate && candidate !== normalizeUsername(target.username)) {
+          const invalid = usernameError(candidate);
+          if (invalid) return Response.json({ error: invalid }, { status: 400 });
+          const owner = await usernameOwner(sr, candidate, target.id);
+          if (owner) {
+            return Response.json({ error: 'That username is already in use by another account' }, { status: 409 });
+          }
+        }
+      }
+
       const editable = [
         'full_name',
         'phone',
@@ -531,6 +554,18 @@ export default async function (req) {
         return Response.json({ error: 'Enter a valid email address' }, { status: 400 });
       }
 
+      // The alias itself, plus who assigned it and when. Nothing else about the
+      // account is rewritten: its id, email and password stay with the platform.
+      if ('username' in patch) {
+        const next = normalizeUsername(patch.username);
+        if (next !== normalizeUsername(target.username)) {
+          update.username = next;
+          update.username_updated_at = next ? new Date().toISOString() : '';
+          update.username_assigned_by = next ? caller.full_name || caller.email || '' : '';
+          changes.push(`Username: ${target.username || '—'} → ${next || '—'}`);
+        }
+      }
+
       if (!Object.keys(update).length && !recordWritten) {
         return Response.json({ ok: true, changed: changes.length });
       }
@@ -551,6 +586,8 @@ export default async function (req) {
           ? 'role_changed'
           : 'account_status' in update
           ? 'status_changed'
+          : 'username' in update
+          ? 'username_assigned'
           : 'contact_email' in update
           ? 'email_changed'
           : 'faculty_id' in update || 'faculty_id' in academicInput

@@ -152,11 +152,17 @@ export default function Profile() {
             </p>
           </Surface>
 
-          <Surface title="Workspace">
+          <Surface title="Account" subtitle="Your identity in the university directory">
             <dl>
+              <Row label="Username" value={user?.username || 'Not assigned'} />
+              <Row label="Registered email" value={user?.email} />
+              <Row label="Role" value={accountRoleLabel(user)} />
               <Row label="Workspace" value={workspace.title} />
               <Row label="Sign-in method" value="Email & password" />
             </dl>
+            <p className="mt-3 text-[13px] leading-relaxed text-mutedink">
+              Your username is assigned by the administration and cannot be changed here.
+            </p>
           </Surface>
         </div>
       </div>

@@ -12,10 +12,11 @@ export default function UserRosterTable({ users, faculties, onOpen }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[900px] border-collapse">
+      <table className="w-full min-w-[1000px] border-collapse">
         <thead>
           <tr className="border-b border-line bg-[#FAFBFD]">
             <th className="table-head py-2 pl-5 pr-3 text-left">Account</th>
+            <th className="table-head py-2 pr-3 text-left">Username</th>
             <th className="table-head py-2 pr-3 text-left">Role</th>
             <th className="table-head py-2 pr-3 text-left">Faculty</th>
             <th className="table-head py-2 pr-3 text-left">Class / group</th>
@@ -41,6 +42,13 @@ export default function UserRosterTable({ users, faculties, onOpen }) {
                     <p className="truncate text-[13px] text-mutedink">{account.email}</p>
                   </div>
                 </div>
+              </td>
+              <td className={cell}>
+                {account.username ? (
+                  <span className="font-mono text-[13px] text-ink">@{account.username}</span>
+                ) : (
+                  <StatusChip tone="warning">Not assigned</StatusChip>
+                )}
               </td>
               <td className={cell}>
                 <StatusChip tone={ROLE_TONES[account.role] || 'neutral'}>{accountRoleLabel(account)}</StatusChip>
