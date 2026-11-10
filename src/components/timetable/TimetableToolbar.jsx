@@ -1,17 +1,6 @@
-import { ChevronLeft, ChevronRight, Download, FileText, Image as ImageIcon, Printer, Share2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { mondayOf, shiftWeek, weekLabel } from '@/lib/timetable/week';
-import { cn } from '@/lib/utils';
-
-const tone = 'btn-quiet btn-sm';
-
-function Action({ icon: Icon, label, onClick, disabled, busy }) {
-  return (
-    <button type="button" onClick={onClick} disabled={disabled || busy} className={cn(tone, 'disabled:opacity-50')}>
-      <Icon className={cn('h-3.5 w-3.5', busy && 'animate-pulse')} />
-      {label}
-    </button>
-  );
-}
+import ExportMenu from '@/components/timetable/ExportMenu';
 
 export default function TimetableToolbar({ weekStart, onWeekChange, onExport, busy }) {
   return (
@@ -36,14 +25,8 @@ export default function TimetableToolbar({ weekStart, onWeekChange, onExport, bu
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Action icon={FileText} label="PDF" onClick={() => onExport('pdf')} disabled={busy} busy={busy === 'pdf'} />
-        <Action icon={ImageIcon} label="PNG" onClick={() => onExport('png')} disabled={busy} busy={busy === 'png'} />
-        <Action icon={Printer} label="Print" onClick={() => onExport('print')} disabled={busy} busy={busy === 'print'} />
-        <Action icon={Share2} label="Share" onClick={() => onExport('share')} disabled={busy} busy={busy === 'share'} />
-        <span className="hidden items-center gap-1 text-[11px] text-mutedink sm:inline-flex">
-          <Download className="h-3 w-3" /> A4 landscape
-        </span>
+      <div className="flex flex-wrap items-center gap-2">
+        <ExportMenu onExport={onExport} busy={busy} disabled={busy} />
       </div>
     </div>
   );

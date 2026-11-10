@@ -1,13 +1,16 @@
 // Exports are produced from the rendered sheet and never touch the records
 // they display: the file is a snapshot, the register stays the source of truth.
 // The two heavy libraries are loaded on first use so the workspace stays light.
-const SCALE = 2;
+const SCALE = 3;
+// The sheet paints its own canvas, so a capture that starts from the same
+// colour has no white seams around the rounded masthead.
+const SHEET_BACKGROUND = '#F6F8FC';
 
 const capture = async (node) => {
   const { default: html2canvas } = await import('html2canvas');
   return html2canvas(node, {
     scale: SCALE,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: SHEET_BACKGROUND,
     logging: false,
     useCORS: true,
     windowWidth: node.scrollWidth,
@@ -37,7 +40,7 @@ export async function exportPdf(node, { slug, weekStart }) {
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  const margin = 6;
+  const margin = 9;
   const ratio = Math.min(
     (pageWidth - margin * 2) / canvas.width,
     (pageHeight - margin * 2) / canvas.height,

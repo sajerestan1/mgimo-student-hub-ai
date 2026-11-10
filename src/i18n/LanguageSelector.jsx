@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { Check, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from './I18nProvider';
 
@@ -20,17 +20,42 @@ export default function LanguageSelector() {
               onClick={() => setLanguage(item.code)}
               aria-pressed={active}
               className={cn(
-                'flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30',
-                active ? 'border-brand/40 bg-[#F7F9FF]' : 'border-line bg-white hover:bg-canvas'
+                'group flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30',
+                active
+                  ? 'border-brand/40 bg-brand-soft'
+                  : 'border-line bg-white hover:border-brand/30 hover:bg-canvas',
               )}
             >
-              <span className="min-w-0">
-                <span className="block truncate text-[15px] font-medium text-ink" lang={item.code}>
-                  {item.nativeName}
+              <span className="flex min-w-0 items-center gap-2.5">
+                <span
+                  className={cn(
+                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors',
+                    active ? 'bg-white text-brand' : 'bg-canvas text-ink/45 group-hover:text-brand',
+                  )}
+                >
+                  <Globe className="h-4 w-4" aria-hidden="true" />
                 </span>
-                <span className="block truncate text-[13px] text-mutedink">{item.englishName}</span>
+                <span className="min-w-0">
+                  <span
+                    className={cn(
+                      'block truncate text-[15px]',
+                      active ? 'font-semibold text-ink' : 'font-medium text-ink',
+                    )}
+                    lang={item.code}
+                  >
+                    {item.nativeName}
+                  </span>
+                  <span className="block truncate text-[13px] text-mutedink">{item.englishName}</span>
+                </span>
               </span>
-              {active && <Check className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />}
+              <span
+                className={cn(
+                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
+                  active ? 'bg-brand text-white' : 'border border-line text-transparent',
+                )}
+              >
+                <Check className="h-3 w-3" aria-hidden="true" />
+              </span>
             </button>
           </li>
         );

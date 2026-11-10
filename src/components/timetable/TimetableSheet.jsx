@@ -1,12 +1,19 @@
 import { GraduationCap } from 'lucide-react';
 import { longWeekLabel, timeLabel, weekDays } from '@/lib/timetable/week';
 
-const KIND = { lecture: 'Lecture', seminar: 'Seminar', practice: 'Practice' };
+// Kind identity for the exported document: navy, blue and green accents keep
+// the sheet inside the institution palette (no new colour system).
+const KIND = {
+  lecture: { label: 'Lecture', accent: '#14213D', tint: '#F4F6FB' },
+  seminar: { label: 'Seminar', accent: '#4F75FF', tint: '#F2F6FF' },
+  practice: { label: 'Practice', accent: '#16A085', tint: '#F1FAF7' },
+};
+const kindMeta = (kind) => KIND[kind] || { label: kind || 'Session', accent: '#64748B', tint: '#F7F9FD' };
 
 /**
- * The printable/exportable weekly sheet. Fixed A4-landscape proportions, the
- * complete Monday–Sunday week, and no on-screen interaction — the same markup
- * is used for PDF, PNG, print and share so they can never drift apart.
+ * The printable/exportable weekly sheet. Laid out with tables rather than CSS
+ * grid or flex gaps because html2canvas (PDF, PNG, print and share all capture
+ * this exact node) renders table geometry reliably and flex gaps poorly.
  *
  * Its type scale (t-*) is scoped in index.css: this is a document, not
  * interface text, so it keeps its own compact sizes.
@@ -28,85 +35,131 @@ export default function TimetableSheet({ sessions, title, subtitle, identity, we
   });
 
   return (
-    <div className="timetable-sheet w-[1180px] bg-white p-7 font-body text-ink">
-      <div className="flex items-start justify-between gap-6 rounded-xl bg-navy px-6 py-5 text-white">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">
-            <GraduationCap className="h-6 w-6 text-white" strokeWidth={1.8} />
-          </span>
-          <div>
-            <p className="t-15 font-semibold tracking-[-0.01em]">Academic Intelligence</p>
-            <p className="t-11 text-white/70">Your University. One Intelligent Platform.</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="t-10 font-semibold uppercase tracking-[0.16em] text-white/60">Week</p>
-          <p className="t-15 mt-1 font-semibold">{longWeekLabel(weekStart)}</p>
-        </div>
+    <div className="timetable-sheet w-[1180px] bg-[#F6F8FC] p-6 font-body text-ink">
+      {/* Masthead: navy band, institution mark, the exported week. */}
+      <div className="rounded-xl bg-navy px-6 py-5 text-white">
+        <table className="w-full border-collapse">
+          <tbody>
+            <tr>
+              <td className="w-[46px] align-middle">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">
+                  <GraduationCap className="h-6 w-6 text-white" strokeWidth={1.8} />
+                </span>
+              </td>
+              <td className="pl-3 align-middle">
+                <p className="t-15 font-semibold tracking-[-0.01em]">Academic Intelligence</p>
+                <p className="t-11 text-white/70">Weekly timetable · issued from the academic register</p>
+              </td>
+              <td className="align-middle text-right">
+                <p className="t-10 font-semibold uppercase tracking-[0.16em] text-white/60">Week</p>
+                <p className="t-15 mt-1 font-semibold">{longWeekLabel(weekStart)}</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <div className="mt-5 flex items-end justify-between gap-6 border-b border-line pb-3">
-        <div>
-          <h2 className="t-24 font-bold leading-tight tracking-[-0.02em] text-ink">{title}</h2>
-          <p className="t-12 mt-1 text-mutedink">{subtitle}</p>
-        </div>
-        {identity && (
-          <p className="t-12 text-right font-medium text-ink">
-            Issued to
-            <span className="ml-1.5 text-mutedink">{identity}</span>
-          </p>
-        )}
-      </div>
+      {/* Document identity: whose week this is. */}
+      <table className="mt-4 w-full border-collapse border-b border-line">
+        <tbody>
+          <tr>
+            <td className="pb-3 align-bottom">
+              <h2 className="t-24 font-bold leading-tight tracking-[-0.02em] text-ink">{title}</h2>
+              {subtitle && <p className="t-12 mt-1 text-mutedink">{subtitle}</p>}
+            </td>
+            {identity && (
+              <td className="pb-3 text-right align-bottom">
+                <p className="t-10 font-semibold uppercase tracking-[0.12em] text-mutedink">Issued to</p>
+                <p className="t-12 font-semibold text-ink">{identity}</p>
+              </td>
+            )}
+          </tr>
+        </tbody>
+      </table>
 
-      <div className="mt-4 grid grid-cols-7 gap-2">
-        {days.map((day) => {
-          const items = byDate[day.iso] || [];
-          return (
-            <div key={day.iso} className="flex flex-col">
-              <div className="rounded-t-md border border-line bg-[#FAFBFD] px-2 py-1.5 text-center">
-                <p className="t-10 font-semibold uppercase tracking-[0.1em] text-mutedink">{day.short}</p>
-                <p className="t-15 mt-0.5 font-semibold tabular-nums text-ink">
-                  {day.day} <span className="t-10 font-medium text-mutedink">{day.month}</span>
+      {/* The week itself: tinted day headers over white day panels. */}
+      <table className="mt-4 w-full table-fixed border-collapse overflow-hidden rounded-lg">
+        <thead>
+          <tr>
+            {days.map((day) => (
+              <th key={day.iso} className="w-[14.28%] border border-[#22355C] bg-navy px-1 py-1.5 align-middle">
+                <p className="t-10 font-semibold uppercase tracking-[0.1em] text-white/65">{day.short}</p>
+                <p className="t-15 font-semibold tabular-nums text-white">
+                  {day.day} <span className="t-10 font-medium text-white/60">{day.month}</span>
                 </p>
-              </div>
-              <div className="flex flex-1 flex-col gap-1.5 rounded-b-md border border-t-0 border-line bg-white px-1.5 py-2">
-                {items.map((session) => (
-                  <div key={session.id} className="rounded border border-line bg-[#F7F9FD] px-1.5 py-1.5">
-                    <p className="t-10 font-semibold tabular-nums text-ink">
-                      {timeLabel(session.start)}
-                      {session.end ? `–${timeLabel(session.end)}` : ''}
-                    </p>
-                    <p className="t-10 mt-0.5 font-medium leading-snug text-ink">
-                      {session.course_code || session.course_title || 'Class'}
-                    </p>
-                    {session.course_title && session.course_code && (
-                      <p className="t-9 leading-snug text-mutedink">{session.course_title}</p>
-                    )}
-                    <p className="t-9 mt-0.5 leading-snug text-mutedink">
-                      {[KIND[session.kind] || session.kind, session.room].filter(Boolean).join(' · ')}
-                    </p>
-                    {(session.group_name || session.professor_name) && (
-                      <p className="t-9 leading-snug text-mutedink">
-                        {[session.group_name, session.professor_name].filter(Boolean).join(' · ')}
-                      </p>
-                    )}
-                  </div>
-                ))}
-                {!items.length && (
-                  <div className="flex flex-1 items-center justify-center rounded border border-dashed border-line px-1 py-4">
-                    <p className="t-9 text-center leading-snug text-mutedink">No classes</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            {days.map((day) => {
+              const items = byDate[day.iso] || [];
+              return (
+                <td key={day.iso} className="border border-line bg-white px-1.5 py-2 align-top">
+                  {items.map((session) => {
+                    const meta = kindMeta(session.kind);
+                    return (
+                      <div
+                        key={session.id}
+                        className="mb-1.5 rounded-md border border-line p-1.5"
+                        style={{ borderLeft: `3px solid ${meta.accent}`, backgroundColor: meta.tint }}
+                      >
+                        <p className="t-10 font-semibold tabular-nums text-ink">
+                          {timeLabel(session.start)}
+                          {session.end ? `–${timeLabel(session.end)}` : ''}
+                        </p>
+                        <p className="t-10 mt-0.5 font-semibold leading-snug text-ink">
+                          {session.course_code || session.course_title || 'Class'}
+                        </p>
+                        {session.course_title && session.course_code && (
+                          <p className="t-9 leading-snug text-ink/70">{session.course_title}</p>
+                        )}
+                        <p className="t-9 mt-1 font-medium leading-snug" style={{ color: meta.accent }}>
+                          {[meta.label, session.room].filter(Boolean).join(' · ')}
+                        </p>
+                        {(session.group_name || session.professor_name) && (
+                          <p className="t-9 leading-snug text-mutedink">
+                            {[session.group_name, session.professor_name].filter(Boolean).join(' · ')}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {!items.length && (
+                    <div className="rounded-md border border-dashed border-line px-1 py-5 text-center">
+                      <p className="t-9 leading-snug text-mutedink">No classes</p>
+                    </div>
+                  )}
+                </td>
+              );
+            })}
+          </tr>
+        </tbody>
+      </table>
 
-      <div className="t-9 mt-4 flex items-center justify-between border-t border-line pt-2 text-mutedink">
-        <p>Generated {generated} · Source: institutional academic register</p>
-        <p>Confidential — issued to the named account. Do not redistribute.</p>
-      </div>
+      {/* Legend and provenance, so a shared image is self-explanatory. */}
+      <table className="mt-3 w-full border-collapse rounded-lg border border-line bg-white">
+        <tbody>
+          <tr>
+            <td className="px-3 py-2 align-middle">
+              {Object.entries(KIND).map(([key, meta]) => (
+                <span key={key} className="mr-3 inline-block">
+                  <span
+                    className="mr-1.5 inline-block align-middle"
+                    style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: meta.accent }}
+                  />
+                  <span className="t-9 align-middle text-ink/80">{meta.label}</span>
+                </span>
+              ))}
+            </td>
+            <td className="px-3 py-2 text-right align-middle">
+              <p className="t-9 text-mutedink">Generated {generated}</p>
+              <p className="t-9 text-mutedink">Confidential — issued to the named account.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 }
