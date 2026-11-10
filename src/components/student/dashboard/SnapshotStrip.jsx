@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, CalendarCheck, ClipboardList, GraduationCap } from 'lucide-react';
+import { ArrowUpRight, BookOpen, CalendarCheck, ClipboardList, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -77,13 +77,16 @@ export default function SnapshotStrip({ summary }) {
           <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', TONES[tone])}>
             <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
           </span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-[13px] font-medium text-mutedink">{label}</p>
             <p className="mt-1 text-[26px] font-semibold leading-none tracking-[-0.02em] tabular-nums text-ink">
               {value}
             </p>
             <p className="mt-1.5 truncate text-[12.5px] text-mutedink">{hint}</p>
           </div>
+          <span className="ms-auto flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full bg-brand text-white transition-colors group-hover:bg-brand-deep">
+            <ArrowUpRight className="h-4 w-4" strokeWidth={2.1} />
+          </span>
         </Link>
       ))}
     </section>

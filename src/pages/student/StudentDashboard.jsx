@@ -12,6 +12,7 @@ import RecentActivity from '@/components/student/dashboard/RecentActivity';
 import AcademicBriefing from '@/components/student/dashboard/AcademicBriefing';
 import AcademicPerformance from '@/components/student/dashboard/AcademicPerformance';
 import AttendancePanel from '@/components/student/dashboard/AttendancePanel';
+import CommunicationsPanel from '@/components/student/dashboard/CommunicationsPanel';
 
 export default function StudentDashboard() {
   const { preview, workspace } = useWorkspace();
@@ -108,9 +109,14 @@ export default function StudentDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <TodaysClasses sessions={context.sessions} />
+        <div className="xl:col-span-2">
+          <CommunicationsPanel />
+        </div>
         <PriorityTasks context={context} />
-        <RecentActivity context={context} />
+        <TodaysClasses sessions={context.sessions} />
+        <div className="xl:col-span-2">
+          <RecentActivity context={context} />
+        </div>
       </div>
     </div>
   );
