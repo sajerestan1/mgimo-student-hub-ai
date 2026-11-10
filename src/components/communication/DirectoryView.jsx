@@ -55,8 +55,8 @@ export default function DirectoryView({ boot, onStarted }) {
         <div className="border-b border-line p-4">
           <h2 className="text-[17px] font-semibold text-ink">Authorised directory</h2>
           <p className="mt-1 text-[13px] leading-relaxed text-mutedink">
-            Only people you are allowed to contact appear here — classmates in your group, the professors who teach your
-            courses, and institutional staff where policy allows.
+            Only people you are allowed to contact appear here — students across the university, the professors who
+            teach your courses, and institutional staff where policy allows.
           </p>
           <div className="relative mt-3">
             <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-mutedink" />

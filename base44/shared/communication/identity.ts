@@ -121,10 +121,21 @@ export async function conversationCandidates(svc, identity) {
   };
 
   if (identity.student) {
-    const students = list(await svc.entities.Student.filter({ group_name: identity.academicGroup }, { limit: 40 }));
-    students.forEach((row) =>
-      push({ user_id: row.user_id, name: row.full_name, role: 'student' }, row.group_name, 'Classmate'),
-    );
+    // The student directory is university-wide by policy: every active student
+    // holding a linked account is reachable, whatever cohort they sit in. The
+    // academic group travels with the result as context only and is never a
+    // filter, so a student can reach peers outside their own class group.
+    // `push` below already skips unlinked records and the caller themselves.
+    const students = list(await svc.entities.Student.list('-created_date', 500));
+    students.forEach((row) => {
+      const status = String(row.enrollment_status || '').toLowerCase();
+      if (status && status !== 'active') return;
+      push(
+        { user_id: row.user_id, name: row.full_name, role: 'student' },
+        row.group_name,
+        row.group_name === identity.academicGroup ? 'Classmate' : 'Student at the university',
+      );
+    });
 
     const enrolments = list(
       await svc.entities.CourseEnrollment.filter({ student_id: identity.student.id }, { limit: 40 }),
