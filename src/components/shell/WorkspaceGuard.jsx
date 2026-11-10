@@ -4,8 +4,6 @@ import { useWorkspace, WORKSPACES } from '@/lib/workspaceRole';
 import AccessDenied from '@/pages/AccessDenied';
 import PageNotFound from '@/lib/PageNotFound';
 
-const LABELS = { student: 'Student', professor: 'Professor', dean: 'Administration' };
-
 // Workspace keys a visitor can ask for. The request is only a destination.
 const REQUESTED = {
   student: 'student',
@@ -40,7 +38,7 @@ export default function WorkspaceGuard() {
   // Administration screens keep their own administrator-only rule.
   if (path.startsWith('/admin/')) {
     if (user?.role !== 'admin') {
-      return <AccessDenied requested="Administration" detail="This page is open to administrators only." />;
+      return <AccessDenied requested="dean" adminOnly />;
     }
     return <Outlet />;
   }
@@ -49,13 +47,13 @@ export default function WorkspaceGuard() {
   if (isEntry) {
     // An arbitrary workspace value is not a route in this app.
     if (!requested) return <PageNotFound />;
-    if (!canView(requested)) return <AccessDenied requested={LABELS[requested]} />;
+    if (!canView(requested)) return <AccessDenied requested={requested} />;
     return <Navigate to={WORKSPACES[requested].home} replace />;
   }
 
   // A workspace route reached directly, e.g. /professor/dashboard.
   const prefix = PREFIXES.find(([p]) => path === p || path.startsWith(`${p}/`))?.[1];
-  if (prefix && !canView(prefix)) return <AccessDenied requested={LABELS[prefix]} />;
+  if (prefix && !canView(prefix)) return <AccessDenied requested={prefix} />;
 
   return <Outlet />;
 }

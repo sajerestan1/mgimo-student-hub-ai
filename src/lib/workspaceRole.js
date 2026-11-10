@@ -4,28 +4,29 @@ import { MODULE_PATHS, modulePath } from '@/lib/moduleRoutes';
 
 // `portalLabel` is the short identity shown above the signed-in user in the
 // sidebar. It follows the workspace the account is actually working in, so a
-// professor never sees student branding.
+// professor never sees student branding. Every human-readable value here is a
+// translation key resolved where it is rendered.
 export const WORKSPACES = {
   student: {
     role: 'student',
-    label: 'Student',
+    label: 'workspace.student.label',
     home: MODULE_PATHS.student.dashboard,
-    title: 'Student Workspace',
-    portalLabel: 'Student portal',
+    title: 'workspace.student.title',
+    portalLabel: 'workspace.student.portal',
   },
   professor: {
     role: 'professor',
-    label: 'Professor',
+    label: 'workspace.professor.label',
     home: MODULE_PATHS.professor.dashboard,
-    title: 'Professor Workspace',
-    portalLabel: 'Professor portal',
+    title: 'workspace.professor.title',
+    portalLabel: 'workspace.professor.portal',
   },
   dean: {
     role: 'dean',
-    label: 'Dean',
+    label: 'workspace.dean.label',
     home: MODULE_PATHS.dean.dashboard,
-    title: "Dean's Command Center",
-    portalLabel: "Dean's office",
+    title: 'workspace.dean.title',
+    portalLabel: 'workspace.dean.portal',
   },
 };
 
@@ -69,7 +70,7 @@ export function useWorkspace() {
     ? requested
     : role;
 
-  const displayName = user?.full_name || user?.email?.split('@')[0] || 'Guest';
+  const displayName = user?.full_name || user?.email?.split('@')[0] || '';
   const workspace = WORKSPACES[activeRole];
 
   return {

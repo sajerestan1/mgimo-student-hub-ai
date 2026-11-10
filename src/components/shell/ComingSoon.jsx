@@ -6,6 +6,7 @@ import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
 import StatusChip from '@/components/shell/StatusChip';
 import { useWorkspace } from '@/lib/workspaceRole';
+import { useI18n } from '@/i18n/I18nProvider';
 
 // Every module path belongs to exactly one workspace role.
 const PATH_OWNER = { '/student': 'student', '/professor': 'professor', '/dean': 'dean' };
@@ -19,6 +20,7 @@ const WORKSPACE_SUMMARY = {
 export default function ComingSoon() {
   const { pathname } = useLocation();
   const { workspace } = useWorkspace();
+  const { t, isRTL } = useI18n();
 
   const owner = Object.entries(PATH_OWNER).find(([prefix]) => pathname.startsWith(prefix))?.[1];
   if (owner && owner !== workspace.role) return <Navigate to={workspace.home} replace />;
@@ -33,12 +35,12 @@ export default function ComingSoon() {
   return (
     <div className="mx-auto max-w-4xl">
       <PageTitle
-        eyebrow={`${workspace.label} workspace · Stage 2`}
+        eyebrow={`${t(workspace.label)} · Stage 2`}
         title={section.title}
         description={section.summary}
         actions={
           <Link to={workspace.home} className="btn-quiet">
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to my workspace
+            <ArrowLeft className="dir-icon h-3.5 w-3.5" /> {t('common.back')}
           </Link>
         }
       />
@@ -63,7 +65,7 @@ export default function ComingSoon() {
             ))}
           </ul>
           <p className="mt-4 rounded-lg bg-canvas px-3 py-2.5 text-[11.5px] leading-relaxed text-mutedink">
-            Nothing on this page pretends to be functional. Every other module in the {workspace.label.toLowerCase()}{' '}
+            Nothing on this page pretends to be functional. Every other module in the {t(workspace.label)}{' '}
             navigation opens this description until the corresponding stage ships.
           </p>
         </Surface>

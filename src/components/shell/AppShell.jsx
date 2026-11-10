@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import AccountStateScreen from './AccountStateScreen';
 import { useAuth } from '@/lib/AuthContext';
+import { useI18n } from '@/i18n/I18nProvider';
 import { normalizeRole } from '@/lib/workspaceRole';
 import { activateStudentAccount } from '@/lib/studentActivation';
 import { useAccountSession } from '@/lib/useAccountSession';
@@ -15,6 +16,7 @@ export default function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
   const { user } = useAuth();
+  const { t } = useI18n();
   const session = useAccountSession();
 
   useEffect(() => {
@@ -40,8 +42,8 @@ export default function AppShell() {
     return (
       <AccountStateScreen
         tone="warning"
-        title="We could not verify your access"
-        body="The institutional account service did not answer, so protected content stays closed. Try again, or sign out and return later."
+        title={t('accountState.unverifiedTitle')}
+        body={t('accountState.unverifiedBody')}
         onRetry={session.refresh}
       />
     );
@@ -50,8 +52,8 @@ export default function AppShell() {
   if (!session.data.provisioned) {
     return (
       <AccountStateScreen
-        title="Access not provisioned"
-        body="This sign-in is not linked to an institutional account. Academic Intelligence issues accounts through the university administration only, so this session cannot reach any student, teaching or administrative data."
+        title={t('accountState.notProvisionedTitle')}
+        body={t('accountState.notProvisionedBody')}
       />
     );
   }
@@ -59,11 +61,15 @@ export default function AppShell() {
   if (session.data.blocked) {
     return (
       <AccountStateScreen
-        title={session.data.status === 'suspended' ? 'Account suspended' : 'Account deactivated'}
+        title={
+          session.data.status === 'suspended'
+            ? t('accountState.suspendedTitle')
+            : t('accountState.deactivatedTitle')
+        }
         body={
           session.data.status === 'suspended'
-            ? 'This account is suspended. Your academic record is safe and unchanged. Contact the university administration to have access restored.'
-            : 'This account is deactivated. Your academic record is kept, but the sign-in no longer opens the platform. Contact the university administration if this was not expected.'
+            ? t('accountState.suspendedBody')
+            : t('accountState.deactivatedBody')
         }
       />
     );
@@ -90,8 +96,10 @@ export default function AppShell() {
       />
       <div
         className={cn(
+          // Padding follows the writing direction, so the sidebar's mirror side
+          // is respected in a right-to-left language without a second rule.
           'flex min-h-dvh flex-col transition-[padding] duration-200 ease-out',
-          collapsed ? 'lg:pl-[70px]' : 'lg:pl-[244px]'
+          collapsed ? 'lg:ps-[70px]' : 'lg:ps-[244px]'
         )}
       >
         <TopBar onOpenMobile={() => setMobileOpen(true)} />
@@ -102,8 +110,7 @@ export default function AppShell() {
         </main>
         <footer className="border-t border-line px-4 py-3 sm:px-6 lg:px-8">
           <p className="mx-auto max-w-[1320px] text-[10.5px] leading-relaxed text-mutedink">
-            Academic Intelligence by Digital Dean. Digital Dean is a fictional institution; all people, records and
-            metrics shown are synthetic demonstration data.
+            {t('shell.footer')}
           </p>
         </footer>
       </div>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -42,9 +42,11 @@
     --type-reading: 1.09375rem; /* 17.5 */
     --leading-body: 1.6;
     --leading-reading: 1.75;
-    --font-heading: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-    --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-    --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    /* Inter covers Latin and Cyrillic; Noto Sans Arabic and Noto Sans SC carry
+       the scripts Inter does not, so no glyph is left to an arbitrary fallback. */
+    --font-heading: 'Inter', 'Noto Sans Arabic', 'Noto Sans SC', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-body: 'Inter', 'Noto Sans Arabic', 'Noto Sans SC', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-display: 'Inter', 'Noto Sans Arabic', 'Noto Sans SC', ui-sans-serif, system-ui, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --sidebar-background: 220 50% 14%;
     --sidebar-foreground: 218 32% 90%;
@@ -243,4 +245,23 @@ input[class],
 select[class],
 textarea[class] {
   font-size: var(--type-body);
+}
+
+/* ── Right-to-left (Arabic) ───────────────────────────────────────────────
+   Negative tracking and tight leading distort Arabic script, so the mirror
+   direction relaxes both. Layout mirroring (sidebar side, panel direction,
+   icon placement) is handled by the components that own those elements. */
+[dir='rtl'] body {
+  letter-spacing: 0;
+  line-height: 1.75;
+}
+
+[dir='rtl'] .eyebrow,
+[dir='rtl'] .table-head {
+  letter-spacing: 0.04em;
+}
+
+/* An icon whose meaning is "forward/back" mirrors in a right-to-left layout. */
+[dir='rtl'] .dir-icon {
+  transform: scaleX(-1);
 }
