@@ -14,9 +14,10 @@ import fr from '../src/i18n/dictionaries/fr.js';
 import zhCN from '../src/i18n/dictionaries/zh-CN.js';
 import ar from '../src/i18n/dictionaries/ar.js';
 import { student } from '../src/i18n/dictionaries/modules/student.js';
+import { assessment } from '../src/i18n/dictionaries/modules/assessment.js';
 
 const base = { en, ru, fr, 'zh-CN': zhCN, ar };
-const packs = [student];
+const packs = [student, assessment];
 
 const flat = (node, prefix = '') =>
   Object.entries(node).flatMap(([key, value]) =>
@@ -26,12 +27,32 @@ const flat = (node, prefix = '') =>
 const merged = Object.fromEntries(
   Object.keys(base).map((language) => [
     language,
-    packs.reduce((acc, pack) => ({ ...acc, ...(pack[language] || pack.en) }), base[language]),
+    // Workspace packs are nested under `student` exactly as the runtime does it,
+    // so the reported key paths are the ones the application actually resolves.
+    packs.reduce(
+      (acc, pack) => ({ ...acc, student: { ...(acc.student || {}), ...(pack[language] || pack.en) } }),
+      base[language]
+    ),
   ])
 );
 
 const keys = Object.fromEntries(
   Object.entries(merged).map(([language, dictionary]) => [language, new Set(flat(dictionary))])
+);
+
+// Values, so placeholders can be compared key by key.
+const values = Object.fromEntries(
+  Object.entries(merged).map(([language, dictionary]) => {
+    const map = new Map();
+    const walk = (node, prefix = '') => {
+      Object.entries(node).forEach(([key, value]) => {
+        if (value && typeof value === 'object') walk(value, `${prefix}${key}.`);
+        else map.set(`${prefix}${key}`, String(value));
+      });
+    };
+    walk(dictionary);
+    return [language, map];
+  })
 );
 
 const reference = keys.en;
@@ -50,4 +71,34 @@ for (const [language, set] of Object.entries(keys)) {
   if (missing.length) console.log(`       missing: ${missing.slice(0, 12).join(', ')}${missing.length > 12 ? ' …' : ''}`);
 }
 
-process.exit(incomplete ? 1 : 0);
+// Interpolation integrity: every translation must carry exactly the
+// placeholders its English original has, so no value can silently drop out.
+const tokens = (value) => [...value.matchAll(/\{(\w+)\}/g)].map((match) => match[1]).sort().join(',');
+let interpolationIssues = 0;
+for (const key of reference) {
+  const expected = tokens(values.en.get(key) || '');
+  for (const language of Object.keys(keys)) {
+    const actual = tokens(values[language].get(key) || '');
+    if (actual !== expected) {
+      interpolationIssues += 1;
+      console.log(`  placeholder mismatch ${language} ${key}: expected {${expected}} got {${actual}}`);
+    }
+  }
+}
+console.log(`interpolation: ${interpolationIssues ? `${interpolationIssues} mismatch(es)` : 'all placeholders aligned'}`);
+
+// Coverage per surface, so each workspace can be reported on its own.
+const groups = [
+  ['shared shell / auth / account', (key) => !key.startsWith('student.')],
+  ['student dashboard & courses', (key) => key.startsWith('student.') && !/^student\.(quizzes|grades|attendance)\./.test(key)],
+  ['student quizzes', (key) => key.startsWith('student.quizzes.')],
+  ['student grades & transcript', (key) => key.startsWith('student.grades.')],
+  ['student attendance', (key) => key.startsWith('student.attendance.')],
+];
+for (const [label, test] of groups) {
+  const inGroup = [...reference].filter(test);
+  const translated = inGroup.filter((key) => Object.keys(keys).every((language) => keys[language].has(key)));
+  console.log(`  ${label.padEnd(30)} ${String(inGroup.length).padStart(3)} keys  ${((translated.length / inGroup.length) * 100).toFixed(1)}%`);
+}
+
+process.exit(incomplete || interpolationIssues ? 1 : 0);

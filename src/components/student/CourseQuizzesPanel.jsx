@@ -4,8 +4,10 @@ import StatusChip from '@/components/shell/StatusChip';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { loadStudentCourses, shortDate } from '@/lib/studentCourses';
+import { useI18n } from '@/i18n/I18nProvider';
 
 export default function CourseQuizzesPanel() {
+  const { t, language } = useI18n();
   const { user } = useAuth();
   const [quizzes, setQuizzes] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -70,7 +72,11 @@ export default function CourseQuizzesPanel() {
 
   return (
     <div className="mb-4">
-      <Surface title="Quizzes set by your professors" subtitle="Published checks you can attempt now" bodyClassName="px-0 pb-0 pt-1">
+      <Surface
+        title={t('student.quizzes.panelTitle')}
+        subtitle={t('student.quizzes.panelHint')}
+        bodyClassName="px-0 pb-0 pt-1"
+      >
         <ul className="divide-y divide-line">
           {quizzes.map((quiz) => {
             const attempt = attempts.find((a) => a.quiz_id === quiz.id);
@@ -82,16 +88,21 @@ export default function CourseQuizzesPanel() {
                   <div className="min-w-0">
                     <p className="text-[12.5px] font-semibold text-ink">{quiz.title}</p>
                     <p className="mt-0.5 text-[11px] text-mutedink">
-                      {quiz.course_code} · {quizQuestions.length} questions · {quiz.duration_minutes} minutes
-                      {quiz.available_until ? ` · until ${shortDate(quiz.available_until)}` : ''}
+                      {quiz.course_code} · {t('student.quizzes.questions', { count: quizQuestions.length })} ·{' '}
+                      {t('student.quizzes.minutes', { count: quiz.duration_minutes })}
+                      {quiz.available_until
+                        ? ` · ${t('student.quizzes.until', { date: shortDate(quiz.available_until, undefined, language) })}`
+                        : ''}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
                     {attempt ? (
-                      <StatusChip tone={attempt.score >= 60 ? 'positive' : 'critical'}>{attempt.score}% scored</StatusChip>
+                      <StatusChip tone={attempt.score >= 60 ? 'positive' : 'critical'}>
+                        {t('student.quizzes.scored', { score: attempt.score })}
+                      </StatusChip>
                     ) : (
                       <button type="button" onClick={() => { setActiveId(isOpen ? null : quiz.id); setAnswers({}); }} className="btn-quiet btn-sm">
-                        {isOpen ? 'Close' : 'Start quiz'}
+                        {isOpen ? t('student.quizzes.close') : t('student.quizzes.start')}
                       </button>
                     )}
                   </div>
@@ -118,7 +129,7 @@ export default function CourseQuizzesPanel() {
                       </div>
                     ))}
                     <button type="button" onClick={() => submitAttempt(quiz)} disabled={busy} className="btn-primary disabled:opacity-60">
-                      {busy ? 'Scoring…' : 'Submit answers'}
+                      {busy ? t('student.quizzes.scoring') : t('student.quizzes.submit')}
                     </button>
                   </div>
                 )}

@@ -8,21 +8,23 @@ import TranscriptTable from '@/components/student/TranscriptTable';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { loadStudentPortal } from '@/lib/studentPortal';
 import { letterFor } from '@/lib/lms';
+import { useI18n } from '@/i18n/I18nProvider';
 
 const COMPLETION = {
-  completed: { label: 'Completed', tone: 'positive' },
-  in_progress: { label: 'In progress', tone: 'brand' },
-  not_started: { label: 'Not started', tone: 'neutral' },
+  completed: { labelKey: 'student.grades.completion.completed', tone: 'positive' },
+  in_progress: { labelKey: 'student.grades.completion.inProgress', tone: 'brand' },
+  not_started: { labelKey: 'student.grades.completion.notStarted', tone: 'neutral' },
 };
 
 const standingFor = (summary) => {
-  if (summary.average === null) return 'No results yet';
-  if (summary.average < 50) return 'Academic risk';
-  if (summary.average < 60) return 'Needs attention';
-  return 'Good standing';
+  if (summary.average === null) return 'none';
+  if (summary.average < 50) return 'risk';
+  if (summary.average < 60) return 'attention';
+  return 'good';
 };
 
 export default function GradesPage() {
+  const { t } = useI18n();
   const [context, setContext] = useState(null);
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export default function GradesPage() {
     return () => { alive = false; };
   }, []);
 
-  if (!context) return <p className="py-10 text-center text-[15px] text-mutedink">Loading your academic record…</p>;
+  if (!context) return <p className="py-10 text-center text-[15px] text-mutedink">{t('student.grades.loading')}</p>;
 
   // One shape, one source: the same gradebook result the dashboard reads.
   const student = context.profile;
@@ -63,13 +65,14 @@ export default function GradesPage() {
 
   if (!student) {
     return (
-      <Surface title="No student record">
-        <p className="text-[12px] text-mutedink">Your account is not linked to a student record yet. Contact the student office.</p>
+      <Surface title={t('student.grades.noStudentRecord')}>
+        <p className="text-[12px] text-mutedink">{t('student.grades.noStudentRecordBody')}</p>
       </Surface>
     );
   }
 
   const standing = standingFor(summary);
+  const standingLabel = t(`student.grades.standingValue.${standing}`);
   const transcriptRows = courses.map((entry) => ({
     code: entry.course.code,
     title: entry.course.title,
@@ -82,36 +85,38 @@ export default function GradesPage() {
   return (
     <div>
       <PageTitle
-        eyebrow="Student workspace"
-        title="Grades & transcript"
-        description="Every assessment recorded in your enrolled courses, with the weighted result that feeds your academic standing."
+        eyebrow={t('student.common.studentWorkspace')}
+        title={t('student.grades.title')}
+        description={t('student.grades.description')}
         meta={[
-          `${courses.length} enrolled courses`,
-          `${summary.credits} credits this semester`,
-          standing,
+          t('student.grades.metaCourses', { count: courses.length }),
+          t('student.grades.metaCredits', { count: summary.credits }),
+          standingLabel,
         ]}
       />
 
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
-          ['Weighted average', summary.average === null ? '—' : `${summary.average.toFixed(1)}`, `${summary.averageLetter} · credit-weighted`],
-          ['Assessments recorded', String(summary.assessmentsRecorded), `${summary.awaiting} awaiting grade`],
-          ['Credits this semester', String(summary.credits), `${summary.missing} missing item${summary.missing === 1 ? '' : 's'}`],
-          ['Academic standing', standing, `${summary.modulePercent}% of modules completed`],
-        ].map(([label, value, hint]) => (
-          <div key={label} className="card-surface px-4 py-3.5">
-            <p className="text-[11px] text-mutedink">{label}</p>
+          [
+            'average',
+            summary.average === null ? '—' : `${summary.average.toFixed(1)}`,
+            t('student.grades.metrics.averageHint', { letter: summary.averageLetter }),
+          ],
+          ['recorded', String(summary.assessmentsRecorded), t('student.grades.metrics.recordedHint', { count: summary.awaiting })],
+          ['credits', String(summary.credits), t('student.grades.metrics.creditsHint', { count: summary.missing })],
+          ['standing', standingLabel, t('student.grades.metrics.standingHint', { percent: summary.modulePercent })],
+        ].map(([key, value, hint]) => (
+          <div key={key} className="card-surface px-4 py-3.5">
+            <p className="text-[13px] text-mutedink">{t(`student.grades.metrics.${key}`)}</p>
             <p className="mt-1 text-[18px] font-semibold leading-none tracking-[-0.02em] text-ink">{value}</p>
-            <p className="mt-1.5 text-[10.5px] text-mutedink">{hint}</p>
+            <p className="mt-1.5 text-[13px] text-mutedink">{hint}</p>
           </div>
         ))}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-        <Surface title="Course record" subtitle="Assessments grouped by course" bodyClassName="px-0 pb-0 pt-1">
-          {!courses.length && (
-            <p className="px-5 py-6 text-[11.5px] text-mutedink">You are not enrolled in a published course yet.</p>
-          )}
+        <Surface title={t('student.grades.courseRecord')} subtitle={t('student.grades.courseRecordHint')} bodyClassName="px-0 pb-0 pt-1">
+          {!courses.length && <p className="px-5 py-6 text-[13px] text-mutedink">{t('student.grades.notEnrolled')}</p>}
           <ul className="divide-y divide-line">
             {courses.map((entry) => {
               const completion = COMPLETION[entry.completion] || COMPLETION.not_started;
@@ -119,31 +124,36 @@ export default function GradesPage() {
                 <li key={entry.course.id} className="px-5 py-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[12.5px] font-semibold text-ink">
-                        <span className="font-mono text-[10.5px] text-mutedink">{entry.course.code}</span>
+                      <p className="text-[14px] font-semibold text-ink">
+                        <span className="font-mono text-[13px] text-mutedink">{entry.course.code}</span>
                         <span className="mx-1.5 text-line">·</span>
                         {entry.course.title}
                       </p>
-                      <p className="mt-0.5 text-[10.5px] text-mutedink">
-                        {entry.professor} · {entry.credits} credits · {entry.moduleProgress.completed}/{entry.moduleProgress.total} modules ·{' '}
-                        {entry.gradebook.weightScored}% of the weight assessed
+                      <p className="mt-0.5 text-[13px] text-mutedink">
+                        {t('student.grades.courseMeta', {
+                          professor: entry.professor,
+                          credits: entry.credits,
+                          done: entry.moduleProgress.completed,
+                          total: entry.moduleProgress.total,
+                          percent: entry.gradebook.weightScored,
+                        })}
                       </p>
                       <div className="mt-1 flex flex-wrap gap-1.5">
-                        <StatusChip tone={completion.tone}>{completion.label}</StatusChip>
+                        <StatusChip tone={completion.tone}>{t(completion.labelKey)}</StatusChip>
                         {entry.gradebook.awaiting > 0 && (
-                          <StatusChip tone="warning">{entry.gradebook.awaiting} awaiting grade</StatusChip>
+                          <StatusChip tone="warning">{t('student.grades.awaitingChip', { count: entry.gradebook.awaiting })}</StatusChip>
                         )}
                         {entry.gradebook.missing > 0 && (
-                          <StatusChip tone="critical">{entry.gradebook.missing} missing</StatusChip>
+                          <StatusChip tone="critical">{t('student.grades.missingChip', { count: entry.gradebook.missing })}</StatusChip>
                         )}
                       </div>
                     </div>
-                    <div className="shrink-0 text-right">
+                    <div className="shrink-0 text-end">
                       <p className="text-[15px] font-semibold tabular-nums text-ink">
                         {entry.gradebook.weighted === null ? '—' : entry.gradebook.weighted.toFixed(1)}
                       </p>
-                      <p className="text-[10.5px] font-medium text-mutedink">
-                        {entry.gradebook.weighted === null ? 'No grade yet' : letterFor(entry.gradebook.weighted)}
+                      <p className="text-[13px] font-medium text-mutedink">
+                        {entry.gradebook.weighted === null ? t('student.grades.noGradeYet') : letterFor(entry.gradebook.weighted)}
                       </p>
                     </div>
                   </div>
@@ -157,38 +167,38 @@ export default function GradesPage() {
         </Surface>
 
         <div className="space-y-4">
-          <Surface title="Academic standing">
-            <p className="text-[12.5px] leading-relaxed text-ink/80">
-              Your standing is <span className="font-medium text-ink">{standing.toLowerCase()}</span>, calculated from the
-              graded work recorded in your courses. Work that is still awaiting a grade is not counted, and missing work is
-              listed rather than averaged in as zero.
+          <Surface title={t('student.grades.metrics.standing')}>
+            <p className="text-[14px] leading-relaxed text-ink/80">
+              {t('student.grades.standingBody', { standing: standingLabel.toLowerCase() })}
             </p>
-            <dl className="mt-3 space-y-2 border-t border-line pt-3 text-[11.5px]">
-              <div className="flex items-center justify-between">
-                <dt className="text-mutedink">Programme</dt>
-                <dd className="text-right font-medium text-ink">{student.program || '—'}</dd>
+            <dl className="mt-3 space-y-2 border-t border-line pt-3 text-[13px]">
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-mutedink">{t('student.grades.programme')}</dt>
+                <dd className="text-end font-medium text-ink">{student.program || '—'}</dd>
               </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-mutedink">Group</dt>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-mutedink">{t('student.grades.group')}</dt>
                 <dd className="font-medium text-ink">{student.group_name || '—'}</dd>
               </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-mutedink">Enrolment</dt>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-mutedink">{t('student.grades.enrolment')}</dt>
                 <dd className="font-medium capitalize text-ink">{(student.enrollment_status || 'active').replace(/_/g, ' ')}</dd>
               </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-mutedink">Modules completed</dt>
-                <dd className="font-medium text-ink">{summary.modulesCompleted} of {summary.modulesTotal}</dd>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-mutedink">{t('student.grades.modulesCompleted')}</dt>
+                <dd className="font-medium text-ink">
+                  {t('student.grades.ofTotal', { done: summary.modulesCompleted, total: summary.modulesTotal })}
+                </dd>
               </div>
             </dl>
           </Surface>
 
-          <Surface title="Grade weighting" subtitle="How the course result is calculated">
-            <ul className="space-y-1.5 text-[11.5px] text-mutedink">
-              <li>Assignments and coursework count for the largest share of each course result.</li>
-              <li>Quizzes use your best attempt and are only counted once marked.</li>
-              <li>Examinations are averaged separately where a course sets one.</li>
-              <li>The result is re-weighted across the categories that have a recorded mark.</li>
+          <Surface title={t('student.grades.weighting')} subtitle={t('student.grades.weightingHint')}>
+            <ul className="space-y-1.5 text-[13px] leading-relaxed text-mutedink">
+              <li>{t('student.grades.weight1')}</li>
+              <li>{t('student.grades.weight2')}</li>
+              <li>{t('student.grades.weight3')}</li>
+              <li>{t('student.grades.weight4')}</li>
             </ul>
           </Surface>
         </div>
@@ -196,19 +206,19 @@ export default function GradesPage() {
 
       <Surface
         className="mt-4"
-        title="Semester results"
-        subtitle={`${courses.length} courses · ${summary.credits} credits · weighted average ${
-          summary.average === null ? '—' : summary.average.toFixed(1)
-        } (${summary.averageLetter})`}
+        title={t('student.grades.semesterResults')}
+        subtitle={t('student.grades.semesterSubtitle', {
+          courses: courses.length,
+          credits: summary.credits,
+          average: summary.average === null ? '—' : summary.average.toFixed(1),
+          letter: summary.averageLetter,
+        })}
         bodyClassName="p-0"
         footer={
-          <div className="flex flex-col gap-1.5 text-[11px] leading-relaxed text-mutedink sm:flex-row sm:items-center sm:justify-between">
-            <span>
-              These results come from the assessments recorded in your courses. The official transcript is issued by the
-              student office as a signed document.
-            </span>
+          <div className="flex flex-col gap-1.5 text-[13px] leading-relaxed text-mutedink sm:flex-row sm:items-center sm:justify-between">
+            <span>{t('student.grades.transcriptNote')}</span>
             <Link to={P.student.applications} className="link-quiet shrink-0">
-              Request official copy
+              {t('student.grades.requestCopy')}
             </Link>
           </div>
         }
