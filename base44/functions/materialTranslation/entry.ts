@@ -300,7 +300,8 @@ async function translateSections(base44, sections, target, source, glossary) {
     '- Translate academic meaning with the standard terminology of the discipline, and keep terminology consistent across the whole document.',
     '- Preserve equations, mathematical symbols, chemical formulas, citation markers, reference numbers, URLs, e-mail addresses, course codes and all numerals unchanged.',
     '- Keep personal names, institution names and titles of published works in their original form; transliterate only where the target script requires it.',
-    '- Return "translated_heading" with the translated heading (an empty string when the section has no heading) and "translated" with the translated text only — never repeat the heading inside the text.',
+    '- Return "translated_heading" with the translated heading and "translated" with the translated text only — never repeat the heading inside the text.',
+    '- When a section has a non-empty "heading", "translated_heading" must also be non-empty: never leave a heading in the source language. When a section has no heading, return "".',
     '- Do not translate the id or kind values, and do not add commentary or notes.',
     `- The source language is ${LANGUAGES[source] || source}. Translate into ${LANGUAGES[target]} even where the source mixes languages.`,
     glossary ? `- Terminology already established in this document, keep it:\n${glossary}` : '',
@@ -313,8 +314,12 @@ async function translateSections(base44, sections, target, source, glossary) {
 
   let lastError = '';
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    const corrective =
+      attempt > 1 && lastError
+        ? `\n\nYour previous reply was rejected: ${lastError}. Return every id, and translate every heading into translated_heading.`
+        : '';
     const response = await base44.integrations.Core.InvokeLLM({
-      prompt,
+      prompt: prompt + corrective,
       response_json_schema: RESPONSE_SCHEMA,
     }).catch((error) => {
       lastError = error.message;
@@ -330,9 +335,20 @@ async function translateSections(base44, sections, target, source, glossary) {
       }
     });
 
-    const missing = ids.filter((id) => !translations.get(id));
-    if (!missing.length) return { ok: true, translations };
-    lastError = `The response was incomplete for ${missing.length} section(s): ${missing.slice(0, 4).join(', ')}`;
+    // A section is only accepted when its text arrived, and when it carries a
+    // heading, when that heading was translated too. This is what prevents a
+    // silently half-translated document.
+    const incomplete = sections
+      .filter((section) => {
+        const entry = translations.get(section.id);
+        if (!entry) return true;
+        if (!entry.text.trim() && !entry.heading.trim()) return true;
+        return Boolean(section.heading) && Boolean(section.original.trim()) && !entry.heading.trim();
+      })
+      .map((section) => section.id);
+
+    if (!incomplete.length) return { ok: true, translations };
+    lastError = `The response was incomplete for ${incomplete.length} section(s): ${incomplete.slice(0, 4).join(', ')}`;
   }
 
   return { ok: false, error: lastError || 'The translation service returned nothing.' };
