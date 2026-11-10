@@ -1,0 +1,180 @@
+{
+  "name": "IntegrityAnalysis",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Account that ran the analysis. Always the authenticated owner from the server session; results are private to that account."
+    },
+    "title": {
+      "type": "string",
+      "description": "Submission title entered by the reviewer"
+    },
+    "student_reference": {
+      "type": "string",
+      "description": "Optional student name or submission identifier entered by the reviewer"
+    },
+    "word_count": {
+      "type": "number"
+    },
+    "text": {
+      "type": "string",
+      "description": "The submitted text exactly as analysed. Stored unmodified so the report can always be reproduced."
+    },
+    "similarity_percent": {
+      "type": "number",
+      "description": "Share of this document's words that fall inside passages matching text already analysed in this same workspace. Internal comparison only."
+    },
+    "matched_passage_count": {
+      "type": "number"
+    },
+    "repeated_passage_count": {
+      "type": "number",
+      "description": "Passages that substantially repeat another passage of the same submission"
+    },
+    "corpus_documents": {
+      "type": "number",
+      "description": "How many previously analysed submissions this run was compared against"
+    },
+    "corpus_words": {
+      "type": "number"
+    },
+    "match_summary": {
+      "type": "array",
+      "description": "One row per matched passage and source, kept small so the record stays light. The passage text itself is rebuilt from `text`.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "number"
+          },
+          "source_type": {
+            "type": "string"
+          },
+          "source_title": {
+            "type": "string"
+          },
+          "source_reference": {
+            "type": "string"
+          },
+          "overlap_percent": {
+            "type": "number"
+          },
+          "excerpt": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ai_status": {
+      "type": "string",
+      "enum": [
+        "skipped",
+        "completed",
+        "failed"
+      ],
+      "enumColors": [
+        "gray",
+        "green",
+        "red"
+      ],
+      "default": "skipped"
+    },
+    "ai_indicator_level": {
+      "type": "string",
+      "description": "Coarse band reported by the screening model. Not a probability and not a detector output.",
+      "enum": [
+        "low",
+        "moderate",
+        "elevated"
+      ],
+      "enumColors": [
+        "green",
+        "yellow",
+        "red"
+      ]
+    },
+    "ai_summary": {
+      "type": "string"
+    },
+    "ai_observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "signal": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ai_flagged": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "excerpt": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ai_human_review": {
+      "type": "boolean",
+      "default": false
+    },
+    "ai_provider": {
+      "type": "string"
+    },
+    "ai_model": {
+      "type": "string"
+    },
+    "ai_truncated": {
+      "type": "boolean",
+      "default": false
+    },
+    "ai_note": {
+      "type": "string"
+    },
+    "analyzed_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "title",
+    "text"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.user_id": "{{user.id}}"
+    },
+    "update": {
+      "data.user_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.user_id": "{{user.id}}"
+    }
+  }
+}

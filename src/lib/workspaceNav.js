@@ -17,6 +17,7 @@ export const NAV_BY_ROLE = {
         { to: P.student.grades, label: 'nav.items.grades', icon: 'GraduationCap' },
         { to: P.student.attendance, label: 'nav.items.attendance', icon: 'CalendarCheck' },
         { to: P.student.intelligence, label: 'nav.items.intelligence', icon: 'BrainCircuit' },
+        { to: '/academic-integrity', label: 'nav.items.academicIntegrity', icon: 'ShieldCheck' },
         { to: P.student.applications, label: 'nav.items.applications', icon: 'FileText' },
         { to: P.student.library, label: 'nav.items.library', icon: 'BookMarked' },
         { to: P.student.studyGroups, label: 'nav.items.studyGroups', icon: 'Users' },
@@ -71,6 +72,7 @@ export const NAV_BY_ROLE = {
       items: [
         { to: P.professor.students, label: 'nav.items.studentPerformance', icon: 'TrendingUp' },
         { to: P.professor.compare, label: 'nav.items.comparative', icon: 'Scale' },
+        { to: '/academic-integrity', label: 'nav.items.academicIntegrity', icon: 'ShieldCheck' },
         { to: P.professor.discussions, label: 'nav.items.discussions', icon: 'MessagesSquare' },
         { to: P.professor.ai, label: 'nav.items.aiTeaching', icon: 'Sparkles' },
         { to: P.professor.profile, label: 'nav.items.profileSettings', icon: 'UserRound' },

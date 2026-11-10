@@ -34,6 +34,7 @@ const en = {
       grades: 'Grades & Transcript',
       attendance: 'Attendance',
       intelligence: 'Academic Intelligence',
+      academicIntegrity: 'Academic Integrity',
       applications: 'Applications & Certificates',
       library: 'Library',
       studyGroups: 'Study Groups',
