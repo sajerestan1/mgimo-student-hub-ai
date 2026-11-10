@@ -5,19 +5,60 @@ import { comm } from '@/lib/communication/api';
 //
 // The list and the unread total both come from the communication function,
 // which scopes every row to the caller's own user_id — this hook never asks
-// for anybody else's notifications. Refreshes are polled (60s, and never while
+// for anybody else's notifications. Refreshes are polled (20s, and never while
 // the tab is hidden) and re-run when the tab becomes visible again, so a message
 // sent from another account shows up without a manual reload.
-export function useNotifications({ pollMs = 60000 } = {}) {
+//
+// `onArrive` receives the notifications that became visible on this poll, so the
+// caller can raise a toast. The first load only primes: existing unread history
+// is never announced as if it just happened, and the announced ids are kept per
+// device so a reload cannot repeat an alert for the same message.
+const SEEN_KEY = 'comm.alerts.seen';
+const SEEN_LIMIT = 300;
+
+function readSeen() {
+  try {
+    const raw = JSON.parse(window.localStorage.getItem(SEEN_KEY) || '[]');
+    return new Set(Array.isArray(raw) ? raw : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function writeSeen(seen) {
+  try {
+    window.localStorage.setItem(SEEN_KEY, JSON.stringify([...seen].slice(-SEEN_LIMIT)));
+  } catch {
+    // Storage unavailable: the in-memory set still prevents repeats this session.
+  }
+}
+
+export function useNotifications({ pollMs = 20000, onArrive } = {}) {
   const [state, setState] = useState({ items: [], unread: 0, loading: true, error: '' });
   const alive = useRef(true);
+  const seen = useRef(readSeen());
+  const primed = useRef(false);
+  const arrive = useRef(onArrive);
+  arrive.current = onArrive;
 
   const load = useCallback(async () => {
     try {
       const data = await comm('notifications');
       if (!alive.current) return;
+      const items = data.items || [];
+      // Another tab on this device may have announced something already, so the
+      // stored ids are merged before deciding what is new.
+      readSeen().forEach((id) => seen.current.add(id));
+      const unreadItems = items.filter((item) => !item.is_read);
+      const fresh = unreadItems.filter((item) => !seen.current.has(item.id));
+      unreadItems.forEach((item) => seen.current.add(item.id));
+      if (fresh.length) {
+        writeSeen(seen.current);
+        if (primed.current) arrive.current?.(fresh);
+      }
+      primed.current = true;
       setState({
-        items: data.items || [],
+        items,
         unread: Number(data.unreadTotal ?? data.unread ?? 0),
         loading: false,
         error: '',

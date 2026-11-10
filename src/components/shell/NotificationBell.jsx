@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatStamp } from '@/lib/communication/api';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useI18n } from '@/i18n/I18nProvider';
+import { useToast } from '@/components/ui/use-toast';
+import { ToastAction } from '@/components/ui/toast';
+import { showBrowserAlert } from '@/lib/messageAlerts';
+import BrowserAlertsToggle from './BrowserAlertsToggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,9 +22,56 @@ const VISIBLE = 6;
 
 export default function NotificationBell() {
   const navigate = useNavigate();
-  const { items, unread, loading, markRead, markAllRead } = useNotifications();
+  const { toast } = useToast();
+  // The arrival callback lives in a ref so the polling effect in the hook keeps
+  // one stable subscription while it can still reach the newest markRead.
+  const announceRef = useRef(null);
+  const { items, unread, loading, markRead, markAllRead } = useNotifications({
+    onArrive: (fresh) => announceRef.current?.(fresh),
+  });
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
+
+  // A message that arrives while the reader is in the app is announced once: an
+  // in-app toast, and a desktop alert too if they turned that on. Both open the
+  // conversation through the same authorised link the bell row uses.
+  const announce = useCallback(
+    (fresh) => {
+      const newest = fresh[0];
+      if (!newest) return;
+      const openConversation = async () => {
+        setOpen(false);
+        try {
+          await markRead(newest.id);
+        } catch {
+          /* the conversation still opens if the read receipt failed */
+        }
+        navigate(newest.link || ALL_NOTIFICATIONS);
+      };
+      const many = fresh.length > 1;
+      const title = many ? `${fresh.length} new messages` : newest.title;
+      const detail = newest.body || newest.conversation_name || '';
+
+      toast({
+        title,
+        description: many ? 'Open your inbox to read them' : detail || undefined,
+        action: (
+          <ToastAction altText="Open conversation" onClick={openConversation}>
+            Open
+          </ToastAction>
+        ),
+      });
+
+      showBrowserAlert({
+        id: newest.id,
+        title,
+        body: many ? 'Open your inbox to read them' : detail,
+        onOpen: openConversation,
+      });
+    },
+    [markRead, navigate, toast],
+  );
+  announceRef.current = announce;
 
   const openItem = async (item) => {
     setOpen(false);
@@ -117,6 +168,8 @@ export default function NotificationBell() {
           );
         })}
 
+        <DropdownMenuSeparator />
+        <BrowserAlertsToggle />
         <DropdownMenuSeparator />
         <button
           type="button"
