@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
+import { ListChecks } from 'lucide-react';
 import Surface from '@/components/shell/Surface';
 import StatusChip from '@/components/shell/StatusChip';
+import PanelTitle from './PanelTitle';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { dueLabel, daysUntil } from '@/lib/studentPortal';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -61,7 +63,8 @@ export default function PriorityTasks({ context }) {
 
   return (
     <Surface
-      title={t('student.dashboard.priorityTasks')}
+      className="h-full"
+      title={<PanelTitle icon={ListChecks} tone="warning">{t('student.dashboard.priorityTasks')}</PanelTitle>}
       action={
         <Link to={P.student.assignments} className="link-quiet text-[14px]">
           {t('student.dashboard.allWork')}

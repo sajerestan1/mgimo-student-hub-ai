@@ -1,6 +1,15 @@
 import { Link } from 'react-router-dom';
+import { BookOpen, CalendarCheck, ClipboardList, GraduationCap } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { useI18n } from '@/i18n/I18nProvider';
+
+const TONES = {
+  brand: 'bg-brand-soft text-brand',
+  positive: 'bg-[#E9F5EF] text-[#1D7A50]',
+  warning: 'bg-[#FCF3E4] text-[#8E6018]',
+  royal: 'bg-royal/10 text-royal',
+};
 
 /**
  * Four compact figures from the student's own record. A metric with no
@@ -12,6 +21,7 @@ export default function SnapshotStrip({ summary }) {
 
   const items = [
     {
+      key: 'average',
       label: t('student.dashboard.metrics.semesterAverage'),
       value: summary.average === null ? '—' : summary.average.toFixed(1),
       hint:
@@ -19,14 +29,20 @@ export default function SnapshotStrip({ summary }) {
           ? unavailable
           : t('student.dashboard.hints.weighted', { letter: summary.averageLetter }),
       to: P.student.grades,
+      icon: GraduationCap,
+      tone: 'brand',
     },
     {
+      key: 'attendance',
       label: t('student.dashboard.metrics.attendance'),
       value: summary.attendanceRate === null ? '—' : `${summary.attendanceRate}%`,
       hint: summary.attendanceRate === null ? unavailable : t('student.dashboard.hints.ofSessions'),
       to: P.student.attendance,
+      icon: CalendarCheck,
+      tone: 'positive',
     },
     {
+      key: 'work',
       label: t('student.dashboard.metrics.pendingWork'),
       value: String(summary.pending + summary.overdue),
       hint:
@@ -34,30 +50,42 @@ export default function SnapshotStrip({ summary }) {
           ? t('student.dashboard.hints.nothingOpen')
           : t('student.dashboard.hints.overdueTodo', { overdue: summary.overdue, pending: summary.pending }),
       to: P.student.assignments,
+      icon: ClipboardList,
+      tone: summary.overdue > 0 ? 'warning' : 'royal',
     },
     {
+      key: 'courses',
       label: t('student.dashboard.metrics.activeCourses'),
       value: String(summary.courseCount),
       hint: summary.courseCount
         ? t('student.dashboard.hints.credits', { count: summary.credits })
         : t('student.dashboard.hints.noEnrolment'),
       to: P.student.courses,
+      icon: BookOpen,
+      tone: 'royal',
     },
   ];
 
   return (
-    <section className="card-surface mb-4 overflow-hidden">
-      <div className="grid grid-cols-2 gap-px bg-line lg:grid-cols-4">
-        {items.map((item) => (
-          <Link key={item.label} to={item.to} className="bg-white px-4 py-4 transition-colors hover:bg-canvas">
-            <p className="text-[13px] font-medium text-mutedink">{item.label}</p>
-            <p className="mt-1.5 text-[26px] font-semibold leading-none tracking-[-0.02em] tabular-nums text-ink sm:text-[28px]">
-              {item.value}
+    <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {items.map(({ key, label, value, hint, to, icon: Icon, tone }) => (
+        <Link
+          key={key}
+          to={to}
+          className="card-surface group flex items-start gap-3 p-4 transition-shadow hover:shadow-[0_10px_30px_-22px_rgba(16,27,51,0.5)]"
+        >
+          <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', TONES[tone])}>
+            <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[13px] font-medium text-mutedink">{label}</p>
+            <p className="mt-1 text-[26px] font-semibold leading-none tracking-[-0.02em] tabular-nums text-ink">
+              {value}
             </p>
-            <p className="mt-1.5 text-[13px] text-mutedink">{item.hint}</p>
-          </Link>
-        ))}
-      </div>
+            <p className="mt-1.5 truncate text-[12.5px] text-mutedink">{hint}</p>
+          </div>
+        </Link>
+      ))}
     </section>
   );
 }

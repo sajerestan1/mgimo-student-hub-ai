@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
+import { CalendarDays } from 'lucide-react';
 import Surface from '@/components/shell/Surface';
+import PanelTitle from './PanelTitle';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { clock, shortDate, todayISO } from '@/lib/studentPortal';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -24,7 +26,12 @@ export default function TodaysClasses({ sessions }) {
 
   return (
     <Surface
-      title={todays.length ? t('student.dashboard.todaySchedule') : t('student.dashboard.nextClasses')}
+      className="h-full"
+      title={
+        <PanelTitle icon={CalendarDays} tone="brand">
+          {todays.length ? t('student.dashboard.todaySchedule') : t('student.dashboard.nextClasses')}
+        </PanelTitle>
+      }
       subtitle={
         day
           ? shortDate(day, { weekday: 'long', day: 'numeric', month: 'long' }, language)

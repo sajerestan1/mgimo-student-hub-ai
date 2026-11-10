@@ -11,6 +11,7 @@ import PriorityTasks from '@/components/student/dashboard/PriorityTasks';
 import RecentActivity from '@/components/student/dashboard/RecentActivity';
 import AcademicBriefing from '@/components/student/dashboard/AcademicBriefing';
 import AcademicPerformance from '@/components/student/dashboard/AcademicPerformance';
+import AttendancePanel from '@/components/student/dashboard/AttendancePanel';
 
 export default function StudentDashboard() {
   const { preview, workspace } = useWorkspace();
@@ -39,11 +40,20 @@ export default function StudentDashboard() {
   if (!context) {
     return (
       <div className="space-y-4">
-        <div className="h-16 animate-pulse rounded-xl bg-white" />
-        <div className="h-24 animate-pulse rounded-xl bg-white" />
-        <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
-          <div className="h-64 animate-pulse rounded-xl bg-white" />
-          <div className="h-64 animate-pulse rounded-xl bg-white" />
+        <div className="h-20 animate-pulse rounded-xl bg-white" />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {[0, 1, 2, 3].map((key) => (
+            <div key={key} className="h-[92px] animate-pulse rounded-xl bg-white" />
+          ))}
+        </div>
+        <div className="grid gap-4 xl:grid-cols-2">
+          <div className="h-72 animate-pulse rounded-xl bg-white" />
+          <div className="h-72 animate-pulse rounded-xl bg-white" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {[0, 1, 2].map((key) => (
+            <div key={key} className="h-52 animate-pulse rounded-xl bg-white" />
+          ))}
         </div>
       </div>
     );
@@ -85,23 +95,22 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div>
-      <WelcomeHeader profile={context.profile} />
+    <div className="space-y-4">
+      <WelcomeHeader profile={context.profile} context={context} />
+
       <SnapshotStrip summary={context.summary} />
 
-      <div className="mt-4">
+      <AcademicBriefing context={context} />
+
+      <div className="grid gap-4 xl:grid-cols-2">
         <AcademicPerformance context={context} />
+        <AttendancePanel context={context} />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[1.35fr_1fr]">
-        <div className="space-y-4">
-          <TodaysClasses sessions={context.sessions} />
-          <PriorityTasks context={context} />
-        </div>
-        <div className="space-y-4">
-          <AcademicBriefing context={context} />
-          <RecentActivity context={context} />
-        </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <TodaysClasses sessions={context.sessions} />
+        <PriorityTasks context={context} />
+        <RecentActivity context={context} />
       </div>
     </div>
   );

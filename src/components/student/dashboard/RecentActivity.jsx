@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, History } from 'lucide-react';
 import Surface from '@/components/shell/Surface';
+import PanelTitle from './PanelTitle';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { recentActivity } from '@/lib/studentPortal';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -13,7 +14,8 @@ export default function RecentActivity({ context }) {
 
   return (
     <Surface
-      title={t('student.dashboard.recentActivity')}
+      className="h-full"
+      title={<PanelTitle icon={History} tone="neutral">{t('student.dashboard.recentActivity')}</PanelTitle>}
       action={
         <Link to={P.student.notifications} className="link-quiet text-[14px]">
           {t('student.dashboard.allUpdates')}
