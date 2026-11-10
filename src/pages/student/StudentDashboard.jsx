@@ -96,25 +96,39 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <WelcomeHeader profile={context.profile} context={context} />
 
       <SnapshotStrip summary={context.summary} />
 
       <AcademicBriefing context={context} />
 
-      {/* Analytics sit side by side only once each panel keeps a readable chart width. */}
+      {/* Analytics sit side by side only once each panel keeps a readable chart width.
+          Each grid cell is min-w-0 so a long course code or message can never widen
+          the track past the viewport. */}
       <div className="grid gap-3 xl:grid-cols-2">
-        <AcademicPerformance context={context} />
-        <AttendancePanel context={context} />
+        <div className="min-w-0">
+          <AcademicPerformance context={context} />
+        </div>
+        <div className="min-w-0">
+          <AttendancePanel context={context} />
+        </div>
       </div>
 
       {/* Balanced two-column lower dashboard; equal heights come from h-full panels. */}
       <div className="grid gap-3 md:grid-cols-2">
-        <CommunicationsPanel />
-        <PriorityTasks context={context} />
-        <TodaysClasses sessions={context.sessions} />
-        <RecentActivity context={context} />
+        <div className="min-w-0">
+          <CommunicationsPanel />
+        </div>
+        <div className="min-w-0">
+          <PriorityTasks context={context} />
+        </div>
+        <div className="min-w-0">
+          <TodaysClasses sessions={context.sessions} />
+        </div>
+        <div className="min-w-0">
+          <RecentActivity context={context} />
+        </div>
       </div>
     </div>
   );

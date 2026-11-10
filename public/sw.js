@@ -1,7 +1,7 @@
 // App-shell service worker: makes the interface itself available offline so a
 // saved timetable can be opened with no connection. API and function traffic is
 // never cached, and every response is fetched fresh first.
-const CACHE = 'academic-intelligence-shell-v1';
+const CACHE = 'academic-intelligence-shell-v2';
 const SHELL = ['/'];
 
 self.addEventListener('install', (event) => {

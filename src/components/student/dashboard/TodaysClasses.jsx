@@ -59,7 +59,7 @@ export default function TodaysClasses({ sessions }) {
                 <p className="truncate text-[15px] font-medium text-ink">
                   {session.courseCode} · {session.courseTitle}
                 </p>
-                <p className="mt-0.5 text-[13px] text-mutedink">
+                <p className="mt-0.5 truncate text-[13px] text-mutedink">
                   {[kindLabel(session.kind), session.room || t('student.dashboard.roomNotSet')].join(' · ')}
                 </p>
               </div>

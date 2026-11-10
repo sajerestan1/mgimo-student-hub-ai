@@ -57,12 +57,12 @@ export default function AttendancePanel({ context }) {
             <ul className="space-y-1.5">
               {KEYS.map((key) => (
                 <li key={key} className="flex items-center justify-between gap-2 text-[13px]">
-                  <span className="flex items-center gap-2 text-mutedink">
+                  <span className="flex min-w-0 items-center gap-2 text-mutedink">
                     <span
                       className="h-2 w-2 shrink-0 rounded-full"
                       style={{ backgroundColor: ATTENDANCE_COLORS[key] }}
                     />
-                    {t(`student.dashboard.attendanceBreakdown.${key}`)}
+                    <span className="truncate">{t(`student.dashboard.attendanceBreakdown.${key}`)}</span>
                   </span>
                   <span className="font-semibold tabular-nums text-ink">{totals[key]}</span>
                 </li>

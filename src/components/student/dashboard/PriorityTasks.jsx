@@ -82,7 +82,7 @@ export default function PriorityTasks({ context }) {
               <Link to={row.to} className="row-hover flex items-start justify-between gap-3 px-4 py-2.5">
                 <div className="min-w-0">
                   <p className="truncate text-[15px] font-medium text-ink">{row.title}</p>
-                  <p className="mt-0.5 text-[13px] text-mutedink">{row.meta}</p>
+                  <p className="mt-0.5 truncate text-[13px] text-mutedink">{row.meta}</p>
                 </div>
                 <StatusChip tone={row.chip.tone} className="shrink-0">
                   {row.chip.label}
