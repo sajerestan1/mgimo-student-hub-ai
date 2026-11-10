@@ -1,0 +1,107 @@
+{
+  "name": "StudyGroup",
+  "type": "object",
+  "properties": {
+    "course_id": {
+      "type": "string",
+      "description": "Course the group studies. Every group belongs to one course a student is enrolled in."
+    },
+    "course_code": {
+      "type": "string"
+    },
+    "course_title": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "description": "Group name chosen by the student who created it"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the group works on"
+    },
+    "focus": {
+      "type": "string",
+      "enum": [
+        "exam_prep",
+        "problem_sets",
+        "readings",
+        "projects",
+        "general"
+      ],
+      "enumColors": [
+        "red",
+        "blue",
+        "green",
+        "purple",
+        "gray"
+      ],
+      "default": "general"
+    },
+    "schedule": {
+      "type": "string",
+      "description": "Meeting rhythm agreed by the members, entered by the leader"
+    },
+    "location": {
+      "type": "string",
+      "description": "Room, library area or video link where the group meets"
+    },
+    "leader_user_id": {
+      "type": "string"
+    },
+    "leader_name": {
+      "type": "string"
+    },
+    "member_count": {
+      "type": "number",
+      "default": 1
+    },
+    "member_limit": {
+      "type": "number",
+      "default": 8
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "full",
+        "archived"
+      ],
+      "enumColors": [
+        "green",
+        "yellow",
+        "gray"
+      ],
+      "default": "open"
+    },
+    "semester": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "course_id",
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -19,6 +19,7 @@ export const NAV_BY_ROLE = {
         { to: P.student.intelligence, label: 'nav.items.intelligence', icon: 'BrainCircuit' },
         { to: P.student.applications, label: 'nav.items.applications', icon: 'FileText' },
         { to: P.student.library, label: 'nav.items.library', icon: 'BookMarked' },
+        { to: P.student.studyGroups, label: 'nav.items.studyGroups', icon: 'Users' },
         { to: P.student.notifications, label: 'nav.items.notifications', icon: 'Bell' },
         { to: P.student.ai, label: 'nav.items.aiStudy', icon: 'Sparkles' },
         { to: P.student.recommendations, label: 'nav.items.recommendations', icon: 'Lightbulb' },

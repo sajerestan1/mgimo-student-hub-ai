@@ -36,6 +36,7 @@ const zhCN = {
       intelligence: '学业智能分析',
       applications: '申请与证明',
       library: '图书馆',
+      studyGroups: '学习小组',
       notifications: '通知',
       aiStudy: 'AI 学习助手',
       recommendations: '学习建议',

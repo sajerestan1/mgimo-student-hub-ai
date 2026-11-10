@@ -1,5 +1,6 @@
 import { student } from './student';
 import { assessment } from './assessment';
+import { studyGroups } from './studyGroups';
 
 /**
  * Interface namespaces, one object per module, each carrying every language.
@@ -7,7 +8,7 @@ import { assessment } from './assessment';
  * existing translate() lookup; a new workspace module never touches the
  * base dictionaries.
  */
-const registered = [student, assessment];
+const registered = [student, assessment, studyGroups];
 
 const LANGUAGES = ['en', 'ru', 'fr', 'zh-CN', 'ar'];
 

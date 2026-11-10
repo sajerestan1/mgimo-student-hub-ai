@@ -36,6 +36,7 @@ const ar = {
       intelligence: 'التحليل الأكاديمي',
       applications: 'الطلبات والشهادات',
       library: 'المكتبة',
+      studyGroups: 'مجموعات الدراسة',
       notifications: 'الإشعارات',
       aiStudy: 'مساعد الدراسة الذكي',
       recommendations: 'توصيات الدراسة',

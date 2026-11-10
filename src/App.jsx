@@ -25,6 +25,7 @@ import AttendancePage from '@/pages/student/AttendancePage';
 import AcademicIntelligence from '@/pages/student/AcademicIntelligence';
 import ApplicationsPage from '@/pages/student/ApplicationsPage';
 import LibraryPage from '@/pages/student/LibraryPage';
+import StudyGroupsPage from '@/pages/student/StudyGroupsPage';
 import AiStudyCompanion from '@/pages/student/AiStudyCompanion';
 import StudyRecommendations from '@/pages/student/StudyRecommendations';
 import StudentProfilePage from '@/pages/student/StudentProfilePage';
@@ -248,6 +249,14 @@ const AuthenticatedApp = () => {
             element={
               <RoleRoute role="student">
                 <StudentProfilePage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path={MODULE_PATHS.student.studyGroups}
+            element={
+              <RoleRoute role="student">
+                <StudyGroupsPage />
               </RoleRoute>
             }
           />

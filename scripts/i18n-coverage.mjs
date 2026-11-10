@@ -15,9 +15,10 @@ import zhCN from '../src/i18n/dictionaries/zh-CN.js';
 import ar from '../src/i18n/dictionaries/ar.js';
 import { student } from '../src/i18n/dictionaries/modules/student.js';
 import { assessment } from '../src/i18n/dictionaries/modules/assessment.js';
+import { studyGroups } from '../src/i18n/dictionaries/modules/studyGroups.js';
 
 const base = { en, ru, fr, 'zh-CN': zhCN, ar };
-const packs = [student, assessment];
+const packs = [student, assessment, studyGroups];
 
 const flat = (node, prefix = '') =>
   Object.entries(node).flatMap(([key, value]) =>

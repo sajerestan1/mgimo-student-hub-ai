@@ -36,6 +36,7 @@ const fr = {
       intelligence: 'Analyse académique',
       applications: 'Demandes et attestations',
       library: 'Bibliothèque',
+      studyGroups: 'Groupes de travail',
       notifications: 'Notifications',
       aiStudy: 'Assistant IA d’étude',
       recommendations: 'Recommandations d’étude',

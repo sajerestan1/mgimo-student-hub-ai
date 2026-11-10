@@ -36,6 +36,7 @@ const en = {
       intelligence: 'Academic Intelligence',
       applications: 'Applications & Certificates',
       library: 'Library',
+      studyGroups: 'Study Groups',
       notifications: 'Notifications',
       aiStudy: 'AI Study Companion',
       recommendations: 'Study Recommendations',

@@ -36,6 +36,7 @@ const ru = {
       intelligence: 'Академическая аналитика',
       applications: 'Заявления и справки',
       library: 'Библиотека',
+      studyGroups: 'Учебные группы',
       notifications: 'Уведомления',
       aiStudy: 'ИИ-помощник в учёбе',
       recommendations: 'Рекомендации по учёбе',

@@ -1,0 +1,72 @@
+{
+  "name": "StudyGroupMember",
+  "type": "object",
+  "properties": {
+    "group_id": {
+      "type": "string"
+    },
+    "course_id": {
+      "type": "string",
+      "description": "Denormalised from the group so membership can be listed per course"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "leader",
+        "member"
+      ],
+      "enumColors": [
+        "purple",
+        "gray"
+      ],
+      "default": "member"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "left"
+      ],
+      "enumColors": [
+        "green",
+        "gray"
+      ],
+      "default": "active"
+    },
+    "joined_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "group_id",
+    "user_id"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

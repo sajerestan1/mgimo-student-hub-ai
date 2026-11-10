@@ -13,6 +13,7 @@ export const MODULE_PATHS = {
     intelligence: '/student/intelligence',
     applications: '/student/applications',
     library: '/student/library',
+    studyGroups: '/study-groups',
     notifications: '/student/notifications',
     ai: '/student/ai-study-companion',
     recommendations: '/student/recommendations',
