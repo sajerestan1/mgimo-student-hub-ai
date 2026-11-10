@@ -3,6 +3,7 @@ import StatusChip from '@/components/shell/StatusChip';
 import { languageLabel } from '@/lib/materialTranslation';
 
 const TONE = {
+  idle: ['neutral', 'Not translated'],
   complete: ['positive', 'Translated'],
   translating: ['brand', 'Translating'],
   pending: ['neutral', 'Queued'],
@@ -54,9 +55,13 @@ export default function ReaderHeader({
             {material?.resource_title}
           </h1>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            <StatusChip tone="neutral">{languageLabel(source)}</StatusChip>
+            {source ? (
+              <StatusChip tone="neutral">{languageLabel(source)}</StatusChip>
+            ) : (
+              <StatusChip tone="warning">Select source language</StatusChip>
+            )}
             <span className="text-[13px] text-mutedink">→</span>
-            <StatusChip tone="brand">{languageLabel(target)}</StatusChip>
+            <StatusChip tone="brand">{languageLabel(target) || 'No target yet'}</StatusChip>
             <StatusChip tone={tone}>{label}</StatusChip>
           </div>
         </div>

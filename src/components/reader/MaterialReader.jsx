@@ -2,13 +2,21 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { openPrivateFile } from '@/lib/studentCourses';
-import { openTranslation, translateNextChunk, defaultTarget, dirFor } from '@/lib/materialTranslation';
+import {
+  openTranslation,
+  inspectMaterial,
+  translateNextChunk,
+  saveTargetPreference,
+  resolveInitialTarget,
+  dirFor,
+} from '@/lib/materialTranslation';
 import { alignPanels, scrollToSection, documentText, downloadTextFile } from '@/lib/readerSync';
 import ReaderHeader from './ReaderHeader';
 import ReaderToolbar from './ReaderToolbar';
 import TranslationStatusBanner from './TranslationStatusBanner';
 import DocumentPanel from './DocumentPanel';
 import BilingualStack from './BilingualStack';
+import ReaderLanguageBar from './ReaderLanguageBar';
 
 const slug = (value) =>
   String(value || 'material')
@@ -21,7 +29,13 @@ const slug = (value) =>
 // separate stored records: nothing here edits the professor's material.
 export default function MaterialReader({ resource, onClose }) {
   const { language } = useI18n();
-  const [target, setTarget] = useState(() => defaultTarget(language));
+  // No target is assumed: it is resolved from the student's saved choice, the
+  // interface language and the material's own detected language, and the
+  // student confirms it before any translation is requested.
+  const [target, setTarget] = useState('');
+  const [sourceOverride, setSourceOverride] = useState('');
+  const [meta, setMeta] = useState(null);
+  const [started, setStarted] = useState(false);
   const [mode, setMode] = useState('both');
   const [sync, setSync] = useState(true);
   const [search, setSearch] = useState('');
@@ -45,7 +59,12 @@ export default function MaterialReader({ resource, onClose }) {
     let current = start;
     for (let step = 0; step < 40; step += 1) {
       if (cancelled.current || !current?.id) return;
-      if (!['pending', 'translating'].includes(current.status)) return;
+      if (!['pending', 'translating'].includes(current.status)) {
+        // Nothing left to generate (a cached or completed translation): stop
+        // cleanly instead of leaving the reader marked as busy.
+        setBusy(false);
+        return;
+      }
       setBusy(true);
       try {
         current = await translateNextChunk(current.id);
@@ -60,22 +79,39 @@ export default function MaterialReader({ resource, onClose }) {
     setBusy(false);
   }, []);
 
+  // Opening a material only inspects it: the source language is detected and the
+  // languages already cached are listed. Nothing is created or translated yet.
   useEffect(() => {
     if (!resource?.id) return undefined;
     cancelled.current = false;
     setLoading(true);
+    setStarted(false);
     setError('');
     setData(null);
+    setMeta(null);
+    setSourceOverride('');
     setActiveId('');
     setSearch('');
 
     (async () => {
       try {
-        const opened = await openTranslation(resource.id, target);
+        const info = await inspectMaterial(resource.id);
         if (cancelled.current) return;
-        setData(opened);
+        setMeta(info);
         setLoading(false);
-        await run(opened);
+        if (info.status !== 'ready') return;
+
+        const initial = resolveInitialTarget({
+          preferred: info.preferred_target,
+          interfaceLanguage: language,
+          source: info.source_language,
+        });
+        setTarget(initial);
+        // An existing translation for that language is shown at once; a language
+        // that has none waits for the student to press Translate.
+        if ((info.cached_languages || []).includes(initial) && initial !== info.source_language) {
+          setStarted(true);
+        }
       } catch (caught) {
         if (cancelled.current) return;
         setError(caught.message || 'This material could not be opened.');
@@ -86,7 +122,36 @@ export default function MaterialReader({ resource, onClose }) {
     return () => {
       cancelled.current = true;
     };
-  }, [resource?.id, target, reloadKey, run]);
+  }, [resource?.id]);
+
+  const sourceResolved = sourceOverride || meta?.source_language || '';
+  const sourceKnown = Boolean(sourceResolved);
+  const sameLanguage = sourceKnown && sourceResolved === target;
+
+  // One target language at a time: every switch opens that language's own record,
+  // so a cached translation is reused and no other language's text is shown.
+  useEffect(() => {
+    if (!started || !target || !resource?.id || sameLanguage) return undefined;
+    cancelled.current = false;
+    setBusy(true);
+
+    (async () => {
+      try {
+        const opened = await openTranslation(resource.id, target, sourceOverride);
+        if (cancelled.current) return;
+        setData(opened);
+        await run(opened);
+      } catch (caught) {
+        if (cancelled.current) return;
+        setError(caught.message || 'This material could not be translated.');
+        setBusy(false);
+      }
+    })();
+
+    return () => {
+      cancelled.current = true;
+    };
+  }, [started, target, resource?.id, reloadKey, sourceOverride, sameLanguage]);
 
   // This component is mounted for the whole life of the course page, so the
   // document scroll lock must exist only while a material is actually open.
@@ -129,6 +194,8 @@ export default function MaterialReader({ resource, onClose }) {
 
   if (!resource) return null;
 
+  const cachedLanguages = meta?.cached_languages || [];
+  const canTranslate = sourceKnown && Boolean(target) && !sameLanguage;
   const sections = data?.sections || [];
   const term = search.trim();
   const visible = term
@@ -166,6 +233,36 @@ export default function MaterialReader({ resource, onClose }) {
     scrollToSection(stackRef.current, id, 8);
   };
 
+  // An explicit choice by the student becomes their saved reader default.
+  const chooseTarget = (code) => {
+    setTarget(code);
+    saveTargetPreference(code);
+    if (started) {
+      setData(null);
+      if (code === sourceResolved) setStarted(false);
+    }
+  };
+
+  const chooseSource = (code) => {
+    setSourceOverride(code);
+    setData(null);
+    setStarted(false);
+    if (code === target) {
+      setTarget(
+        resolveInitialTarget({
+          preferred: meta?.preferred_target,
+          interfaceLanguage: language,
+          source: code,
+        })
+      );
+    }
+  };
+
+  const startTranslation = () => {
+    if (!canTranslate) return;
+    setStarted(true);
+  };
+
   const regenerate = async () => {
     if (!data?.id) return;
     setError('');
@@ -181,11 +278,12 @@ export default function MaterialReader({ resource, onClose }) {
   };
 
   const downloadOriginal = async () => {
-    if (data?.material?.file_url) {
-      await openPrivateFile(data.material.file_url);
+    const materialInfo = data?.material || meta?.material;
+    if (materialInfo?.file_url) {
+      await openPrivateFile(materialInfo.file_url);
       return;
     }
-    downloadTextFile(`${slug(data?.material?.resource_title)}-original.md`, documentText(sections, 'original'));
+    downloadTextFile(`${slug(materialInfo?.resource_title)}-original.md`, documentText(sections, 'original'));
   };
 
   const downloadTranslation = () => {
@@ -202,9 +300,9 @@ export default function MaterialReader({ resource, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-canvas" role="dialog" aria-modal="true" aria-label="Course material translation reader">
       <ReaderHeader
-        material={data?.material}
-        status={status}
-        source={data?.source_language || 'en'}
+        material={data?.material || meta?.material}
+        status={data ? status : 'idle'}
+        source={sourceResolved}
         target={target}
         onClose={onClose}
         onDownloadOriginal={downloadOriginal}
@@ -212,19 +310,32 @@ export default function MaterialReader({ resource, onClose }) {
         canDownloadTranslation={translatedCount > 0}
       />
 
+      {meta?.status === 'ready' && (
+        <ReaderLanguageBar
+          source={sourceResolved}
+          sourceDetection={meta?.source_detection}
+          sourceKnown={sourceKnown}
+          sameLanguage={sameLanguage}
+          target={target}
+          onSource={chooseSource}
+          onTarget={chooseTarget}
+          started={started}
+          busy={busy}
+          canTranslate={canTranslate}
+          onTranslate={startTranslation}
+          cachedLanguages={cachedLanguages}
+        />
+      )}
+
       <ReaderToolbar
         mode={mode}
         onMode={setMode}
-        target={target}
-        onTarget={setTarget}
-        source={data?.source_language}
         sync={sync}
         onSync={() => setSync((value) => !value)}
         search={search}
         onSearch={setSearch}
         matchCount={term ? visible.length : sections.length}
         onClose={onClose}
-        translateBusy={busy}
       />
 
       {data && (
@@ -274,11 +385,11 @@ export default function MaterialReader({ resource, onClose }) {
         </div>
       )}
 
-      {!loading && data && status === 'unsupported' && (
+      {!loading && (data?.status === 'unsupported' || meta?.status === 'unsupported') && (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
           <AlertCircle className="h-6 w-6 text-mutedink" />
           <p className="max-w-md text-[15px] leading-relaxed text-ink">
-            {data.note || 'This material cannot be read as text, so no translation can be produced.'}
+            {data?.note || meta?.note || 'This material cannot be read as text, so no translation can be produced.'}
           </p>
           <div className="flex gap-2">
             <button type="button" onClick={downloadOriginal} className="btn-primary btn-sm">
@@ -386,7 +497,7 @@ export default function MaterialReader({ resource, onClose }) {
               <BilingualStack
                 sections={visible}
                 target={target}
-                source={data.source_language || 'en'}
+                source={data.source_language || sourceResolved || 'en'}
                 activeId={activeId}
                 onSelect={selectSection}
                 emptyLabel={emptyLabel}

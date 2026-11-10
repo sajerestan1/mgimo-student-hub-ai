@@ -110,6 +110,24 @@
           ],
           "default": "morning"
         },
+        "translation_target": {
+          "type": "string",
+          "description": "Target language the student last chose in the course material translation reader. Used only as the reader's default and never overrides the material's own source language.",
+          "enum": [
+            "en",
+            "ru",
+            "fr",
+            "zh",
+            "ar"
+          ],
+          "enumColors": [
+            "blue",
+            "purple",
+            "green",
+            "yellow",
+            "red"
+          ]
+        },
         "digest": {
           "type": "string",
           "description": "Superseded by daily_digest and weekly_digest; kept so existing stored preferences stay readable",

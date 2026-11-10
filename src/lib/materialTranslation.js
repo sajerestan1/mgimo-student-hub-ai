@@ -11,12 +11,27 @@ export const READER_LANGUAGES = [
 export const dirFor = (code) => (code === 'ar' ? 'rtl' : 'ltr');
 
 export const languageLabel = (code) =>
-  READER_LANGUAGES.find((language) => language.code === code)?.label || 'English';
+  READER_LANGUAGES.find((language) => language.code === code)?.label || '';
 
-// The interface language is only a default: the reader keeps its own selection.
-export const defaultTarget = (language) => {
-  const base = String(language || 'en').split('-')[0];
-  return READER_LANGUAGES.some((entry) => entry.code === base) ? base : 'en';
+export const isReaderLanguage = (code) =>
+  READER_LANGUAGES.some((language) => language.code === code);
+
+// The initial target follows the student's own saved choice, then the interface
+// language, then any language that is not the material's. A target is never the
+// same as the source, and the interface language is only a default - it says
+// nothing about what language the material itself is written in.
+export const resolveInitialTarget = ({ preferred, interfaceLanguage, source }) => {
+  const sourceCode = String(source || '').toLowerCase();
+  const usable = (value) => {
+    const base = String(value || '').toLowerCase().split('-')[0];
+    return isReaderLanguage(base) && base !== sourceCode ? base : '';
+  };
+  return (
+    usable(preferred) ||
+    usable(interfaceLanguage) ||
+    READER_LANGUAGES.map((language) => language.code).find((code) => code !== sourceCode) ||
+    'ru'
+  );
 };
 
 const unwrap = (response) => {
@@ -38,12 +53,23 @@ export const supportsTranslation = (resource) => {
   return /\.(txt|md|markdown|pdf|png|jpe?g|webp)$/.test(name);
 };
 
-export const openTranslation = async (resourceId, target) =>
+// Reads the material's detected source language and what is already cached. It
+// creates nothing and starts no translation.
+export const inspectMaterial = async (resourceId) =>
+  unwrap(
+    await base44.functions.invoke('materialTranslation', {
+      action: 'inspect',
+      resource_id: resourceId,
+    })
+  );
+
+export const openTranslation = async (resourceId, target, sourceOverride) =>
   unwrap(
     await base44.functions.invoke('materialTranslation', {
       action: 'open',
       resource_id: resourceId,
       target_language: target,
+      source_language: sourceOverride || undefined,
     })
   );
 
@@ -55,3 +81,10 @@ export const translateNextChunk = async (translationId, force = false) =>
       force,
     })
   );
+
+// The student's explicit choice is remembered as their reader default.
+export const saveTargetPreference = async (target) => {
+  await base44.functions
+    .invoke('materialTranslation', { action: 'preference', target_language: target })
+    .catch(() => null);
+};

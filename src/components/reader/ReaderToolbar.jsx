@@ -1,5 +1,4 @@
 import { Search } from 'lucide-react';
-import { READER_LANGUAGES, languageLabel } from '@/lib/materialTranslation';
 
 const MODES = [
   ['both', 'Both'],
@@ -10,16 +9,12 @@ const MODES = [
 export default function ReaderToolbar({
   mode,
   onMode,
-  target,
-  onTarget,
-  source,
   sync,
   onSync,
   search,
   onSearch,
   matchCount,
   onClose,
-  translateBusy,
 }) {
   return (
     <div className="flex flex-col gap-2 border-b border-line bg-white px-3 py-2 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
@@ -39,23 +34,6 @@ export default function ReaderToolbar({
             </button>
           ))}
         </div>
-
-        <label className="flex items-center gap-1.5 text-[13px] text-mutedink">
-          <span className="hidden sm:inline">Translate into</span>
-          <select
-            value={target}
-            onChange={(event) => onTarget(event.target.value)}
-            disabled={translateBusy}
-            className="rounded-lg border border-line bg-white px-2 py-1 text-[13px] text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 disabled:opacity-60"
-            aria-label="Translation language"
-          >
-            {READER_LANGUAGES.map((language) => (
-              <option key={language.code} value={language.code}>
-                {language.native} · {language.label}
-              </option>
-            ))}
-          </select>
-        </label>
 
         <button
           type="button"
@@ -83,11 +61,7 @@ export default function ReaderToolbar({
         </div>
         {search ? (
           <span className="whitespace-nowrap text-[13px] text-mutedink">{matchCount} matching</span>
-        ) : (
-          <span className="hidden shrink-0 text-[13px] text-mutedink lg:inline">
-            {source ? `Source: ${languageLabel(source)}` : ''}
-          </span>
-        )}
+        ) : null}
         <button
           type="button"
           onClick={onClose}

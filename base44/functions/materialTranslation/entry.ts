@@ -11,6 +11,11 @@ const LANGUAGES = {
   ar: 'Arabic',
 };
 
+const SUPPORTED = Object.keys(LANGUAGES);
+const normalise = (value) => String(value || '').trim().toLowerCase().split('-')[0];
+const isSupported = (value) => SUPPORTED.includes(value);
+const languageName = (code) => LANGUAGES[code] || 'the requested language';
+
 const STAFF_ROLES = ['admin', 'dean', 'deputy_dean', 'academic_staff'];
 const MAX_CHUNK_CHARS = 3600;
 const MAX_CHUNK_SECTIONS = 8;
@@ -64,13 +69,44 @@ const checksum = (text) => {
   return `${hash.toString(16).padStart(8, '0')}-${text.length}`;
 };
 
+// Language detection from the extracted text itself. Script evidence decides
+// Arabic, Chinese and Russian outright; Latin text is scored on frequent words
+// so French is not confused with English. Anything inconclusive is reported as
+// undetermined instead of being assumed to be English.
+const LATIN_MARKERS = {
+  en: ['the', 'and', 'of', 'to', 'is', 'that', 'for', 'with', 'this', 'are', 'from', 'which', 'not', 'you', 'was', 'on', 'as', 'by', 'be', 'it', 'at', 'or', 'an'],
+  fr: ['le', 'la', 'les', 'des', 'du', 'et', 'est', 'pour', 'dans', 'que', 'une', 'un', 'pas', 'sur', 'avec', 'ce', 'cette', 'sont', 'au', 'aux', 'qui', 'par', 'plus', 'vous', 'nous', 'être'],
+};
+
 const detectLanguage = (text) => {
-  const sample = text.slice(0, 1500);
-  if (/[\u0600-\u06FF]/.test(sample)) return 'ar';
-  if (/[\u4E00-\u9FFF]/.test(sample)) return 'zh';
-  if (/[\u0400-\u04FF]/.test(sample)) return 'ru';
-  if (/[àâçéèêëîïôùûüÿœ]/i.test(sample)) return 'fr';
-  return 'en';
+  const sample = String(text || '').slice(0, 4000).toLowerCase();
+  const letters = (sample.match(/\p{L}/gu) || []).length;
+  if (!letters) return { language: null, confidence: 0 };
+
+  const scripts = [
+    ['ar', /[\u0600-\u06FF\u0750-\u077F]/gu],
+    ['zh', /[\u3040-\u30FF\u4E00-\u9FFF]/gu],
+    ['ru', /[\u0400-\u04FF]/gu],
+  ];
+  for (const [code, pattern] of scripts) {
+    const hits = (sample.match(pattern) || []).length;
+    if (hits / letters >= 0.2) return { language: code, confidence: Math.min(0.95, 0.6 + hits / letters) };
+  }
+
+  const words = sample.replace(/[^\p{L}\s'-]/gu, ' ').split(/\s+/).filter(Boolean);
+  const scores = { en: 0, fr: 0 };
+  words.forEach((word) => {
+    Object.entries(LATIN_MARKERS).forEach(([code, markers]) => {
+      if (markers.includes(word)) scores[code] += 1;
+    });
+  });
+  if ((sample.match(/[àâçéèêëîïôùûüÿœ]/g) || []).length >= 3) scores.fr += 3;
+
+  const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  if (ranked[0][1] >= 3 && ranked[0][1] >= ranked[1][1] * 1.5) {
+    return { language: ranked[0][0], confidence: 0.75 };
+  }
+  return { language: null, confidence: 0 };
 };
 
 // Splits markdown/plain text into stable, numbered sections. Headings, lists,
@@ -303,7 +339,8 @@ async function translateSections(base44, sections, target, source, glossary) {
     '- Return "translated_heading" with the translated heading and "translated" with the translated text only — never repeat the heading inside the text.',
     '- When a section has a non-empty "heading", "translated_heading" must also be non-empty: never leave a heading in the source language. When a section has no heading, return "".',
     '- Do not translate the id or kind values, and do not add commentary or notes.',
-    `- The source language is ${LANGUAGES[source] || source}. Translate into ${LANGUAGES[target]} even where the source mixes languages.`,
+    `- Every returned text must be written in ${languageName(target)}. Never return a section unchanged in its source language.`,
+    `- The source language is ${LANGUAGES[source] || 'not stated'}. Translate into ${LANGUAGES[target]} even where the source mixes languages.`,
     glossary ? `- Terminology already established in this document, keep it:\n${glossary}` : '',
     '',
     'Sections:',
@@ -366,7 +403,12 @@ export default async function (req) {
     const action = String(payload.action || 'open');
     const svc = base44.asServiceRole;
 
-    const targetLanguage = LANGUAGES[payload.target_language] ? payload.target_language : 'en';
+    // The target is never guessed and never replaced with English: the caller
+    // must name one of the supported languages.
+    const requestedTarget = normalise(payload.target_language);
+    const targetLanguage = isSupported(requestedTarget) ? requestedTarget : '';
+    const requestedSource = normalise(payload.source_language);
+    const sourceOverride = isSupported(requestedSource) ? requestedSource : '';
 
     let record = null;
     let resource = null;
@@ -403,6 +445,69 @@ export default async function (req) {
       scope: access.scope,
     };
 
+    // ── inspect: extract and detect the source language, list what is already
+    // cached, and let the student choose the target before anything is created.
+    if (action === 'inspect') {
+      const source = await extractSource(svc, resource);
+      if (!source.text) {
+        return Response.json({
+          material,
+          status: 'unsupported',
+          note: source.note,
+          cached_languages: [],
+        });
+      }
+
+      const detected = detectLanguage(source.text);
+      const sourceLanguage = sourceOverride || detected.language || '';
+      const stamp = checksum(source.text);
+      const rows = list(
+        await svc.entities.MaterialTranslation.filter({ resource_id: resource.id }, { limit: 40 })
+      );
+      const cachedLanguages = [
+        ...new Set(
+          rows
+            .filter(
+              (row) =>
+                row.status === 'complete' &&
+                row.source_checksum === stamp &&
+                isSupported(row.target_language) &&
+                row.target_language !== sourceLanguage
+            )
+            .map((row) => row.target_language)
+        ),
+      ];
+      const preferred = normalise(access.student?.preferences?.translation_target);
+
+      return Response.json({
+        material,
+        status: 'ready',
+        source_language: sourceLanguage,
+        source_confidence: sourceLanguage ? (sourceOverride ? 1 : detected.confidence) : 0,
+        source_detection: sourceOverride ? 'manual' : detected.language ? 'detected' : 'undetermined',
+        source_format: source.format,
+        preferred_target: isSupported(preferred) ? preferred : '',
+        cached_languages: cachedLanguages,
+      });
+    }
+
+    // ── preference: the student's explicit choice becomes their saved default.
+    if (action === 'preference') {
+      if (!targetLanguage) {
+        return Response.json(
+          { error: 'Choose one of the supported languages.', reason: 'target_required' },
+          { status: 400 }
+        );
+      }
+      if (!access.student?.id) return Response.json({ saved: false, reason: 'no_student_profile' });
+      const profile = await svc.entities.StudentProfile.get(access.student.id).catch(() => null);
+      if (!profile) return Response.json({ saved: false, reason: 'no_student_profile' });
+      await svc.entities.StudentProfile.update(profile.id, {
+        preferences: { ...(profile.preferences || {}), translation_target: targetLanguage },
+      });
+      return Response.json({ saved: true, preferred_target: targetLanguage });
+    }
+
     // ── open: extract, align, and serve the cached translation when it is current
     if (action === 'open') {
       const source = await extractSource(svc, resource);
@@ -413,6 +518,40 @@ export default async function (req) {
           sections: [],
           note: source.note,
           target_language: targetLanguage,
+        });
+      }
+
+      if (!targetLanguage) {
+        return Response.json(
+          { error: 'Choose the language to translate into.', reason: 'target_required', material },
+          { status: 400 }
+        );
+      }
+
+      const detected = detectLanguage(source.text);
+      const sourceLanguage = sourceOverride || detected.language || '';
+
+      if (!sourceLanguage) {
+        return Response.json(
+          {
+            error: 'Confirm the language of the original material before translating it.',
+            reason: 'source_required',
+            material,
+          },
+          { status: 400 }
+        );
+      }
+
+      // The same language is never sent to the model: an English document is not
+      // "translated into English".
+      if (sourceLanguage === targetLanguage) {
+        return Response.json({
+          material,
+          status: 'same_language',
+          source_language: sourceLanguage,
+          target_language: targetLanguage,
+          source_detection: sourceOverride ? 'manual' : 'detected',
+          note: `The original material is already in ${LANGUAGES[targetLanguage]}. Please select another language.`,
         });
       }
 
@@ -440,7 +579,7 @@ export default async function (req) {
         const updated = await svc.entities.MaterialTranslation.update(stale.id, {
           source_checksum: stamp,
           source_format: source.format,
-          source_language: detectLanguage(source.text),
+          source_language: sourceLanguage,
           sections,
           status: 'outdated',
           chunk_total: chunks.length,
@@ -460,7 +599,7 @@ export default async function (req) {
         course_code: material.course_code,
         source_checksum: stamp,
         source_format: source.format,
-        source_language: detectLanguage(source.text),
+        source_language: sourceLanguage,
         target_language: targetLanguage,
         sections,
         status: 'pending',
@@ -479,6 +618,26 @@ export default async function (req) {
       if (!record) {
         return Response.json({ error: 'Open the material before translating it.' }, { status: 400 });
       }
+      // The stored record decides which language is produced; it must be one of
+      // the supported languages and must differ from the source.
+      const recordTarget = normalise(record.target_language);
+      if (!isSupported(recordTarget)) {
+        return Response.json(
+          { error: 'This translation has no valid target language.', reason: 'unsupported_target' },
+          { status: 400 }
+        );
+      }
+      const recordSource = normalise(record.source_language);
+      if (recordSource && recordSource === recordTarget) {
+        return Response.json({
+          material,
+          status: 'same_language',
+          source_language: recordSource,
+          target_language: recordTarget,
+          note: `The original material is already in ${LANGUAGES[recordTarget]}. Please select another language.`,
+        });
+      }
+
       if (record.status === 'complete' && !payload.force) {
         return Response.json({ material, ...record });
       }
@@ -518,8 +677,8 @@ export default async function (req) {
           ...section,
           translated: '',
         })),
-        record.target_language,
-        record.source_language || 'en',
+        recordTarget,
+        recordSource || 'unknown',
         glossaryFrom(sections)
       );
 
