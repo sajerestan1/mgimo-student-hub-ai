@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUp, BookOpen, Sparkles } from 'lucide-react';
 import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
+import MarkdownMessage from '@/components/assistant/MarkdownMessage';
 import { base44 } from '@/api/base44Client';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { Link } from 'react-router-dom';
@@ -111,11 +112,13 @@ export default function AiStudyCompanion() {
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[88%] whitespace-pre-line rounded-xl px-3.5 py-2.5 text-[14px] leading-relaxed ${
-                    message.role === 'user' ? 'bg-royal text-white' : 'border border-line bg-canvas/60 text-ink'
+                  className={`max-w-[88%] rounded-xl px-3.5 py-2.5 text-[14px] leading-relaxed ${
+                    message.role === 'user'
+                      ? 'whitespace-pre-line bg-royal text-white'
+                      : 'border border-line bg-canvas/60 text-ink'
                   }`}
                 >
-                  {message.text}
+                  {message.role === 'user' ? message.text : <MarkdownMessage>{message.text}</MarkdownMessage>}
                 </div>
               </div>
             ))}

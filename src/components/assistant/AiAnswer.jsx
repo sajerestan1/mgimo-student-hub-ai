@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Lightbulb, ShieldAlert, ListChecks } from 'lucide-react';
 import { BarBlock, LineBlock, DonutBlock, ChartLegend } from '@/components/charts/Charts';
+import MarkdownMessage from '@/components/assistant/MarkdownMessage';
 
 export default function AiAnswer({ response }) {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function AiAnswer({ response }) {
 
   return (
     <div className="space-y-3">
-      {answer && <p className="whitespace-pre-line text-[12.5px] leading-relaxed text-ink">{answer}</p>}
+      {answer && <MarkdownMessage className="text-[12.5px] leading-relaxed text-ink">{answer}</MarkdownMessage>}
 
       {visualization && (
         <div className="rounded-xl border border-[#E9EFF7] bg-white p-3">

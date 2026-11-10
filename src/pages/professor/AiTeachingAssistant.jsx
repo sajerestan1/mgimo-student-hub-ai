@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
+import MarkdownMessage from '@/components/assistant/MarkdownMessage';
 import { base44 } from '@/api/base44Client';
 import { useProfessorContext, loadTeaching } from '@/lib/professorData';
 
@@ -83,7 +84,7 @@ export default function AiTeachingAssistant() {
                   message.role === 'user' ? 'ml-8 bg-brand-soft text-ink' : 'mr-8 border border-line bg-white text-ink'
                 }`}
               >
-                {message.content}
+                {message.role === 'user' ? message.content : <MarkdownMessage>{message.content}</MarkdownMessage>}
               </div>
             ))}
             {busy && <p className="text-[11px] text-mutedink">The assistant is drafting a response…</p>}

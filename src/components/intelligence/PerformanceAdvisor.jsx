@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
+import MarkdownMessage from '@/components/assistant/MarkdownMessage';
 import { askAcademicAdvisor } from '@/lib/academicIntelligence';
 
 const SUGGESTIONS = [
@@ -74,7 +75,7 @@ export default function PerformanceAdvisor() {
 
       {answer && !busy && (
         <div className="mt-3 rounded-xl border border-line bg-canvas px-4 py-3">
-          <p className="whitespace-pre-line text-[14px] leading-relaxed text-ink">{answer}</p>
+          <MarkdownMessage className="text-[14px] leading-relaxed text-ink">{answer}</MarkdownMessage>
         </div>
       )}
 
