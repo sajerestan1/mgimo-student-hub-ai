@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, TrendingUp } from 'lucide-react';
+import { ArrowRight, BarChart3, TrendingUp } from 'lucide-react';
 import Surface from '@/components/shell/Surface';
 import StatusChip from '@/components/shell/StatusChip';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
@@ -65,29 +65,43 @@ export default function AcademicPerformance({ context }) {
         </StatusChip>
       </div>
 
-      {scored.length > 0 && <PerformanceChart courses={scored.slice(0, 8)} average={average} />}
+      {scored.length > 0 ? (
+        <>
+          <PerformanceChart courses={scored.slice(0, 8)} average={average} />
 
-      {scored.length > 0 && (
-        <ul className="mt-1 divide-y divide-line">
-          {scored.slice(0, 4).map((course) => (
-            <li key={course.id} className="flex items-center justify-between gap-3 py-2">
-              <div className="min-w-0">
-                <p className="truncate text-[13.5px] font-medium text-ink">
-                  {course.code} · {course.title}
-                </p>
-                <p className="text-[12.5px] text-mutedink">
-                  {t('student.dashboard.performance.graded', { count: course.graded })}
-                  {course.missing
-                    ? t('student.dashboard.performance.notSubmitted', { count: course.missing })
-                    : ''}
-                </p>
-              </div>
-              <span className={`shrink-0 text-[14px] font-semibold tabular-nums ${toneFor(course.weighted)}`}>
-                {course.weighted}
-              </span>
-            </li>
-          ))}
-        </ul>
+          <ul className="mt-1 divide-y divide-line">
+            {scored.slice(0, 4).map((course) => (
+              <li key={course.id} className="flex items-center justify-between gap-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-[13.5px] font-medium text-ink">
+                    {course.code} · {course.title}
+                  </p>
+                  <p className="text-[12.5px] text-mutedink">
+                    {t('student.dashboard.performance.graded', { count: course.graded })}
+                    {course.missing
+                      ? t('student.dashboard.performance.notSubmitted', { count: course.missing })
+                      : ''}
+                  </p>
+                </div>
+                <span className={`shrink-0 text-[14px] font-semibold tabular-nums ${toneFor(course.weighted)}`}>
+                  {course.weighted}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <div className="flex min-h-[188px] flex-col items-center justify-center px-2 py-6 text-center sm:min-h-[232px]">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-[#F6F8FC] text-[#2563EB]">
+            <BarChart3 className="h-5 w-5" strokeWidth={1.8} />
+          </span>
+          <p className="mt-3 max-w-[34ch] text-[14.5px] font-semibold leading-snug text-ink">
+            No graded work recorded yet.
+          </p>
+          <p className="mt-1 max-w-[36ch] text-[13px] leading-relaxed text-mutedink">
+            Your academic performance and course results will appear here once your work has been graded.
+          </p>
+        </div>
       )}
 
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-2 text-[12.5px] text-[#64748B]">
