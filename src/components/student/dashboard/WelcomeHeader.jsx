@@ -24,35 +24,38 @@ export default function WelcomeHeader({ profile, context }) {
   });
 
   return (
-    <header className="mb-4">
-      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-mutedink">{today}</p>
+    <header>
+      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#64748B]">{today}</p>
 
-      <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mt-1.5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <h1 className="text-[length:var(--type-title)] font-bold leading-[1.1] tracking-[-0.03em] text-ink">
+          <h1 className="truncate text-[length:var(--type-title)] font-bold leading-[1.12] tracking-[-0.03em] text-ink">
             {greeting(t)}, {firstName(profile, t)}
           </h1>
-          <p className="mt-1.5 text-[15px] text-mutedink">
+          <p className="mt-1 truncate text-[14.5px] text-[#64748B]">
             {profile?.program || t('student.dashboard.workspace')}
             {profile?.group_name ? ` · ${profile.group_name}` : ''}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="hidden w-56 lg:block xl:w-72">
+          <div className="hidden w-52 lg:block xl:w-64">
             <DashboardSearch context={context} />
           </div>
-          <AiAssistantButton to={P.student.ai} />
+          <AiAssistantButton
+            to={P.student.ai}
+            className="bg-none bg-[#2563EB] shadow-[0_8px_18px_-10px_rgba(37,99,235,0.85)] hover:bg-[#1D4ED8] hover:brightness-100"
+          />
           <Link
             to={P.student.notifications}
-            className="icon-btn border border-line bg-white"
+            className="icon-btn h-10 w-10 shrink-0 border border-line bg-white text-[#2563EB] hover:bg-[#EFF6FF]"
             aria-label={t('student.dashboard.notifications')}
           >
             <Bell className="h-[17px] w-[17px]" strokeWidth={1.9} />
           </Link>
           <Link
             to={P.student.profile}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-navy text-[12.5px] font-semibold text-white transition-colors hover:bg-navy-mid"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#14213D] text-[12.5px] font-semibold text-white transition-colors hover:bg-[#1B2C4F]"
             aria-label={t('student.dashboard.profile')}
           >
             {initialsOf(profile?.full_name) || '·'}

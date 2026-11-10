@@ -8,7 +8,13 @@ import PanelTitle from './PanelTitle';
 import PerformanceChart from './PerformanceChart';
 
 const toneFor = (average) =>
-  average === null ? 'text-mutedink' : average >= 70 ? 'text-positive' : average >= 50 ? 'text-warning' : 'text-critical';
+  average === null
+    ? 'text-[#64748B]'
+    : average >= 70
+      ? 'text-[#059669]'
+      : average >= 50
+        ? 'text-[#D97706]'
+        : 'text-[#DC2626]';
 
 /**
  * Dashboard section. It reads the academic context the dashboard has already
@@ -34,12 +40,15 @@ export default function AcademicPerformance({ context }) {
           : t('student.dashboard.performance.none')
       }
       action={
-        <Link to={P.student.intelligence} className="link-quiet text-[13.5px]">
+        <Link
+          to={P.student.intelligence}
+          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
+        >
           {t('student.dashboard.performance.open')}
           <ArrowRight className="dir-icon h-3.5 w-3.5" />
         </Link>
       }
-      bodyClassName="px-4 pb-4 pt-1"
+      bodyClassName="px-4 pb-3 pt-1"
     >
       <div className="flex items-end justify-between gap-3">
         <div>
@@ -81,9 +90,9 @@ export default function AcademicPerformance({ context }) {
         </ul>
       )}
 
-      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-2 text-[12.5px] text-mutedink">
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-2 text-[12.5px] text-[#64748B]">
         {missing.length > 0 && (
-          <span className="font-medium text-critical">
+          <span className="font-medium text-[#DC2626]">
             {missing.length === 1
               ? t('student.dashboard.performance.overdueOne')
               : t('student.dashboard.performance.overdueMany', { count: missing.length })}

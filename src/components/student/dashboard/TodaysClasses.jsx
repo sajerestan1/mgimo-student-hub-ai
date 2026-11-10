@@ -38,7 +38,10 @@ export default function TodaysClasses({ sessions }) {
           : t('student.dashboard.noSessionsPublished')
       }
       action={
-        <Link to={P.student.timetable} className="link-quiet text-[14px]">
+        <Link
+          to={P.student.timetable}
+          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
+        >
           {t('student.dashboard.viewAll')}
         </Link>
       }
@@ -47,7 +50,7 @@ export default function TodaysClasses({ sessions }) {
       {shown.length ? (
         <ul className="divide-y divide-line">
           {shown.map((session) => (
-            <li key={session.id} className="flex items-start gap-3 px-5 py-3">
+            <li key={session.id} className="flex items-start gap-3 px-4 py-2.5">
               <div className="w-14 shrink-0 text-[14px] font-semibold tabular-nums text-ink">
                 {clock(session.start)}
                 {session.end && <p className="text-[12px] font-normal text-mutedink">{clock(session.end)}</p>}

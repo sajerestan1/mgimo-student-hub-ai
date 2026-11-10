@@ -40,12 +40,15 @@ export default function AttendancePanel({ context }) {
           : t('student.dashboard.hints.notRecorded')
       }
       action={
-        <Link to={P.student.attendance} className="link-quiet text-[13.5px]">
+        <Link
+          to={P.student.attendance}
+          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
+        >
           {t('student.dashboard.viewAll')}
           <ArrowRight className="dir-icon h-3.5 w-3.5" />
         </Link>
       }
-      bodyClassName="px-4 pb-4 pt-1"
+      bodyClassName="px-4 pb-3 pt-1"
     >
       {totals.total > 0 ? (
         <>
@@ -73,9 +76,9 @@ export default function AttendancePanel({ context }) {
                 <li key={row.code} className="flex items-center justify-between gap-3 py-2">
                   <span className="min-w-0 truncate text-[13px] font-medium text-ink">{row.code}</span>
                   <span className="flex items-center gap-2">
-                    <span className="h-1.5 w-16 overflow-hidden rounded-full bg-[#EEF1F6]">
+                    <span className="h-1.5 w-16 overflow-hidden rounded-full bg-[#E7EAF2]">
                       <span
-                        className="block h-full rounded-full bg-positive"
+                        className="block h-full rounded-full bg-[#059669]"
                         style={{ width: `${Math.min(100, Math.max(0, row.rate))}%` }}
                       />
                     </span>

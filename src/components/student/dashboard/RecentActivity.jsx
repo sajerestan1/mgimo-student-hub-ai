@@ -17,7 +17,10 @@ export default function RecentActivity({ context }) {
       className="h-full"
       title={<PanelTitle icon={History} tone="neutral">{t('student.dashboard.recentActivity')}</PanelTitle>}
       action={
-        <Link to={P.student.notifications} className="link-quiet text-[14px]">
+        <Link
+          to={P.student.notifications}
+          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
+        >
           {t('student.dashboard.allUpdates')}
         </Link>
       }
@@ -43,14 +46,14 @@ export default function RecentActivity({ context }) {
             return (
               <li key={entry.id}>
                 {entry.to ? (
-                  <Link to={entry.to} className="row-hover block px-5 py-3">
+                  <Link to={entry.to} className="row-hover block px-4 py-2.5">
                     {content}
                   </Link>
                 ) : (
                   <button
                     type="button"
                     onClick={() => setOpenId(expanded ? null : entry.id)}
-                    className="row-hover flex w-full items-start justify-between gap-2 px-5 py-3 text-start"
+                    className="row-hover flex w-full items-start justify-between gap-2 px-4 py-2.5 text-start"
                     aria-expanded={Boolean(expanded)}
                   >
                     <div className="min-w-0">{content}</div>

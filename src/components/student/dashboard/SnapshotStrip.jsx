@@ -5,10 +5,10 @@ import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { useI18n } from '@/i18n/I18nProvider';
 
 const TONES = {
-  brand: 'bg-brand-soft text-brand',
-  positive: 'bg-[#E9F5EF] text-[#1D7A50]',
-  warning: 'bg-[#FCF3E4] text-[#8E6018]',
-  royal: 'bg-royal/10 text-royal',
+  brand: 'bg-[#EFF6FF] text-[#2563EB]',
+  positive: 'bg-[#ECFDF5] text-[#059669]',
+  warning: 'bg-[#FFFBEB] text-[#D97706]',
+  neutral: 'bg-[#F1F5F9] text-[#64748B]',
 };
 
 /**
@@ -51,7 +51,7 @@ export default function SnapshotStrip({ summary }) {
           : t('student.dashboard.hints.overdueTodo', { overdue: summary.overdue, pending: summary.pending }),
       to: P.student.assignments,
       icon: ClipboardList,
-      tone: summary.overdue > 0 ? 'warning' : 'royal',
+      tone: summary.overdue > 0 ? 'warning' : 'brand',
     },
     {
       key: 'courses',
@@ -62,7 +62,7 @@ export default function SnapshotStrip({ summary }) {
         : t('student.dashboard.hints.noEnrolment'),
       to: P.student.courses,
       icon: BookOpen,
-      tone: 'royal',
+      tone: 'neutral',
     },
   ];
 
@@ -72,21 +72,21 @@ export default function SnapshotStrip({ summary }) {
         <Link
           key={key}
           to={to}
-          className="card-surface group flex items-start gap-3 p-4 transition-shadow hover:shadow-[0_10px_30px_-22px_rgba(16,27,51,0.5)]"
+          className="card-surface group flex min-w-0 flex-col p-3.5 transition-colors hover:border-[#CBD8EC]"
         >
-          <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', TONES[tone])}>
-            <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-medium text-mutedink">{label}</p>
-            <p className="mt-1 text-[26px] font-semibold leading-none tracking-[-0.02em] tabular-nums text-ink">
-              {value}
-            </p>
-            <p className="mt-1.5 truncate text-[12.5px] text-mutedink">{hint}</p>
+          <div className="flex items-center gap-2">
+            <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', TONES[tone])}>
+              <Icon className="h-4 w-4" strokeWidth={1.9} />
+            </span>
+            <p className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-[#64748B]">{label}</p>
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2563EB] text-white transition-colors group-hover:bg-[#1D4ED8]">
+              <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+            </span>
           </div>
-          <span className="ms-auto flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-full bg-brand text-white transition-colors group-hover:bg-brand-deep">
-            <ArrowUpRight className="h-4 w-4" strokeWidth={2.1} />
-          </span>
+          <p className="mt-2 text-[24px] font-semibold leading-none tracking-[-0.02em] tabular-nums text-ink">
+            {value}
+          </p>
+          <p className="mt-1 truncate text-[12px] text-[#64748B]">{hint}</p>
         </Link>
       ))}
     </section>

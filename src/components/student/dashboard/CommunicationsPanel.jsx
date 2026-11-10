@@ -60,7 +60,10 @@ export default function CommunicationsPanel() {
         state.items.length ? t('student.dashboard.communications.subtitle') : undefined
       }
       action={
-        <Link to="/communication" className="link-quiet text-[14px]">
+        <Link
+          to="/communication"
+          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
+        >
           {t('student.dashboard.communications.openInbox')}
           <ArrowRight className="dir-icon h-3.5 w-3.5" />
         </Link>
@@ -80,9 +83,9 @@ export default function CommunicationsPanel() {
               <button
                 type="button"
                 onClick={() => open(item)}
-                className="row-hover flex w-full items-start gap-3 px-5 py-3 text-start"
+                className="row-hover flex w-full items-start gap-3 px-4 py-2.5 text-start"
               >
-                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-[12px] font-semibold text-brand">
+                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EFF6FF] text-[12px] font-semibold text-[#2563EB]">
                   {initialsOf(item.sender_name || item.conversation_name) || '·'}
                 </span>
                 <span className="min-w-0 flex-1">
@@ -91,7 +94,9 @@ export default function CommunicationsPanel() {
                       <span className="truncate text-[14.5px] font-medium text-ink">
                         {item.sender_name || item.conversation_name || item.title}
                       </span>
-                      {!item.is_read && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />}
+                      {!item.is_read && (
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#2563EB]" />
+                      )}
                     </span>
                     <span className="shrink-0 text-[12px] text-mutedink">{formatStamp(item.created_date)}</span>
                   </span>

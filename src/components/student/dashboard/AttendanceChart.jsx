@@ -2,10 +2,10 @@ import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 import { useI18n } from '@/i18n/I18nProvider';
 
 export const ATTENDANCE_COLORS = {
-  present: '#16A085',
-  late: '#E6A23C',
-  excused: '#4F75FF',
-  absent: '#D64545',
+  present: '#059669',
+  late: '#D97706',
+  excused: '#2563EB',
+  absent: '#DC2626',
 };
 
 /** Donut of the recorded register rows, with the overall rate in the middle. */
@@ -19,7 +19,7 @@ export default function AttendanceChart({ totals, rate }) {
   if (!data.length) return null;
 
   return (
-    <div className="relative h-[186px] w-full">
+    <div className="relative mx-auto h-[168px] w-full max-w-[220px]">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie data={data} dataKey="value" nameKey="key" innerRadius="64%" outerRadius="94%" paddingAngle={2} stroke="none">
@@ -30,10 +30,10 @@ export default function AttendanceChart({ totals, rate }) {
         </PieChart>
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-[26px] font-semibold leading-none tabular-nums text-ink">
+        <span className="text-[24px] font-semibold leading-none tabular-nums text-ink">
           {rate === null || rate === undefined ? '—' : `${rate}%`}
         </span>
-        <span className="mt-1 text-[12px] text-mutedink">{t('student.dashboard.metrics.attendance')}</span>
+        <span className="mt-1 text-[12px] text-[#64748B]">{t('student.dashboard.metrics.attendance')}</span>
       </div>
     </div>
   );

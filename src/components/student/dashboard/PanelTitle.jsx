@@ -1,11 +1,11 @@
 import { cn } from '@/lib/utils';
 
 const TONES = {
-  brand: 'bg-brand-soft text-brand',
-  positive: 'bg-[#E9F5EF] text-[#1D7A50]',
-  warning: 'bg-[#FCF3E4] text-[#8E6018]',
-  royal: 'bg-royal/10 text-royal',
-  neutral: 'bg-[#F2F4F8] text-[#5A6779]',
+  brand: 'bg-[#EFF6FF] text-[#2563EB]',
+  positive: 'bg-[#ECFDF5] text-[#059669]',
+  warning: 'bg-[#FFFBEB] text-[#D97706]',
+  critical: 'bg-[#FEF2F2] text-[#DC2626]',
+  neutral: 'bg-[#F1F5F9] text-[#64748B]',
 };
 
 /** A panel heading: a tinted icon chip followed by the section name. */
