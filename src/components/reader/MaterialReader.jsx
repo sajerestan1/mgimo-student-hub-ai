@@ -88,18 +88,26 @@ export default function MaterialReader({ resource, onClose }) {
     };
   }, [resource?.id, target, reloadKey, run]);
 
+  // This component is mounted for the whole life of the course page, so the
+  // document scroll lock must exist only while a material is actually open.
+  // Locking unconditionally froze the page's own scrolling on every visit.
+  const open = Boolean(resource?.id);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
   useEffect(() => {
+    if (!open) return undefined;
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const onKey = (event) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') closeRef.current();
     };
     window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = previous;
       window.removeEventListener('keydown', onKey);
     };
-  }, [onClose]);
+  }, [open]);
 
   useEffect(() => {
     const move = (event) => {
