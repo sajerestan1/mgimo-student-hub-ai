@@ -4,6 +4,17 @@ import { buildAcademicIntelligence, intelligenceBrief } from '../../shared/stude
 
 const clean = (value) => (typeof value === 'string' ? value.slice(0, 500) : '');
 
+// Answer language is a presentation choice made in the interface. Only these
+// identifiers are accepted, so the instruction cannot carry free text into the
+// prompt.
+const LANGUAGE_NAMES = {
+  en: 'English',
+  ru: 'Russian',
+  fr: 'French',
+  'zh-CN': 'Simplified Chinese',
+  ar: 'Arabic',
+};
+
 // The AI study companion. The academic record is loaded server-side from the
 // authenticated account, so a caller cannot ask about another student by
 // sending a different id, and no unpublished or unauthorised record is exposed.
@@ -17,12 +28,13 @@ export default async function (req) {
     const question = clean(body.question).trim();
     if (!question) return Response.json({ error: 'question is required' }, { status: 400 });
 
+    const answerLanguage = LANGUAGE_NAMES[body.language] || LANGUAGE_NAMES.en;
+
     const context = await buildStudentContext(base44, user);
     if (!context.linked) {
-      return Response.json({
-        answer:
-          'Your account is not linked to a student record yet, so I cannot see any courses or results. The student office links accounts to the academic register — please ask them to connect yours.',
-      });
+      // A code, not a sentence: the interface renders this in the student's
+      // own language.
+      return Response.json({ code: 'not_linked' });
     }
 
     // The performance and attendance figures are added from the same resolver
@@ -45,6 +57,8 @@ export default async function (req) {
       'Put each section label on its own line in bold, for example **Track Progress**, and list the points under it as "- " bullets of one short line each.',
       'Use a numbered list only where the order matters. Never use tables, code blocks or horizontal rules, and put exactly one blank line between sections.',
       'Be concise and practical: at most 160 words. No medical, legal or financial advice.',
+      `Write the entire answer in ${answerLanguage}, including every section label and bullet, unless the student explicitly asks for a different language.`,
+      'Never translate course codes, course titles, module numbers or personal names: reproduce them exactly as they appear in the record, because they are official identifiers.',
       '',
       'STUDENT RECORD',
       contextBrief(context),
