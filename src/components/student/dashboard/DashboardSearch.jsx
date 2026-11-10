@@ -72,14 +72,14 @@ export default function DashboardSearch({ context }) {
                     onClick={() => setQuery('')}
                     className="row-hover block px-3 py-2"
                   >
-                    <p className="truncate text-[13.5px] font-medium text-ink">{result.label}</p>
-                    <p className="mt-0.5 truncate text-[12px] text-mutedink">{result.meta}</p>
+                    <p className="truncate text-[length:var(--type-secondary)] font-medium text-ink">{result.label}</p>
+                    <p className="mt-0.5 truncate text-[length:var(--type-meta)] text-mutedink">{result.meta}</p>
                   </Link>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="px-3 py-3 text-[13px] text-mutedink">{t('student.assignments.emptyFilter')}</p>
+            <p className="px-3 py-3 text-[length:var(--type-meta)] text-mutedink">{t('student.assignments.emptyFilter')}</p>
           )}
         </div>
       )}

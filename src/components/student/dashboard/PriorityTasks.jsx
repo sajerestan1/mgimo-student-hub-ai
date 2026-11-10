@@ -68,7 +68,7 @@ export default function PriorityTasks({ context }) {
       action={
         <Link
           to={P.student.assignments}
-          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
+          className="inline-flex shrink-0 items-center gap-1 text-[length:var(--type-meta)] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
         >
           {t('student.dashboard.allWork')}
         </Link>
@@ -79,10 +79,10 @@ export default function PriorityTasks({ context }) {
         <ul className="divide-y divide-line">
           {shown.map((row) => (
             <li key={row.id}>
-              <Link to={row.to} className="row-hover flex items-start justify-between gap-3 px-4 py-2.5">
+              <Link to={row.to} className="row-hover flex items-start justify-between gap-3 px-5 py-3">
                 <div className="min-w-0">
-                  <p className="truncate text-[15px] font-medium text-ink">{row.title}</p>
-                  <p className="mt-0.5 truncate text-[13px] text-mutedink">{row.meta}</p>
+                  <p className="truncate text-[length:var(--type-secondary)] font-medium text-ink">{row.title}</p>
+                  <p className="mt-0.5 truncate text-[length:var(--type-meta)] text-mutedink">{row.meta}</p>
                 </div>
                 <StatusChip tone={row.chip.tone} className="shrink-0">
                   {row.chip.label}
@@ -92,7 +92,7 @@ export default function PriorityTasks({ context }) {
           ))}
         </ul>
       ) : (
-        <p className="text-[14px] leading-relaxed text-mutedink">{t('student.dashboard.nothingUrgent')}</p>
+        <p className="text-[length:var(--type-secondary)] leading-relaxed text-mutedink">{t('student.dashboard.nothingUrgent')}</p>
       )}
     </Surface>
   );

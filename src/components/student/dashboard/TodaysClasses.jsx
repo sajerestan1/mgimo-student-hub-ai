@@ -40,7 +40,7 @@ export default function TodaysClasses({ sessions }) {
       action={
         <Link
           to={P.student.timetable}
-          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
+          className="inline-flex shrink-0 items-center gap-1 text-[length:var(--type-meta)] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
         >
           {t('student.dashboard.viewAll')}
         </Link>
@@ -50,16 +50,16 @@ export default function TodaysClasses({ sessions }) {
       {shown.length ? (
         <ul className="divide-y divide-line">
           {shown.map((session) => (
-            <li key={session.id} className="flex items-start gap-3 px-4 py-2.5">
-              <div className="w-14 shrink-0 text-[14px] font-semibold tabular-nums text-ink">
+            <li key={session.id} className="flex items-start gap-3 px-5 py-3">
+              <div className="w-14 shrink-0 text-[length:var(--type-secondary)] font-semibold tabular-nums text-ink">
                 {clock(session.start)}
-                {session.end && <p className="text-[12px] font-normal text-mutedink">{clock(session.end)}</p>}
+                {session.end && <p className="mt-0.5 text-[length:var(--type-meta)] font-normal text-mutedink">{clock(session.end)}</p>}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-[15px] font-medium text-ink">
+                <p className="truncate text-[length:var(--type-secondary)] font-medium text-ink">
                   {session.courseCode} · {session.courseTitle}
                 </p>
-                <p className="mt-0.5 truncate text-[13px] text-mutedink">
+                <p className="mt-0.5 truncate text-[length:var(--type-meta)] text-mutedink">
                   {[kindLabel(session.kind), session.room || t('student.dashboard.roomNotSet')].join(' · ')}
                 </p>
               </div>
@@ -67,7 +67,7 @@ export default function TodaysClasses({ sessions }) {
           ))}
         </ul>
       ) : (
-        <p className="text-[14px] leading-relaxed text-mutedink">{t('student.dashboard.noSessions')}</p>
+        <p className="text-[length:var(--type-secondary)] leading-relaxed text-mutedink">{t('student.dashboard.noSessions')}</p>
       )}
     </Surface>
   );

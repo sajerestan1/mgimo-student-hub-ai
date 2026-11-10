@@ -33,7 +33,7 @@ export default function AttendanceChart({ totals, rate }) {
         <span className="text-[24px] font-semibold leading-none tabular-nums text-ink">
           {rate === null || rate === undefined ? '—' : `${rate}%`}
         </span>
-        <span className="mt-1 text-[12px] text-[#64748B]">{t('student.dashboard.metrics.attendance')}</span>
+        <span className="mt-1 text-[length:var(--type-meta)] text-[#64748B]">{t('student.dashboard.metrics.attendance')}</span>
       </div>
     </div>
   );
