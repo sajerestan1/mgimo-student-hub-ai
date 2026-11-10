@@ -19,7 +19,7 @@ export default function RecentActivity({ context }) {
       action={
         <Link
           to={P.student.notifications}
-          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
+          className="inline-flex shrink-0 items-center gap-1 text-[length:var(--type-meta)] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
         >
           {t('student.dashboard.allUpdates')}
         </Link>
@@ -33,12 +33,12 @@ export default function RecentActivity({ context }) {
             const content = (
               <>
                 <div className="flex items-baseline justify-between gap-3">
-                  <p className="truncate text-[15px] font-medium text-ink">{entry.title}</p>
-                  <span className="shrink-0 text-[12px] text-mutedink">{entry.label}</span>
+                  <p className="truncate text-[length:var(--type-secondary)] font-medium text-ink">{entry.title}</p>
+                  <span className="shrink-0 text-[length:var(--type-meta)] text-mutedink">{entry.label}</span>
                 </div>
-                <p className="mt-0.5 truncate text-[13px] text-mutedink">{entry.meta}</p>
+                <p className="mt-0.5 truncate text-[length:var(--type-meta)] text-mutedink">{entry.meta}</p>
                 {expanded && (
-                  <p className="mt-1.5 line-clamp-4 text-[13px] leading-relaxed text-ink/80">{entry.detail}</p>
+                  <p className="mt-1.5 line-clamp-4 text-[length:var(--type-meta)] leading-relaxed text-ink/80">{entry.detail}</p>
                 )}
               </>
             );
@@ -46,14 +46,14 @@ export default function RecentActivity({ context }) {
             return (
               <li key={entry.id}>
                 {entry.to ? (
-                  <Link to={entry.to} className="row-hover block px-4 py-2.5">
+                  <Link to={entry.to} className="row-hover block px-5 py-3">
                     {content}
                   </Link>
                 ) : (
                   <button
                     type="button"
                     onClick={() => setOpenId(expanded ? null : entry.id)}
-                    className="row-hover flex w-full items-start justify-between gap-2 px-4 py-2.5 text-start"
+                    className="row-hover flex w-full items-start justify-between gap-2 px-5 py-3 text-start"
                     aria-expanded={Boolean(expanded)}
                   >
                     <div className="min-w-0">{content}</div>
@@ -71,7 +71,7 @@ export default function RecentActivity({ context }) {
           })}
         </ul>
       ) : (
-        <p className="text-[14px] leading-relaxed text-mutedink">{t('student.dashboard.noActivity')}</p>
+        <p className="text-[length:var(--type-secondary)] leading-relaxed text-mutedink">{t('student.dashboard.noActivity')}</p>
       )}
     </Surface>
   );

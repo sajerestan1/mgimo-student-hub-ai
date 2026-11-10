@@ -40,18 +40,18 @@ export default function StudentDashboard() {
 
   if (!context) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="h-16 animate-pulse rounded-xl bg-white" />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[0, 1, 2, 3].map((key) => (
             <div key={key} className="h-[86px] animate-pulse rounded-xl bg-white" />
           ))}
         </div>
-        <div className="grid gap-3 xl:grid-cols-2">
+        <div className="grid gap-4 xl:grid-cols-2">
           <div className="h-64 animate-pulse rounded-xl bg-white" />
           <div className="h-64 animate-pulse rounded-xl bg-white" />
         </div>
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           {[0, 1, 2, 3].map((key) => (
             <div key={key} className="h-44 animate-pulse rounded-xl bg-white" />
           ))}
@@ -86,7 +86,7 @@ export default function StudentDashboard() {
           {t('student.dashboard.unlinked.body')}
         </p>
         {context.scopeNote && (
-          <p className="mx-auto mt-1.5 max-w-md text-[13px] leading-relaxed text-mutedink/80">{context.scopeNote}</p>
+          <p className="mx-auto mt-1.5 max-w-md text-[length:var(--type-meta)] leading-relaxed text-mutedink/80">{context.scopeNote}</p>
         )}
         <Link to={P.student.profile} className="btn-quiet mt-4 inline-flex">
           {t('student.common.viewAccount')}
@@ -96,7 +96,7 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="min-w-0 space-y-3">
+    <div className="min-w-0 space-y-4">
       <WelcomeHeader profile={context.profile} context={context} />
 
       <SnapshotStrip summary={context.summary} />
@@ -106,7 +106,7 @@ export default function StudentDashboard() {
       {/* Analytics sit side by side only once each panel keeps a readable chart width.
           Each grid cell is min-w-0 so a long course code or message can never widen
           the track past the viewport. */}
-      <div className="grid gap-3 xl:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2">
         <div className="min-w-0">
           <AcademicPerformance context={context} />
         </div>
@@ -116,7 +116,7 @@ export default function StudentDashboard() {
       </div>
 
       {/* Balanced two-column lower dashboard; equal heights come from h-full panels. */}
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         <div className="min-w-0">
           <CommunicationsPanel />
         </div>

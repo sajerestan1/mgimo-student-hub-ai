@@ -67,26 +67,26 @@ export default function SnapshotStrip({ summary }) {
   ];
 
   return (
-    <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {items.map(({ key, label, value, hint, to, icon: Icon, tone }) => (
         <Link
           key={key}
           to={to}
-          className="card-surface group flex min-w-0 flex-col p-3.5 transition-colors hover:border-[#CBD8EC]"
+          className="card-surface group flex min-w-0 flex-col p-4 transition-colors hover:border-[#CBD8EC]"
         >
           <div className="flex items-center gap-2">
             <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', TONES[tone])}>
               <Icon className="h-4 w-4" strokeWidth={1.9} />
             </span>
-            <p className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-[#64748B]">{label}</p>
+            <p className="min-w-0 flex-1 truncate text-[length:var(--type-meta)] font-medium text-[#64748B]">{label}</p>
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2563EB] text-white transition-colors group-hover:bg-[#1D4ED8]">
               <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
             </span>
           </div>
-          <p className="mt-2 text-[24px] font-semibold leading-none tracking-[-0.02em] tabular-nums text-ink">
+          <p className="mt-2.5 text-[24px] font-semibold leading-none tracking-[-0.02em] tabular-nums text-ink">
             {value}
           </p>
-          <p className="mt-1 truncate text-[12px] text-[#64748B]">{hint}</p>
+          <p className="mt-1.5 truncate text-[length:var(--type-meta)] text-[#64748B]">{hint}</p>
         </Link>
       ))}
     </section>

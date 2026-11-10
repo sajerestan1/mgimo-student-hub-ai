@@ -42,21 +42,21 @@ export default function AttendancePanel({ context }) {
       action={
         <Link
           to={P.student.attendance}
-          className="inline-flex shrink-0 items-center gap-1 text-[13px] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
+          className="inline-flex shrink-0 items-center gap-1 text-[length:var(--type-meta)] font-medium text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
         >
           {t('student.dashboard.viewAll')}
           <ArrowRight className="dir-icon h-3.5 w-3.5" />
         </Link>
       }
-      bodyClassName="px-4 pb-3 pt-1"
+      bodyClassName="px-5 pb-4 pt-1"
     >
       {totals.total > 0 ? (
         <>
           <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[190px_1fr]">
             <AttendanceChart totals={totals} rate={rate} />
-            <ul className="space-y-1.5">
+            <ul className="space-y-2">
               {KEYS.map((key) => (
-                <li key={key} className="flex items-center justify-between gap-2 text-[13px]">
+                <li key={key} className="flex items-center justify-between gap-2 text-[length:var(--type-meta)]">
                   <span className="flex min-w-0 items-center gap-2 text-mutedink">
                     <span
                       className="h-2 w-2 shrink-0 rounded-full"
@@ -71,10 +71,10 @@ export default function AttendancePanel({ context }) {
           </div>
 
           {withSessions.length > 0 && (
-            <ul className="mt-2 divide-y divide-line border-t border-line pt-1">
+            <ul className="mt-3 divide-y divide-line border-t border-line pt-2">
               {withSessions.map((row) => (
-                <li key={row.code} className="flex items-center justify-between gap-3 py-2">
-                  <span className="min-w-0 truncate text-[13px] font-medium text-ink">{row.code}</span>
+                <li key={row.code} className="flex items-center justify-between gap-3 py-2.5">
+                  <span className="min-w-0 truncate text-[length:var(--type-secondary)] font-medium text-ink">{row.code}</span>
                   <span className="flex items-center gap-2">
                     <span className="h-1.5 w-16 overflow-hidden rounded-full bg-[#E7EAF2]">
                       <span
@@ -82,7 +82,7 @@ export default function AttendancePanel({ context }) {
                         style={{ width: `${Math.min(100, Math.max(0, row.rate))}%` }}
                       />
                     </span>
-                    <span className="w-9 text-end text-[12.5px] font-semibold tabular-nums text-ink">{row.rate}%</span>
+                    <span className="w-10 text-end text-[length:var(--type-meta)] font-semibold tabular-nums text-ink">{row.rate}%</span>
                   </span>
                 </li>
               ))}
@@ -90,7 +90,7 @@ export default function AttendancePanel({ context }) {
           )}
         </>
       ) : (
-        <p className="py-8 text-center text-[14px] leading-relaxed text-mutedink">
+        <p className="py-8 text-center text-[length:var(--type-secondary)] leading-relaxed text-mutedink">
           {t('student.dashboard.hints.notRecorded')}
         </p>
       )}
