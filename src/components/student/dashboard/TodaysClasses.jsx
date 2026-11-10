@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom';
 import Surface from '@/components/shell/Surface';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { clock, shortDate, todayISO } from '@/lib/studentPortal';
-
-const KIND_LABEL = { lecture: 'Lecture', seminar: 'Seminar', practice: 'Practice' };
+import { useI18n } from '@/i18n/I18nProvider';
 
 export default function TodaysClasses({ sessions }) {
+  const { t, language } = useI18n();
   const today = todayISO();
   const todays = sessions.filter((session) => session.date === today).slice(0, 3);
   const nextDay = sessions
@@ -16,13 +16,23 @@ export default function TodaysClasses({ sessions }) {
   const shown = todays.length ? todays : upcoming;
   const day = todays.length ? today : nextDay;
 
+  const kindLabel = (kind) => {
+    const key = `student.dashboard.kinds.${kind}`;
+    const label = t(key);
+    return label === key ? kind : label;
+  };
+
   return (
     <Surface
-      title={todays.length ? "Today's schedule" : 'Next classes'}
-      subtitle={day ? shortDate(day, { weekday: 'long', day: 'numeric', month: 'long' }) : 'No sessions published'}
+      title={todays.length ? t('student.dashboard.todaySchedule') : t('student.dashboard.nextClasses')}
+      subtitle={
+        day
+          ? shortDate(day, { weekday: 'long', day: 'numeric', month: 'long' }, language)
+          : t('student.dashboard.noSessionsPublished')
+      }
       action={
         <Link to={P.student.timetable} className="link-quiet text-[14px]">
-          View all
+          {t('student.dashboard.viewAll')}
         </Link>
       }
       bodyClassName={shown.length ? 'px-0 pb-0 pt-0' : undefined}
@@ -40,16 +50,14 @@ export default function TodaysClasses({ sessions }) {
                   {session.courseCode} · {session.courseTitle}
                 </p>
                 <p className="mt-0.5 text-[13px] text-mutedink">
-                  {[KIND_LABEL[session.kind] || session.kind, session.room || 'Room not set'].join(' · ')}
+                  {[kindLabel(session.kind), session.room || t('student.dashboard.roomNotSet')].join(' · ')}
                 </p>
               </div>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-[14px] leading-relaxed text-mutedink">
-          No sessions have been published for your courses. Your timetable fills in as the faculty publishes it.
-        </p>
+        <p className="text-[14px] leading-relaxed text-mutedink">{t('student.dashboard.noSessions')}</p>
       )}
     </Surface>
   );

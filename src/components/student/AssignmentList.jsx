@@ -4,6 +4,7 @@ import StatusChip from '@/components/shell/StatusChip';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { ASSIGNMENT_STATE, dueLabel, shortDate } from '@/lib/studentPortal';
+import { useI18n } from '@/i18n/I18nProvider';
 
 const field =
   'w-full rounded-lg border border-line bg-white px-3 py-2 text-[15px] text-ink focus:border-royal/40 focus:outline-none focus:ring-2 focus:ring-royal/10';
@@ -11,6 +12,7 @@ const field =
 /** One authoritative list of the student's assignments, with submission. */
 export default function AssignmentList({ rows, profile, onChanged }) {
   const { user } = useAuth();
+  const { t, language } = useI18n();
   const [openId, setOpenId] = useState(null);
   const [form, setForm] = useState('');
   const [file, setFile] = useState(null);
@@ -19,7 +21,7 @@ export default function AssignmentList({ rows, profile, onChanged }) {
 
   const submit = async (row) => {
     if (!form.trim()) {
-      setError('Add a short note or the text of your submission.');
+      setError(t('student.assignments.noteRequired'));
       return;
     }
     setBusy(true);
@@ -48,14 +50,14 @@ export default function AssignmentList({ rows, profile, onChanged }) {
       setFile(null);
       await onChanged();
     } catch {
-      setError('The submission could not be saved. Please try again.');
+      setError(t('student.assignments.uploadError'));
     } finally {
       setBusy(false);
     }
   };
 
   if (!rows.length) {
-    return <p className="px-5 py-8 text-center text-[15px] text-mutedink">Nothing in this list.</p>;
+    return <p className="px-5 py-8 text-center text-[15px] text-mutedink">{t('student.assignments.emptyFilter')}</p>;
   }
 
   return (
@@ -70,17 +72,17 @@ export default function AssignmentList({ rows, profile, onChanged }) {
               <div className="min-w-0">
                 <p className="text-[15px] font-medium text-ink">{row.title}</p>
                 <p className="mt-0.5 text-[13px] text-mutedink">
-                  {row.courseCode} · {row.type} · {shortDate(row.dueDate)} · {dueLabel(row.dueDate)}
+                  {row.courseCode} · {row.type} · {shortDate(row.dueDate, undefined, language)} · {dueLabel(row.dueDate, t)}
                 </p>
                 {row.state === 'graded' && row.feedback && (
                   <p className="mt-1.5 text-[13px] leading-relaxed text-ink/75">
-                    <span className="font-medium text-ink">Feedback:</span> {row.feedback}
+                    <span className="font-medium text-ink">{t('student.assignments.feedback')}</span> {row.feedback}
                   </p>
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <StatusChip tone={state.tone}>
-                  {row.state === 'graded' ? `${row.score}/${row.maxScore}` : state.label}
+                  {row.state === 'graded' ? `${row.score}/${row.maxScore}` : t(state.labelKey)}
                 </StatusChip>
                 {(row.state === 'pending' || row.state === 'overdue') && (
                   <button
@@ -91,7 +93,7 @@ export default function AssignmentList({ rows, profile, onChanged }) {
                     }}
                     className="btn-quiet btn-sm"
                   >
-                    {isForm ? 'Cancel' : 'Submit'}
+                    {isForm ? t('student.assignments.cancel') : t('student.assignments.submit')}
                   </button>
                 )}
                 {row.instructions && (
@@ -102,7 +104,7 @@ export default function AssignmentList({ rows, profile, onChanged }) {
                       setError('');
                     }}
                     className="icon-btn"
-                    aria-label="Show brief"
+                    aria-label={t('student.assignments.showBrief')}
                     aria-expanded={isBrief}
                   >
                     <ChevronDown className={`h-4 w-4 transition-transform ${isBrief ? 'rotate-180' : ''}`} />
@@ -124,7 +126,7 @@ export default function AssignmentList({ rows, profile, onChanged }) {
                   value={form}
                   onChange={(event) => setForm(event.target.value)}
                   className={field}
-                  placeholder="Your answer, or a note describing the attached file"
+                  placeholder={t('student.assignments.answerPlaceholder')}
                 />
                 <input
                   type="file"
@@ -138,9 +140,9 @@ export default function AssignmentList({ rows, profile, onChanged }) {
                   disabled={busy}
                   className="btn-primary disabled:opacity-60"
                 >
-                  {busy ? 'Submitting…' : 'Submit assignment'}
+                  {busy ? t('student.assignments.submitting') : t('student.assignments.submitAssignment')}
                 </button>
-                <p className="text-[12px] text-mutedink">Attached files are stored privately.</p>
+                <p className="text-[12px] text-mutedink">{t('student.assignments.privateNote')}</p>
               </div>
             )}
           </li>

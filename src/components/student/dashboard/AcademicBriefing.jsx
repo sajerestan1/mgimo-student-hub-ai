@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { buildBriefing } from '@/lib/studentPortal';
+import { useI18n } from '@/i18n/I18nProvider';
 
 const DOT = {
   critical: 'bg-critical',
@@ -12,7 +13,8 @@ const DOT = {
 };
 
 export default function AcademicBriefing({ context }) {
-  const insights = buildBriefing(context);
+  const { t } = useI18n();
+  const insights = buildBriefing(context, t);
 
   return (
     <section className="card-surface flex flex-col overflow-hidden">
@@ -20,7 +22,7 @@ export default function AcademicBriefing({ context }) {
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-royal/10 text-royal">
           <Sparkles className="h-3.5 w-3.5" />
         </span>
-        <h2 className="text-[length:var(--type-card)] font-semibold text-ink">Academic briefing</h2>
+        <h2 className="text-[length:var(--type-card)] font-semibold text-ink">{t('student.dashboard.briefing.title')}</h2>
       </header>
       <ul className="space-y-2.5 px-5 pb-4">
         {insights.map((insight) => (
@@ -30,7 +32,7 @@ export default function AcademicBriefing({ context }) {
               <p className="text-[14px] leading-relaxed text-ink/85">{insight.text}</p>
               <Link to={insight.to} className="mt-0.5 inline-flex items-center gap-1 text-[13px] font-medium text-brand">
                 {insight.cta}
-                <ArrowRight className="h-3 w-3" />
+                <span className="dir-icon text-[13px]">→</span>
               </Link>
             </div>
           </li>
@@ -38,7 +40,7 @@ export default function AcademicBriefing({ context }) {
       </ul>
       <div className="mt-auto border-t border-line px-5 py-2.5">
         <Link to={P.student.ai} className="link-quiet text-[13px]">
-          Ask the study companion
+          {t('student.dashboard.briefing.ask')}
         </Link>
       </div>
     </section>

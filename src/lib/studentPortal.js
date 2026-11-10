@@ -45,41 +45,60 @@ export function daysUntil(value) {
   return Math.round((target - today) / 86400000);
 }
 
-export const shortDate = (value, options) =>
+// The interface language is passed in rather than assumed, so a date reads
+// "12 окт." for a Russian interface and "12 oct." for a French one.
+export const shortDate = (value, options, language = 'en-GB') =>
   value
     ? new Date(`${String(value).slice(0, 10)}T00:00:00`).toLocaleDateString(
-        'en-GB',
+        language,
         options || { day: 'numeric', month: 'short' }
       )
     : '—';
 
 export const clock = (value) => (value ? String(value).slice(0, 5) : '');
 
-export const dueLabel = (value) => {
+// Every label produced here is a translation key plus its values; the English
+// text is only the fallback for a caller that has no translator at hand.
+export const dueLabel = (value, t) => {
   const days = daysUntil(value);
-  if (days === null) return 'No due date';
-  if (days < 0) return `${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} overdue`;
-  if (days === 0) return 'Due today';
-  if (days === 1) return 'Due tomorrow';
-  return `Due in ${days} days`;
+  const label = (key, vars, english) => (t ? t(key, vars) : english);
+  if (days === null) return label('student.assignments.due.noDate', null, 'No due date');
+  if (days < 0) {
+    const count = Math.abs(days);
+    return label(
+      count === 1 ? 'student.assignments.due.one' : 'student.assignments.due.many',
+      { count },
+      count === 1 ? '1 day overdue' : `${count} days overdue`
+    );
+  }
+  if (days === 0) return label('student.assignments.due.today', null, 'Due today');
+  if (days === 1) return label('student.assignments.due.tomorrow', null, 'Due tomorrow');
+  return label('student.assignments.due.inDays', { count: days }, `Due in ${days} days`);
 };
 
 export const ASSIGNMENT_STATE = {
-  pending: { label: 'To do', tone: 'brand' },
-  submitted: { label: 'Submitted', tone: 'warning' },
-  overdue: { label: 'Overdue', tone: 'critical' },
-  graded: { label: 'Graded', tone: 'positive' },
+  pending: { label: 'To do', labelKey: 'student.assignments.states.pending', tone: 'brand' },
+  submitted: { label: 'Submitted', labelKey: 'student.assignments.states.submitted', tone: 'warning' },
+  overdue: { label: 'Overdue', labelKey: 'student.assignments.states.overdue', tone: 'critical' },
+  graded: { label: 'Graded', labelKey: 'student.assignments.states.graded', tone: 'positive' },
 };
 
 export const coursePath = (courseId) => (courseId ? `${P.student.courses}/${courseId}` : P.student.courses);
 
-export const firstName = (profile) => (profile?.full_name || '').split(' ')[0] || 'there';
+export const firstName = (profile, t) =>
+  (profile?.full_name || '').split(' ')[0] || (t ? t('student.dashboard.greetingFallback') : 'there');
 
-export const greeting = () => {
+export const greeting = (t) => {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 18) return 'Good afternoon';
-  return 'Good evening';
+  const name = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  if (!t) return name;
+  const key =
+    hour < 12
+      ? 'student.dashboard.goodMorning'
+      : hour < 18
+        ? 'student.dashboard.goodAfternoon'
+        : 'student.dashboard.goodEvening';
+  return t(key);
 };
 
 const byStart = (a, b) => clock(a.start).localeCompare(clock(b.start));
@@ -94,20 +113,31 @@ export const upcomingSessions = (context) => {
     .sort((a, b) => a.date.localeCompare(b.date) || byStart(a, b));
 };
 
-/** Up to three short priorities, each derived from a real record. */
-export function buildBriefing(context) {
+/**
+ * Up to three short priorities, each derived from a real record. The text is
+ * built from translation keys with the record's own values interpolated, so a
+ * course title or code stays exactly as recorded while the sentence around it
+ * follows the interface language.
+ */
+export function buildBriefing(context, t) {
+  const say = (key, vars, english) => (t ? t(key, vars) : english);
   const items = [];
   const open = (context.assignments || []).filter((row) => row.state !== 'graded');
   const overdue = open.filter((row) => row.state === 'overdue');
 
   if (overdue.length) {
     const first = overdue[0];
+    const count = overdue.length;
     items.push({
       key: 'overdue',
       tone: 'critical',
-      text: `${overdue.length} overdue item${overdue.length === 1 ? '' : 's'} — start with “${first.title}” (${first.courseCode}).`,
+      text: say(
+        count === 1 ? 'student.dashboard.briefing.overdueOne' : 'student.dashboard.briefing.overdueMany',
+        { count, title: first.title, code: first.courseCode },
+        `${count} overdue item${count === 1 ? '' : 's'} — start with “${first.title}” (${first.courseCode}).`
+      ),
       to: P.student.assignments,
-      cta: 'Open assignments',
+      cta: say('student.dashboard.briefing.cta.assignments', null, 'Open assignments'),
     });
   }
 
@@ -115,12 +145,17 @@ export function buildBriefing(context) {
     .filter((row) => row.state === 'pending' && daysUntil(row.dueDate) !== null && daysUntil(row.dueDate) >= 0)
     .sort((a, b) => daysUntil(a.dueDate) - daysUntil(b.dueDate))[0];
   if (soonest && items.length < 3) {
+    const due = dueLabel(soonest.dueDate, t);
     items.push({
       key: 'due',
       tone: 'warning',
-      text: `${soonest.courseCode} · “${soonest.title}” — ${dueLabel(soonest.dueDate).toLowerCase()}.`,
+      text: say(
+        'student.dashboard.briefing.due',
+        { code: soonest.courseCode, title: soonest.title, due },
+        `${soonest.courseCode} · “${soonest.title}” — ${due}.`
+      ),
       to: P.student.assignments,
-      cta: 'Submit work',
+      cta: say('student.dashboard.briefing.cta.submit', null, 'Submit work'),
     });
   }
 
@@ -128,12 +163,23 @@ export function buildBriefing(context) {
     .filter((quiz) => quiz.state !== 'graded' && daysUntil(quiz.availableUntil) !== null && daysUntil(quiz.availableUntil) >= 0)
     .sort((a, b) => daysUntil(a.availableUntil) - daysUntil(b.availableUntil))[0];
   if (closingQuiz && items.length < 3) {
+    const due = dueLabel(closingQuiz.availableUntil, t);
     items.push({
       key: 'quiz',
       tone: 'brand',
-      text: `${closingQuiz.courseCode} quiz “${closingQuiz.title}” — ${dueLabel(closingQuiz.availableUntil).toLowerCase()}, ${closingQuiz.attempts}/${closingQuiz.attemptLimit} attempts used.`,
+      text: say(
+        'student.dashboard.briefing.quiz',
+        {
+          code: closingQuiz.courseCode,
+          title: closingQuiz.title,
+          due,
+          used: closingQuiz.attempts,
+          limit: closingQuiz.attemptLimit,
+        },
+        `${closingQuiz.courseCode} quiz “${closingQuiz.title}” — ${due}, ${closingQuiz.attempts}/${closingQuiz.attemptLimit} attempts used.`
+      ),
       to: P.student.quizzes,
-      cta: 'Open quizzes',
+      cta: say('student.dashboard.briefing.cta.quizzes', null, 'Open quizzes'),
     });
   }
 
@@ -141,12 +187,17 @@ export function buildBriefing(context) {
     .filter((course) => course.weighted !== null)
     .sort((a, b) => a.weighted - b.weighted)[0];
   if (weakest && items.length < 3) {
+    const score = weakest.weighted.toFixed(1);
     items.push({
       key: 'weakest',
       tone: 'neutral',
-      text: `${weakest.code} is your lowest recorded result at ${weakest.weighted.toFixed(1)}/100 — review its published materials.`,
+      text: say(
+        'student.dashboard.briefing.weakest',
+        { code: weakest.code, score },
+        `${weakest.code} is your lowest recorded result at ${score}/100 — review its published materials.`
+      ),
       to: coursePath(weakest.id),
-      cta: 'Open course',
+      cta: say('student.dashboard.briefing.cta.course', null, 'Open course'),
     });
   }
 
@@ -154,9 +205,13 @@ export function buildBriefing(context) {
     items.push({
       key: 'clear',
       tone: 'positive',
-      text: 'Nothing overdue and nothing due in the next few days. Use the time to work ahead on your next assessment.',
+      text: say(
+        'student.dashboard.briefing.clear',
+        null,
+        'Nothing overdue and nothing due in the next few days. Use the time to work ahead on your next assessment.'
+      ),
       to: P.student.assignments,
-      cta: 'See all work',
+      cta: say('student.dashboard.briefing.cta.allWork', null, 'See all work'),
     });
   }
 
@@ -164,7 +219,8 @@ export function buildBriefing(context) {
 }
 
 /** Grades, new materials and announcements in one short list. */
-export function recentActivity(context) {
+export function recentActivity(context, t, language) {
+  const say = (key, english) => (t ? t(key) : english);
   const courseIdByCode = new Map((context.courses || []).map((course) => [course.code, course.id]));
   const entries = [];
 
@@ -172,7 +228,10 @@ export function recentActivity(context) {
     entries.push({
       id: `grade-${grade.courseCode}-${grade.title}`,
       kind: 'grade',
-      label: grade.feedback ? 'Grade & feedback' : 'New grade',
+      label: say(
+        grade.feedback ? 'student.dashboard.activityKinds.gradeFeedback' : 'student.dashboard.activityKinds.newGrade',
+        grade.feedback ? 'Grade & feedback' : 'New grade'
+      ),
       title: grade.title,
       detail: grade.feedback ? grade.feedback.slice(0, 140) : '',
       meta: `${grade.courseCode} · ${grade.score}/${grade.max}`,
@@ -185,7 +244,7 @@ export function recentActivity(context) {
     entries.push({
       id: `material-${material.id}`,
       kind: 'material',
-      label: 'New material',
+      label: say('student.dashboard.activityKinds.newMaterial', 'New material'),
       title: material.title,
       detail: '',
       meta: `${material.courseCode} · ${String(material.type).replace(/_/g, ' ')}`,
@@ -198,10 +257,10 @@ export function recentActivity(context) {
     entries.push({
       id: `announcement-${announcement.id}`,
       kind: 'announcement',
-      label: 'Announcement',
+      label: say('student.dashboard.activityKinds.announcement', 'Announcement'),
       title: announcement.title,
       detail: announcement.body,
-      meta: `${announcement.author} · ${shortDate(announcement.date, { day: 'numeric', month: 'short' })}`,
+      meta: `${announcement.author} · ${shortDate(announcement.date, { day: 'numeric', month: 'short' }, language)}`,
       date: announcement.date,
       to: null,
     });

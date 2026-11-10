@@ -4,17 +4,19 @@ import { ChevronDown } from 'lucide-react';
 import Surface from '@/components/shell/Surface';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { recentActivity } from '@/lib/studentPortal';
+import { useI18n } from '@/i18n/I18nProvider';
 
 export default function RecentActivity({ context }) {
-  const entries = recentActivity(context);
+  const { t, language } = useI18n();
+  const entries = recentActivity(context, t, language);
   const [openId, setOpenId] = useState(null);
 
   return (
     <Surface
-      title="Recent activity"
+      title={t('student.dashboard.recentActivity')}
       action={
         <Link to={P.student.notifications} className="link-quiet text-[14px]">
-          All updates
+          {t('student.dashboard.allUpdates')}
         </Link>
       }
       bodyClassName={entries.length ? 'px-0 pb-0 pt-0' : undefined}
@@ -46,7 +48,7 @@ export default function RecentActivity({ context }) {
                   <button
                     type="button"
                     onClick={() => setOpenId(expanded ? null : entry.id)}
-                    className="row-hover flex w-full items-start justify-between gap-2 px-5 py-3 text-left"
+                    className="row-hover flex w-full items-start justify-between gap-2 px-5 py-3 text-start"
                     aria-expanded={Boolean(expanded)}
                   >
                     <div className="min-w-0">{content}</div>
@@ -64,9 +66,7 @@ export default function RecentActivity({ context }) {
           })}
         </ul>
       ) : (
-        <p className="text-[14px] leading-relaxed text-mutedink">
-          Nothing new yet. Grades, materials and announcements appear here as they are published.
-        </p>
+        <p className="text-[14px] leading-relaxed text-mutedink">{t('student.dashboard.noActivity')}</p>
       )}
     </Surface>
   );

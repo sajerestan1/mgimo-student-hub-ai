@@ -57,8 +57,10 @@ export async function loadStudentCourses(userId) {
   };
 }
 
-export const shortDate = (value) =>
-  value ? new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—';
+// The locale follows the interface language; English ordering stays the default
+// for any caller that does not pass one.
+export const shortDate = (value, options, language = 'en-GB') =>
+  value ? new Date(value).toLocaleDateString(language, options || { day: 'numeric', month: 'short' }) : '—';
 
 export async function openPrivateFile(uri) {
   if (!uri) return;

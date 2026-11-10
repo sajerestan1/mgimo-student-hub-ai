@@ -1,39 +1,46 @@
 import { Link } from 'react-router-dom';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
-
-const UNAVAILABLE = 'Not yet recorded';
+import { useI18n } from '@/i18n/I18nProvider';
 
 /**
  * Four compact figures from the student's own record. A metric with no
  * recorded data says so rather than showing a placeholder number.
  */
 export default function SnapshotStrip({ summary }) {
+  const { t } = useI18n();
+  const unavailable = t('student.dashboard.hints.notRecorded');
+
   const items = [
     {
-      label: 'Semester average',
+      label: t('student.dashboard.metrics.semesterAverage'),
       value: summary.average === null ? '—' : summary.average.toFixed(1),
-      hint: summary.average === null ? UNAVAILABLE : `${summary.averageLetter} · credit-weighted`,
+      hint:
+        summary.average === null
+          ? unavailable
+          : t('student.dashboard.hints.weighted', { letter: summary.averageLetter }),
       to: P.student.grades,
     },
     {
-      label: 'Attendance',
+      label: t('student.dashboard.metrics.attendance'),
       value: summary.attendanceRate === null ? '—' : `${summary.attendanceRate}%`,
-      hint: summary.attendanceRate === null ? UNAVAILABLE : 'of registered sessions',
+      hint: summary.attendanceRate === null ? unavailable : t('student.dashboard.hints.ofSessions'),
       to: P.student.attendance,
     },
     {
-      label: 'Pending work',
+      label: t('student.dashboard.metrics.pendingWork'),
       value: String(summary.pending + summary.overdue),
       hint:
         summary.pending + summary.overdue === 0
-          ? 'Nothing open'
-          : `${summary.overdue} overdue · ${summary.pending} to do`,
+          ? t('student.dashboard.hints.nothingOpen')
+          : t('student.dashboard.hints.overdueTodo', { overdue: summary.overdue, pending: summary.pending }),
       to: P.student.assignments,
     },
     {
-      label: 'Active courses',
+      label: t('student.dashboard.metrics.activeCourses'),
       value: String(summary.courseCount),
-      hint: summary.courseCount ? `${summary.credits} credits` : 'No enrolment yet',
+      hint: summary.courseCount
+        ? t('student.dashboard.hints.credits', { count: summary.credits })
+        : t('student.dashboard.hints.noEnrolment'),
       to: P.student.courses,
     },
   ];

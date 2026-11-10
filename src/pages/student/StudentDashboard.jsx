@@ -16,20 +16,24 @@ export default function StudentDashboard() {
   const { preview, workspace } = useWorkspace();
   const { t } = useI18n();
   const [context, setContext] = useState(null);
-  const [error, setError] = useState('');
+  // A flag, not a message: the wording is resolved at render time so it follows
+  // the interface language without refetching the record.
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let alive = true;
     loadStudentPortal()
       .then((data) => alive && setContext(data))
-      .catch(() => alive && setError('Your academic record could not be loaded. Please refresh the page.'));
+      .catch(() => alive && setFailed(true));
     return () => {
       alive = false;
     };
   }, []);
 
-  if (error) {
-    return <p className="card-surface px-5 py-6 text-[15px] text-critical">{error}</p>;
+  if (failed) {
+    return (
+      <p className="card-surface px-5 py-6 text-[15px] text-critical">{t('student.dashboard.error')}</p>
+    );
   }
 
   if (!context) {
@@ -65,14 +69,16 @@ export default function StudentDashboard() {
     return (
       <div className="card-surface px-5 py-10 text-center">
         <h1 className="text-[length:var(--type-section)] font-semibold tracking-[-0.02em] text-ink">
-          Your student record is not linked yet
+          {t('student.dashboard.unlinked.title')}
         </h1>
         <p className="mx-auto mt-2 max-w-md text-[15px] leading-relaxed text-mutedink">
-          {context.scopeNote || 'The student office links your account to the academic register.'} Once it is linked,
-          your courses, timetable and results appear here.
+          {t('student.dashboard.unlinked.body')}
         </p>
+        {context.scopeNote && (
+          <p className="mx-auto mt-1.5 max-w-md text-[13px] leading-relaxed text-mutedink/80">{context.scopeNote}</p>
+        )}
         <Link to={P.student.profile} className="btn-quiet mt-4 inline-flex">
-          View account details
+          {t('student.common.viewAccount')}
         </Link>
       </div>
     );

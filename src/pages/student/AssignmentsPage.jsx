@@ -2,24 +2,26 @@ import { useCallback, useEffect, useState } from 'react';
 import PageTitle from '@/components/shell/PageTitle';
 import AssignmentList from '@/components/student/AssignmentList';
 import { loadStudentPortal } from '@/lib/studentPortal';
+import { useI18n } from '@/i18n/I18nProvider';
 
 const FILTERS = [
-  { key: 'todo', label: 'To do', match: (row) => row.state === 'pending' || row.state === 'overdue' },
-  { key: 'submitted', label: 'Submitted', match: (row) => row.state === 'submitted' },
-  { key: 'graded', label: 'Graded', match: (row) => row.state === 'graded' },
-  { key: 'all', label: 'All', match: () => true },
+  { key: 'todo', keyLabel: 'student.assignments.filters.todo', match: (row) => row.state === 'pending' || row.state === 'overdue' },
+  { key: 'submitted', keyLabel: 'student.assignments.filters.submitted', match: (row) => row.state === 'submitted' },
+  { key: 'graded', keyLabel: 'student.assignments.filters.graded', match: (row) => row.state === 'graded' },
+  { key: 'all', keyLabel: 'student.assignments.filters.all', match: () => true },
 ];
 
 export default function AssignmentsPage() {
+  const { t } = useI18n();
   const [context, setContext] = useState(null);
   const [filter, setFilter] = useState('todo');
-  const [error, setError] = useState('');
+  const [failed, setFailed] = useState(false);
 
   const load = useCallback(
     () =>
       loadStudentPortal({ fresh: true })
         .then(setContext)
-        .catch(() => setError('Your assignments could not be loaded. Please refresh the page.')),
+        .catch(() => setFailed(true)),
     []
   );
 
@@ -27,7 +29,9 @@ export default function AssignmentsPage() {
     load();
   }, [load]);
 
-  if (error) return <p className="card-surface px-5 py-6 text-[15px] text-critical">{error}</p>;
+  if (failed) {
+    return <p className="card-surface px-5 py-6 text-[15px] text-critical">{t('student.assignments.error')}</p>;
+  }
   if (!context) return <div className="h-64 animate-pulse rounded-xl bg-white" />;
 
   const rows = context.assignments || [];
@@ -37,9 +41,9 @@ export default function AssignmentsPage() {
   if (!context.linked) {
     return (
       <div>
-        <PageTitle eyebrow="Student workspace" title="Assignments" />
+        <PageTitle eyebrow={t('student.assignments.eyebrow')} title={t('student.assignments.title')} />
         <p className="card-surface px-5 py-8 text-[15px] text-mutedink">
-          {context.scopeNote || 'Your account is not linked to a student record yet.'}
+          {context.scopeNote || t('student.common.notLinked')}
         </p>
       </div>
     );
@@ -48,10 +52,14 @@ export default function AssignmentsPage() {
   return (
     <div>
       <PageTitle
-        eyebrow="Student workspace"
-        title="Assignments"
-        description="Every piece of coursework set for your enrolled courses, with its deadline and where your submission stands."
-        meta={[`${todoCount} to do`, `${gradedCount} graded`, `${context.summary.overdue} overdue`]}
+        eyebrow={t('student.assignments.eyebrow')}
+        title={t('student.assignments.title')}
+        description={t('student.assignments.description')}
+        meta={[
+          t('student.assignments.metaTodo', { count: todoCount }),
+          t('student.assignments.metaGraded', { count: gradedCount }),
+          t('student.assignments.metaOverdue', { count: context.summary.overdue }),
+        ]}
       />
 
       <div className="mb-4 flex flex-wrap gap-1.5">
@@ -67,8 +75,8 @@ export default function AssignmentsPage() {
                 active ? 'bg-royal text-white' : 'border border-line bg-white text-ink hover:bg-canvas'
               }`}
             >
-              {item.label}
-              <span className={`ml-1.5 ${active ? 'text-white/70' : 'text-mutedink'}`}>{count}</span>
+              {t(item.keyLabel)}
+              <span className={`ms-1.5 ${active ? 'text-white/70' : 'text-mutedink'}`}>{count}</span>
             </button>
           );
         })}
@@ -76,9 +84,7 @@ export default function AssignmentsPage() {
 
       <div className="card-surface overflow-hidden">
         {rows.length === 0 ? (
-          <p className="px-5 py-8 text-center text-[15px] text-mutedink">
-            No assignments have been published for your courses yet.
-          </p>
+          <p className="px-5 py-8 text-center text-[15px] text-mutedink">{t('student.assignments.empty')}</p>
         ) : (
           <AssignmentList
             rows={rows.filter(FILTERS.find((item) => item.key === filter).match)}

@@ -3,12 +3,14 @@ import Surface from '@/components/shell/Surface';
 import StatusChip from '@/components/shell/StatusChip';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { dueLabel, daysUntil } from '@/lib/studentPortal';
+import { useI18n } from '@/i18n/I18nProvider';
 
 /**
  * The three most urgent real items: overdue work first, then the nearest
  * deadline, then a closing quiz.
  */
 export default function PriorityTasks({ context }) {
+  const { t } = useI18n();
   const rows = [];
 
   context.assignments
@@ -18,8 +20,8 @@ export default function PriorityTasks({ context }) {
       rows.push({
         id: `a-${row.id}`,
         title: row.title,
-        meta: `${row.courseCode} · ${dueLabel(row.dueDate)}`,
-        chip: { label: 'Overdue', tone: 'critical' },
+        meta: `${row.courseCode} · ${dueLabel(row.dueDate, t)}`,
+        chip: { label: t('student.dashboard.chips.overdue'), tone: 'critical' },
         to: P.student.assignments,
       })
     );
@@ -32,8 +34,8 @@ export default function PriorityTasks({ context }) {
       rows.push({
         id: `a-${row.id}`,
         title: row.title,
-        meta: `${row.courseCode} · ${dueLabel(row.dueDate)}`,
-        chip: { label: 'Due soon', tone: 'warning' },
+        meta: `${row.courseCode} · ${dueLabel(row.dueDate, t)}`,
+        chip: { label: t('student.dashboard.chips.dueSoon'), tone: 'warning' },
         to: P.student.assignments,
       })
     );
@@ -46,8 +48,11 @@ export default function PriorityTasks({ context }) {
       rows.push({
         id: `q-${quiz.id}`,
         title: quiz.title,
-        meta: `${quiz.courseCode} · quiz · ${dueLabel(quiz.availableUntil)}`,
-        chip: { label: 'Quiz', tone: 'brand' },
+        meta: t('student.dashboard.quizMeta', {
+          code: quiz.courseCode,
+          due: dueLabel(quiz.availableUntil, t),
+        }),
+        chip: { label: t('student.dashboard.chips.quiz'), tone: 'brand' },
         to: P.student.quizzes,
       })
     );
@@ -56,10 +61,10 @@ export default function PriorityTasks({ context }) {
 
   return (
     <Surface
-      title="Priority tasks"
+      title={t('student.dashboard.priorityTasks')}
       action={
         <Link to={P.student.assignments} className="link-quiet text-[14px]">
-          All work
+          {t('student.dashboard.allWork')}
         </Link>
       }
       bodyClassName={shown.length ? 'px-0 pb-0 pt-0' : undefined}
@@ -79,9 +84,7 @@ export default function PriorityTasks({ context }) {
           ))}
         </ul>
       ) : (
-        <p className="text-[14px] leading-relaxed text-mutedink">
-          Nothing overdue and no assessment closing soon.
-        </p>
+        <p className="text-[14px] leading-relaxed text-mutedink">{t('student.dashboard.nothingUrgent')}</p>
       )}
     </Surface>
   );
