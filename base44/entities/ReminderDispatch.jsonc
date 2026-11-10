@@ -1,0 +1,133 @@
+{
+  "name": "ReminderDispatch",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Account the reminder belongs to. Always derived server-side from the student record."
+    },
+    "student_id": {
+      "type": "string",
+      "description": "Student record the reminder was built from"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "in_app",
+        "email"
+      ],
+      "enumColors": [
+        "blue",
+        "purple"
+      ]
+    },
+    "category": {
+      "type": "string",
+      "description": "assignment | quiz | exam | overdue | attendance | performance | digest",
+      "enum": [
+        "assignment",
+        "quiz",
+        "exam",
+        "overdue",
+        "attendance",
+        "performance",
+        "digest"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "yellow",
+        "red",
+        "green",
+        "pink",
+        "gray"
+      ]
+    },
+    "task_type": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "course_code": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "description": "Reminder stage: d7 | d3 | d1 | d0 | overdue-1 | overdue-3 | overdue-7 | overdue-14 | alert | digest"
+    },
+    "dedupe_key": {
+      "type": "string",
+      "description": "user + task + stage + channel. Checked before anything is created or sent."
+    },
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Text used for the email body and for retries, so a retry never needs to rebuild the record"
+    },
+    "action_path": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "description": "pending before the provider call, sent once the provider accepts it, blocked when the provider refuses the recipient, failed for a retryable error. Delivered is never claimed: the provider does not confirm it.",
+      "enum": [
+        "pending",
+        "sent",
+        "failed",
+        "blocked",
+        "retry_exhausted"
+      ],
+      "enumColors": [
+        "gray",
+        "green",
+        "red",
+        "yellow",
+        "red"
+      ],
+      "default": "pending"
+    },
+    "attempts": {
+      "type": "number",
+      "default": 0
+    },
+    "last_error": {
+      "type": "string"
+    },
+    "next_attempt_at": {
+      "type": "string"
+    },
+    "sent_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "channel",
+    "dedupe_key"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

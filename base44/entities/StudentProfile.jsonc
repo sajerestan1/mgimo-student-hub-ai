@@ -33,34 +33,86 @@
     },
     "preferences": {
       "type": "object",
-      "description": "Academic alert preferences owned by the student. Essential account and security notifications are not controlled here.",
+      "description": "Reminder and alert preferences owned by the student. Essential account and security notifications are not controlled here. Email always goes to the account's own registered address, never to an address typed here.",
       "properties": {
-        "course_performance_alerts": {
-          "type": "boolean",
-          "default": true
-        },
-        "overall_performance_alerts": {
-          "type": "boolean",
-          "default": true
-        },
-        "attendance_alerts": {
-          "type": "boolean",
-          "default": true
-        },
-        "threshold_alerts": {
-          "type": "boolean",
-          "default": true
-        },
         "in_app_delivery": {
           "type": "boolean",
+          "description": "Master switch for in-app reminders",
           "default": true
         },
         "email_delivery": {
           "type": "boolean",
+          "description": "Master switch for email reminders, sent to the account's registered address",
           "default": false
+        },
+        "assignment_reminders": {
+          "type": "boolean",
+          "description": "Deadline reminders for assignments and homework",
+          "default": true
+        },
+        "quiz_reminders": {
+          "type": "boolean",
+          "description": "Closing-date reminders for quizzes",
+          "default": true
+        },
+        "exam_reminders": {
+          "type": "boolean",
+          "description": "Deadline reminders for examinations",
+          "default": true
+        },
+        "overdue_alerts": {
+          "type": "boolean",
+          "description": "Reminders for work past its deadline",
+          "default": true
+        },
+        "attendance_alerts": {
+          "type": "boolean",
+          "description": "Absence allowance and attendance risk",
+          "default": true
+        },
+        "threshold_alerts": {
+          "type": "boolean",
+          "description": "Attendance threshold warnings at 50, 70, 80, 90 and 100 percent of the allowance",
+          "default": true
+        },
+        "course_performance_alerts": {
+          "type": "boolean",
+          "description": "A course whose recorded results need attention",
+          "default": true
+        },
+        "overall_performance_alerts": {
+          "type": "boolean",
+          "description": "Semester average needing attention",
+          "default": true
+        },
+        "daily_digest": {
+          "type": "boolean",
+          "description": "One summary email each day in the preferred slot",
+          "default": false
+        },
+        "weekly_digest": {
+          "type": "boolean",
+          "description": "One summary email each Monday in the preferred slot",
+          "default": false
+        },
+        "reminder_timing": {
+          "type": "string",
+          "description": "Which scheduled run delivers this student's reminders",
+          "enum": [
+            "morning",
+            "afternoon",
+            "evening"
+          ],
+          "enumColors": [
+            "yellow",
+            "blue",
+            "purple"
+          ],
+          "default": "morning"
         },
         "digest": {
           "type": "string",
+          "description": "Superseded by daily_digest and weekly_digest; kept so existing stored preferences stay readable",
           "enum": [
             "off",
             "daily",

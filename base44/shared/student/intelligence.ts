@@ -25,10 +25,18 @@ export const PREFERENCE_DEFAULTS = {
   threshold_alerts: true,
   in_app_delivery: true,
   email_delivery: false,
+  assignment_reminders: true,
+  quiz_reminders: true,
+  exam_reminders: true,
+  overdue_alerts: true,
+  daily_digest: false,
+  weekly_digest: false,
+  reminder_timing: 'morning',
   digest: 'off',
 };
 
 const DIGEST_VALUES = ['off', 'daily', 'weekly'];
+const TIMING_VALUES = ['morning', 'afternoon', 'evening'];
 
 const list = (page) => (Array.isArray(page) ? page : page?.items || []);
 const round0 = (value) => Math.round(value);
@@ -40,10 +48,13 @@ export function normalisePreferences(raw) {
   const source = raw && typeof raw === 'object' ? raw : {};
   const next = { ...PREFERENCE_DEFAULTS };
   Object.keys(PREFERENCE_DEFAULTS).forEach((key) => {
-    if (key === 'digest') return;
+    if (key === 'digest' || key === 'reminder_timing') return;
     if (typeof source[key] === 'boolean') next[key] = source[key];
   });
   next.digest = DIGEST_VALUES.includes(source.digest) ? source.digest : PREFERENCE_DEFAULTS.digest;
+  next.reminder_timing = TIMING_VALUES.includes(source.reminder_timing)
+    ? source.reminder_timing
+    : PREFERENCE_DEFAULTS.reminder_timing;
   return next;
 }
 
@@ -312,9 +323,11 @@ const RISK_COPY = {
   ok: { level: 'positive', label: 'Attendance within the permitted allowance', action: 'No action needed: keep attending as you are.' },
 };
 
-export async function buildAcademicIntelligence(base44, user) {
+export async function buildAcademicIntelligence(base44, user, options = {}) {
   const svc = base44.asServiceRole;
-  const context = await buildStudentContext(base44, user);
+  // A caller that already holds the authorised context (the reminder sweep)
+  // passes it in, so one student's record is read once per run.
+  const context = options.context || (await buildStudentContext(base44, user));
   const stored = await loadStudentPreferences(svc, user.id);
   const policy = await loadPolicy(svc, { institution: stored.institution });
 
@@ -502,10 +515,10 @@ export function intelligenceBrief(intel) {
   return lines.join('\n');
 }
 
-// Alerts are written once per threshold per semester: the dedupe key is checked
-// before any row is created, so polling the overview cannot repeat an alert.
-export async function syncAcademicAlerts(svc, identity, intel, preferences) {
-  if (!intel.linked || !preferences.in_app_delivery) return [];
+// The alert rows are built here, independently of any delivery channel, so the
+// in-app inbox and email share one set of thresholds, records and dedupe keys.
+export function academicAlertRows(identity, intel, preferences) {
+  if (!intel.linked) return [];
   const rows = [];
   const term = intel.attendance.semesterLabel || 'current';
   const allowance = intel.attendance.allowance;
@@ -561,6 +574,14 @@ export async function syncAcademicAlerts(svc, identity, intel, preferences) {
     });
   }
 
+  return rows;
+}
+
+// Alerts are written once per threshold per semester: the dedupe key is checked
+// before any row is created, so polling the overview cannot repeat an alert.
+export async function syncAcademicAlerts(svc, identity, intel, preferences) {
+  if (!intel.linked || !preferences.in_app_delivery) return [];
+  const rows = academicAlertRows(identity, intel, preferences);
   if (!rows.length) return [];
 
   const keys = rows.map((row) => row.dedupe_key);

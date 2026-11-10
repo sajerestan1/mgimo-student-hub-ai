@@ -1,0 +1,59 @@
+<mjml>
+  <mj-head>
+    <mj-title>{{headline}}</mj-title>
+    <mj-preview>{{summary}}</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="Inter, Arial, sans-serif" />
+      <mj-section background-color="#ffffff" padding="0 36px" />
+      <mj-text color="#1e293b" font-size="15px" line-height="1.6" padding="0" />
+      <mj-button background-color="#14223d" color="#ffffff" border-radius="20px" font-weight="700" inner-padding="14px 28px" align="left" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f8f9fc">
+    <mj-section background-color="#14223d" padding="20px 36px">
+      <mj-column>
+        <mj-image src="https://media.base44.com/images/public/6aef2aa9ee2a398c4400224f/defd328d1_logo.png" alt="MGIMO Student Hub AI" width="40px" align="left" />
+        <mj-text color="#ffffff" font-size="15px" font-weight="700" padding="8px 0 0 0">MGIMO Student Hub AI</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="36px 36px 8px">
+      <mj-column>
+        <mj-text font-size="16px" font-weight="600">Hello {{first_name}},</mj-text>
+        <mj-text font-size="26px" line-height="1.25" font-weight="700" color="#14223d" padding="10px 0 0 0">{{headline}}</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="12px 36px 4px">
+      <mj-column>
+        <mj-text font-size="15px" line-height="1.7" css-class="reminder-body" padding="0">
+          <span style="white-space:pre-line;">{{summary}}</span>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="24px 36px 8px">
+      <mj-column>
+        <mj-button href="{{action_url}}">Open in the student portal</mj-button>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="16px 36px 32px">
+      <mj-column>
+        <mj-text font-size="13px" line-height="1.6" color="#64748b" padding="0">
+          You are receiving this because reminders are switched on for your own account. You can change or switch off
+          every reminder in Academic intelligence, under Alerts and preferences. Account and security notices are not
+          affected by that setting.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#f4f6f8" padding="20px 36px">
+      <mj-column>
+        <mj-text font-size="12px" line-height="1.6" color="#1e293b" padding="0">
+          MGIMO Student Hub AI sends this to the email address registered on your account.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
