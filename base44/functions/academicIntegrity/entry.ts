@@ -18,25 +18,14 @@ import {
 const AI_PROVIDER = 'Base44 Core integration — InvokeLLM';
 const AI_MODEL = 'platform automatic model selection';
 
-const summarise = (row) => ({
-  id: row.id,
-  title: row.title,
-  student_reference: row.student_reference || '',
-  word_count: row.word_count || 0,
-  similarity_percent: row.similarity_percent || 0,
-  matched_passage_count: row.matched_passage_count || 0,
-  repeated_passage_count: row.repeated_passage_count || 0,
-  ai_status: row.ai_status || 'skipped',
-  ai_indicator_level: row.ai_indicator_level || '',
-  analyzed_at: row.analyzed_at || row.created_date || '',
-});
-
 const asList = (value) => (Array.isArray(value) ? value : []);
 const asText = (value, limit) => String(value === undefined || value === null ? '' : value).slice(0, limit);
 
 // Academic Integrity: internal similarity plus an optional LLM screening pass.
-// Every comparison is made against text this account can already read, and the
-// caller's identity comes from the session, never from the request body.
+// This function computes only; it reads no academic record and writes nothing.
+// The caller's identity comes from the session and the caller's own comparison
+// set is supplied by the interface it reads, so a report can never name a source
+// that was not really compared.
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -46,24 +35,12 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || 'analyze');
 
-    if (action === 'list') {
-      const page = await base44.entities.IntegrityAnalysis.filter(
-        { user_id: user.id },
-        { sort: '-created_date', limit: 20 },
-      );
-      return Response.json({ items: asList(page.items).map(summarise) });
-    }
-
-    if (action === 'get') {
-      const id = String(body.id || '');
-      if (!id) return Response.json({ error: 'id is required' }, { status: 400 });
-      const record = await base44.entities.IntegrityAnalysis.get(id).catch((e) =>
-        e.status === 404 ? null : Promise.reject(e),
-      );
-      if (!record || record.user_id !== user.id) {
-        return Response.json({ error: 'Analysis not found' }, { status: 404 });
-      }
-      return Response.json({ record, passages: documentPassages(record) });
+    // Rebuilds the highlightable document for a stored record.
+    if (action === 'reopen') {
+      const text = asText(body.text, MAX_CHARS);
+      if (!text) return Response.json({ error: 'text is required' }, { status: 400 });
+      const matchSummary = asList(body.match_summary).slice(0, 60);
+      return Response.json({ passages: documentPassages({ text, match_summary: matchSummary }) });
     }
 
     if (action !== 'analyze') {
@@ -84,28 +61,25 @@ export default async function (req) {
       );
     }
 
-    // Corpus: only submissions this same account has already analysed. Nothing
-    // else is readable, so nothing else can be compared against.
-    const page = await base44.entities.IntegrityAnalysis.filter(
-      { user_id: user.id },
-      { sort: '-created_date', limit: MAX_CORPUS_DOCUMENTS },
-    );
+    // The comparison set: submissions this account has already analysed. It is
+    // read through the caller's own access rules, so nothing else can appear.
     const corpus = [];
     let corpusChars = 0;
     let corpusWords = 0;
-    asList(page.items).forEach((row) => {
-      const value = String(row.text || '');
-      if (!value || corpusChars + value.length > MAX_CORPUS_CHARS) return;
-      corpusChars += value.length;
-      corpusWords += row.word_count || countWords(value);
-      corpus.push({
-        id: row.id,
-        title: row.title,
-        student_reference: row.student_reference,
-        analyzed_at: row.analyzed_at,
-        text: value,
+    asList(body.corpus)
+      .slice(0, MAX_CORPUS_DOCUMENTS)
+      .forEach((row) => {
+        const value = asText(row && row.text, MAX_CHARS);
+        if (!value || corpusChars + value.length > MAX_CORPUS_CHARS) return;
+        corpusChars += value.length;
+        corpusWords += Number(row.word_count || 0) || countWords(value);
+        corpus.push({
+          title: asText(row && row.title, 180),
+          student_reference: asText(row && row.student_reference, 180),
+          analyzed_at: asText(row && row.analyzed_at, 40),
+          text: value,
+        });
       });
-    });
 
     const similarity = analyseSimilarity(text, corpus);
 
@@ -158,28 +132,28 @@ export default async function (req) {
         ai = {
           status: 'failed',
           truncated,
-          note: 'The screening service did not respond. The similarity analysis below is unaffected.',
+          note: 'The screening service did not respond. The similarity analysis is unaffected.',
         };
       }
     }
 
-    const flagged = similarity.passages.filter((passage) => passage.flagged);
     const matchSummary = [];
-    flagged.forEach((passage) => {
-      passage.sources.forEach((source) => {
-        matchSummary.push({
-          index: passage.index,
-          source_type: source.type,
-          source_title: source.title,
-          source_reference: source.reference,
-          overlap_percent: source.overlap,
-          excerpt: source.excerpt,
+    similarity.passages
+      .filter((passage) => passage.flagged)
+      .forEach((passage) => {
+        passage.sources.forEach((source) => {
+          matchSummary.push({
+            index: passage.index,
+            source_type: source.type,
+            source_title: source.title,
+            source_reference: source.reference,
+            overlap_percent: source.overlap,
+            excerpt: source.excerpt,
+          });
         });
       });
-    });
 
-    const record = await base44.entities.IntegrityAnalysis.create({
-      user_id: user.id,
+    const record = {
       title,
       student_reference: studentReference,
       word_count: words,
@@ -201,7 +175,7 @@ export default async function (req) {
       ai_truncated: ai.truncated === true,
       ai_note: ai.note || '',
       analyzed_at: new Date().toISOString(),
-    });
+    };
 
     return Response.json({ record, passages: similarity.passages });
   } catch (error) {
