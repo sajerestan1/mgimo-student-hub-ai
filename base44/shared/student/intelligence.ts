@@ -13,9 +13,9 @@ import { dedupeAttendanceRecords } from './attendance.ts';
 export const ATTENDANCE_THRESHOLDS = [50, 70, 80, 90, 100];
 
 export const DEFAULT_POLICY = {
-  institution: 'MGIMO University (Demo)',
+  institution: 'Digital Dean',
   absenceLimit: 15,
-  note: 'Prototype default for this demonstration institution. It is not a claim about every MGIMO course or official regulation.',
+  note: 'Prototype default for Digital Dean. It is not a claim about every course or official regulation.',
 };
 
 export const PREFERENCE_DEFAULTS = {

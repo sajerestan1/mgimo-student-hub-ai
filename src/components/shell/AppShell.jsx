@@ -102,8 +102,8 @@ export default function AppShell() {
         </main>
         <footer className="border-t border-line px-4 py-3 sm:px-6 lg:px-8">
           <p className="mx-auto max-w-[1320px] text-[10.5px] leading-relaxed text-mutedink">
-            Independent academic technology prototype developed for the MGIMO AI Challenge 2026. Not an official MGIMO
-            service. All people, records and metrics shown are fictional.
+            Academic Intelligence by Digital Dean. Digital Dean is a fictional institution; all people, records and
+            metrics shown are synthetic demonstration data.
           </p>
         </footer>
       </div>

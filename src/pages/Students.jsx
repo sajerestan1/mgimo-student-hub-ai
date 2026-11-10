@@ -45,7 +45,7 @@ export default function Students() {
 
   const exportRows = () => {
     downloadCsv(
-      'mgimo-students.csv',
+      'digitaldean-students.csv',
       [
         { label: 'Student', value: (row) => row.student.full_name },
         { label: 'Student ID', value: (row) => row.student.student_id },

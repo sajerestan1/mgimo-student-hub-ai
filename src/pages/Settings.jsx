@@ -170,8 +170,8 @@ export default function Settings() {
           </div>
           <p className="mt-2.5 flex gap-1.5 rounded-lg bg-[#FCF3DF]/60 px-2.5 py-2 text-[10.5px] leading-relaxed text-[#8A6C26]">
             <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            All records are fictional demonstration data generated for the MGIMO AI Challenge. They do not represent MGIMO
-            University, its students, staff or statistics.
+            All records are synthetic demonstration data for Digital Dean, a fictional institution. They do not represent
+            any real university, its students, staff or statistics.
           </p>
           <p className="mt-2 inline-flex items-center gap-1.5 text-[10px] text-mutedink">
             <History className="h-3 w-3" /> Administrative actions are attributable and auditable.

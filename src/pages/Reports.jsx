@@ -257,7 +257,7 @@ export default function Reports() {
   const exportReport = () => {
     if (!report) return;
     downloadCsv(
-      `mgimo-${openKey}-report.csv`,
+      `digitaldean-${openKey}-report.csv`,
       [
         { label: 'Metric', value: (row) => row.label },
         { label: 'Value', value: (row) => row.value },

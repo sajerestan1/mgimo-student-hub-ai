@@ -205,7 +205,7 @@ export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollap
           <BrandMark className="h-8 w-8 shrink-0" />
           <div className={cn('min-w-0 flex-1', collapsed && 'lg:hidden')}>
             <p className="truncate text-[15px] font-semibold tracking-[-0.01em] text-white">Academic Intelligence</p>
-            <p className="truncate text-[13px] text-white/45">{workspace.title}</p>
+            <p className="truncate text-[12px] uppercase tracking-[0.14em] text-white/45">Digital Dean</p>
           </div>
           <button
             type="button"

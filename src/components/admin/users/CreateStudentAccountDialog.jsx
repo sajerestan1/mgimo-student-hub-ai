@@ -85,7 +85,7 @@ export default function CreateStudentAccountDialog({ faculties = [], onClose, on
                 className={field}
                 value={form.email}
                 onChange={set('email')}
-                placeholder="name@mgimo.example"
+                placeholder="name@digitaldean.example"
                 required
               />
             </div>

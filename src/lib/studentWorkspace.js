@@ -24,7 +24,7 @@ export const STUDENT = {
   firstName: 'Alex',
   fullName: 'Alex Morozov',
   initials: 'AM',
-  email: 'a.morozov@student.mgimo.example',
+  email: 'a.morozov@student.digitaldean.example',
   studentId: 'IE-23-0417',
   programme: 'International Economic Relations',
   degree: 'BSc, 4 years',

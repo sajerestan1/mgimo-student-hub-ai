@@ -42,7 +42,7 @@ export default function Staff() {
 
   const exportStaff = () => {
     downloadCsv(
-      'mgimo-staff-workload.csv',
+      'digitaldean-staff-workload.csv',
       [
         { label: 'Staff member', value: (row) => row.full_name },
         { label: 'Title', value: (row) => row.title },

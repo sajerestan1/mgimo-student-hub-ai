@@ -1,6 +1,6 @@
 export default function BrandMark({ className = 'h-10 w-10' }) {
   return (
-    <svg viewBox="0 0 48 48" className={className} role="img" aria-label="Student Hub AI insignia" fill="none">
+    <svg viewBox="0 0 48 48" className={className} role="img" aria-label="Digital Dean Academic Intelligence insignia" fill="none">
       <defs>
         <linearGradient id="hubGold" x1="8" y1="4" x2="40" y2="44" gradientUnits="userSpaceOnUse">
           <stop stopColor="#EBD9AC" />

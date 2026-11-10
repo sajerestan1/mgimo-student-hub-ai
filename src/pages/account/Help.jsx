@@ -16,7 +16,7 @@ const FAQ = [
   },
   {
     q: 'Is this connected to a real university?',
-    a: 'No. This is an independent prototype built for the MGIMO AI Challenge 2026. It is not an official MGIMO service, and every student, professor and record shown is fictional.',
+    a: 'No. Digital Dean is a fictional institution created for this prototype, and every student, professor and record shown is synthetic demonstration data.',
   },
   {
     q: 'When will the AI assistant be live?',
@@ -81,7 +81,8 @@ export default function Help() {
       <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-line bg-white px-5 py-3.5">
         <LifeBuoy className="mt-0.5 h-4 w-4 shrink-0 text-mutedink" />
         <p className="text-[11px] leading-relaxed text-mutedink">
-          Independent academic technology prototype developed for the MGIMO AI Challenge 2026. Not an official MGIMO service.{' '}
+          Academic Intelligence by Digital Dean. Digital Dean is a fictional institution; all records shown are
+          demonstration data.{' '}
           <Link to={workspace.home} className="font-medium text-brand hover:underline">
             Back to my workspace
           </Link>

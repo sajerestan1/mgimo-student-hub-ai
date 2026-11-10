@@ -56,8 +56,7 @@ export default function AppLayout() {
           <Outlet />
           <footer className="mt-10 border-t border-[#E4EAF3] pt-4 text-[10.5px] leading-relaxed text-mutedink">
             <span className="font-medium text-ink">DEMONSTRATION DATA.</span> All faculties, students, staff, grades and
-            requests shown are fictional records generated for the MGIMO AI Challenge prototype. This is not an official
-            MGIMO University system.
+            requests shown are synthetic demonstration records for Digital Dean, a fictional institution.
           </footer>
         </main>
       </div>

@@ -168,7 +168,7 @@ export async function handleAssistant(base44, svc, identity, body) {
   }
 
   const prompt = [
-    'You are the writing assistant inside the Communication Center of a university student portal (MGIMO).',
+    'You are the writing assistant inside the Communication Center of the Digital Dean student portal (a fictional institution; the platform is called Academic Intelligence). Never name or imply any real-world institution.',
     `You are helping a ${identity.role} named ${identity.name}.`,
     `TASK: ${MODE_BRIEF[mode]}.`,
     mode === 'draft' ? `The recipient is a ${audience}.` : '',

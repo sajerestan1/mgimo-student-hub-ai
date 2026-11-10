@@ -50,8 +50,8 @@ export default function Sidebar({ role = 'dean', user, pendingRequests = 0, onSi
       <div className="flex items-center gap-3 px-5 pb-5 pt-6">
         <BrandMark className="h-10 w-10 shrink-0" />
         <div className="min-w-0">
-          <p className="font-heading text-[15px] leading-tight text-white">MGIMO</p>
-          <p className="mt-0.5 text-[9px] uppercase tracking-[0.22em] text-gold">AI Dean’s Office</p>
+          <p className="font-heading text-[15px] leading-tight text-white">Digital Dean</p>
+          <p className="mt-0.5 text-[9px] uppercase tracking-[0.22em] text-gold">Academic Intelligence</p>
         </div>
       </div>
 
@@ -123,7 +123,7 @@ export default function Sidebar({ role = 'dean', user, pendingRequests = 0, onSi
       </div>
 
       <p className="px-5 pb-4 text-[9px] leading-relaxed text-white/25">
-        Demonstration environment. Not an official MGIMO University system.
+        Demonstration environment. Digital Dean is a fictional institution.
       </p>
     </aside>
   );

@@ -71,7 +71,7 @@ async function digestSummary(base44, intel, fallback) {
   try {
     const answer = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: [
-        'Write a short academic digest for one university student, using only the figures below.',
+        'Write a short academic digest for one Digital Dean student, using only the figures below. Digital Dean is a fictional institution; never name another institution.',
         'Never invent a course, task, date, grade or policy, and never mention another student.',
         'Do not predict or guarantee grades. Three short sentences maximum, plain text, no headings.',
         '',

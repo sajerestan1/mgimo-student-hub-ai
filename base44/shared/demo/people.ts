@@ -2,7 +2,7 @@
 // below is invented for the prototype. Nothing here refers to a real person or
 // institution, and every row written from it is flagged is_demo = true.
 
-export const DEMO_DOMAIN = 'mgimo-demo.edu';
+export const DEMO_DOMAIN = 'digitaldean-demo.edu';
 
 export const FACULTIES = [
   {
@@ -42,7 +42,7 @@ export const PROFESSORS = [
     title: 'Professor',
     faculty: 'IR',
     dept: 'IRFP',
-    email: 'e.sokolova@staff.mgimo-demo.edu',
+    email: 'e.sokolova@staff.digitaldean-demo.edu',
     employment_status: 'full_time',
     weekly_hours: 18,
   },
@@ -51,7 +51,7 @@ export const PROFESSORS = [
     title: 'Associate Professor',
     faculty: 'IR',
     dept: 'RS',
-    email: 'p.rybakov@staff.mgimo-demo.edu',
+    email: 'p.rybakov@staff.digitaldean-demo.edu',
     employment_status: 'full_time',
     weekly_hours: 16,
   },
@@ -60,7 +60,7 @@ export const PROFESSORS = [
     title: 'Senior Lecturer',
     faculty: 'IR',
     dept: 'IRFP',
-    email: 'i.melnikova@staff.mgimo-demo.edu',
+    email: 'i.melnikova@staff.digitaldean-demo.edu',
     employment_status: 'part_time',
     weekly_hours: 12,
   },
@@ -69,7 +69,7 @@ export const PROFESSORS = [
     title: 'Professor',
     faculty: 'IER',
     dept: 'WE',
-    email: 'a.volkov@staff.mgimo-demo.edu',
+    email: 'a.volkov@staff.digitaldean-demo.edu',
     employment_status: 'full_time',
     weekly_hours: 18,
   },
@@ -78,7 +78,7 @@ export const PROFESSORS = [
     title: 'Associate Professor',
     faculty: 'IER',
     dept: 'IF',
-    email: 'o.timofeeva@staff.mgimo-demo.edu',
+    email: 'o.timofeeva@staff.digitaldean-demo.edu',
     employment_status: 'full_time',
     weekly_hours: 16,
   },
@@ -87,7 +87,7 @@ export const PROFESSORS = [
     title: 'Lecturer',
     faculty: 'IER',
     dept: 'WE',
-    email: 's.antonov@staff.mgimo-demo.edu',
+    email: 's.antonov@staff.digitaldean-demo.edu',
     employment_status: 'visiting',
     weekly_hours: 10,
   },

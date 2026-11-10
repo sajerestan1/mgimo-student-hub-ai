@@ -1,15 +1,17 @@
 // Fictional demonstration dataset for Academic Intelligence (Stage 1).
 // All people, records and metrics below are synthetic and exist only for the
-// MGIMO AI Challenge prototype.
+// Digital Dean demonstration environment.
 
 export const UNIVERSITY = {
-  name: 'Academic Intelligence University',
-  shortName: 'AIU',
+  name: 'Digital Dean',
+  platform: 'Academic Intelligence',
+  tagline: 'Your Academic Journey. One Intelligent Platform.',
+  shortName: 'DD',
   academicYear: '2026 / 2027',
   semester: 'Fall Semester',
   updated: 'Updated 7 Nov, 08:40',
   disclaimer:
-    'Independent academic technology prototype developed for the MGIMO AI Challenge 2026. Not an official MGIMO service.',
+    'Digital Dean is a fictional institution. All people, records and metrics shown are synthetic demonstration data.',
 };
 
 export const FACULTIES = [
