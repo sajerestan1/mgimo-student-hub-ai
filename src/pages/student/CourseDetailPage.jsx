@@ -15,6 +15,7 @@ import CourseAssignments from '@/components/lms/CourseAssignments';
 import CourseQuizRunner from '@/components/lms/CourseQuizRunner';
 import CourseDiscussion from '@/components/lms/CourseDiscussion';
 import CourseGradebook from '@/components/lms/CourseGradebook';
+import MaterialReader from '@/components/reader/MaterialReader';
 
 const TABS = [
   ['overview', 'Overview'],
@@ -34,6 +35,7 @@ export default function CourseDetailPage() {
   const [professor, setProfessor] = useState(null);
   const [tab, setTab] = useState('overview');
   const [resource, setResource] = useState(null);
+  const [translateResource, setTranslateResource] = useState(null);
   const [error, setError] = useState('');
 
   const refresh = async () => {
@@ -175,11 +177,11 @@ export default function CourseDetailPage() {
         <Surface title="Learning resources" subtitle={`${resources.length} resources across ${modules.length} modules`} bodyClassName="px-0 pb-0 pt-1">
           <ul className="divide-y divide-line">
             {resources.map((item) => (
-              <li key={item.id}>
+              <li key={item.id} className="flex items-start gap-2 pe-5">
                 <button
                   type="button"
                   onClick={() => setResource(item)}
-                  className="row-hover flex w-full items-start gap-3 px-5 py-3 text-left"
+                  className="row-hover flex min-w-0 flex-1 items-start gap-3 px-5 py-3 text-left"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-[12.5px] font-medium text-ink">{item.title}</p>
@@ -188,6 +190,14 @@ export default function CourseDetailPage() {
                   <span className="shrink-0 text-[10px] uppercase tracking-[0.06em] text-mutedink">
                     {item.type.replace(/_/g, ' ')}
                   </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTranslateResource(item)}
+                  className="btn-quiet btn-sm mt-2.5 shrink-0"
+                  title="Read this material beside a translation"
+                >
+                  Open Translation Reader
                 </button>
               </li>
             ))}
@@ -229,6 +239,7 @@ export default function CourseDetailPage() {
       {tab === 'gradebook' && <CourseGradebook course={course} gradebook={gradebook} />}
 
       <ResourceReader resource={resource} onClose={() => setResource(null)} />
+      <MaterialReader resource={translateResource} onClose={() => setTranslateResource(null)} />
     </div>
   );
 }

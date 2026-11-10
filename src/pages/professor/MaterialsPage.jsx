@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Languages } from 'lucide-react';
+import MaterialReader from '@/components/reader/MaterialReader';
+import { supportsTranslation } from '@/lib/materialTranslation';
 import PageTitle from '@/components/shell/PageTitle';
 import KpiStrip from '@/components/shell/KpiStrip';
 import Surface from '@/components/shell/Surface';
@@ -24,6 +27,8 @@ export default function ProfessorMaterialsPage() {
   const [resourceForm, setResourceForm] = useState(null);
   const [selectedModule, setSelectedModule] = useState('all');
   const [preview, setPreview] = useState(null);
+  const [previewTranslation, setPreviewTranslation] = useState(null);
+  const [previewId, setPreviewId] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -172,6 +177,37 @@ export default function ProfessorMaterialsPage() {
             ]}
           />
 
+          {!!resources.length && (
+            <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-white px-4 py-2.5">
+              <Languages className="h-4 w-4 shrink-0 text-mutedink" />
+              <p className="text-[13px] text-mutedink">Preview the student translation reader for</p>
+              <select
+                value={previewId || resources[0]?.id || ''}
+                onChange={(event) => setPreviewId(event.target.value)}
+                className="max-w-full rounded-lg border border-line bg-white px-2 py-1 text-[13px] text-ink"
+              >
+                {resources.map((row) => (
+                  <option key={row.id} value={row.id}>
+                    {row.title}
+                    {supportsTranslation(row) ? '' : ' — no readable text'}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="btn-quiet btn-sm"
+                onClick={() =>
+                  setPreviewTranslation(resources.find((row) => row.id === (previewId || resources[0]?.id)) || null)
+                }
+              >
+                Open reader
+              </button>
+              <span className="text-[13px] text-mutedink">
+                {resources.filter(supportsTranslation).length} of {resources.length} materials can be translated
+              </span>
+            </div>
+          )}
+
           <div className="grid items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
             <div className="space-y-4">
               <ContentModuleList
@@ -225,6 +261,7 @@ export default function ProfessorMaterialsPage() {
       )}
 
       <ResourcePreviewDialog resource={preview} onClose={() => setPreview(null)} />
+      <MaterialReader resource={previewTranslation} onClose={() => setPreviewTranslation(null)} />
     </div>
   );
 }

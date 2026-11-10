@@ -1,0 +1,146 @@
+{
+  "name": "MaterialTranslation",
+  "type": "object",
+  "properties": {
+    "resource_id": {
+      "type": "string",
+      "description": "LearningResource this translation belongs to. The original record is never modified."
+    },
+    "course_id": {
+      "type": "string"
+    },
+    "resource_title": {
+      "type": "string"
+    },
+    "course_code": {
+      "type": "string"
+    },
+    "source_checksum": {
+      "type": "string",
+      "description": "Fingerprint of the extracted source text. A different checksum means the material changed."
+    },
+    "source_format": {
+      "type": "string",
+      "description": "markdown | text | pdf | image. Anything else is reported as unsupported instead of being guessed."
+    },
+    "source_language": {
+      "type": "string"
+    },
+    "target_language": {
+      "type": "string",
+      "enum": [
+        "en",
+        "ru",
+        "fr",
+        "zh",
+        "ar"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "green",
+        "yellow",
+        "red"
+      ]
+    },
+    "sections": {
+      "type": "array",
+      "description": "Aligned document sections. Each id links the original paragraph to its translation.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "description": "heading | paragraph | list | table"
+          },
+          "heading": {
+            "type": "string"
+          },
+          "original": {
+            "type": "string"
+          },
+          "translated_heading": {
+            "type": "string"
+          },
+          "translated": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "translating",
+        "complete",
+        "outdated",
+        "failed",
+        "unsupported"
+      ],
+      "enumColors": [
+        "gray",
+        "blue",
+        "green",
+        "yellow",
+        "red",
+        "gray"
+      ],
+      "default": "pending"
+    },
+    "chunk_total": {
+      "type": "number",
+      "default": 0
+    },
+    "chunk_done": {
+      "type": "number",
+      "default": 0
+    },
+    "attempts": {
+      "type": "number",
+      "default": 0
+    },
+    "error": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "translated_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "resource_id",
+    "target_language",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
