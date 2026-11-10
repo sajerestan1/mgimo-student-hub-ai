@@ -6,8 +6,9 @@ const sameEmail = (a, b) => Boolean(a) && Boolean(b) && String(a).toLowerCase() 
 
 // Resolves the calling account to its academic profile with service-role reads,
 // so the course list never depends on which per-record read rule happens to pass.
-// An account with no linked profile claims one unlinked demo profile once, which
-// keeps every demo account usable and stays idempotent (a profile is claimed once).
+// A professor profile is linked only by an exact email match. No unlinked record is
+// ever handed to an account that merely holds the professor role: a name or a role
+// never stands in for evidence that the profile belongs to this person.
 async function findProfessor(svc, user) {
   const linked = list(await svc.entities.Professor.filter({ user_id: user.id }, { limit: 2 }))[0];
   if (linked) return linked;
@@ -27,21 +28,6 @@ async function findStudent(svc, user) {
   return identity.student;
 }
 
-async function claimProfessor(svc, user) {
-  const published = list(await svc.entities.Course.filter({ status: 'published' }, { limit: 200 }));
-  const load = new Map();
-  published.forEach((course) => load.set(course.professor_id, (load.get(course.professor_id) || 0) + 1));
-
-  const spare = list(await svc.entities.Professor.list('-created_date', 300))
-    .filter((p) => !p.user_id)
-    .sort((a, b) => (load.get(b.id) || 0) - (load.get(a.id) || 0));
-
-  const target = spare[0];
-  if (!target) return null;
-  await svc.entities.Professor.update(target.id, { user_id: user.id });
-  return { ...target, user_id: user.id };
-}
-
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -59,12 +45,9 @@ export default async function (req) {
       ? { ...caller, email: String(payload.asEmail), role: payload.asRole || 'user', id: payload.asUserId || '' }
       : caller;
 
-    const role = String(user.role || 'user').toLowerCase();
-
-    let professor = readOnly
+    const professor = readOnly
       ? list(await svc.entities.Professor.list('-created_date', 300)).find((p) => sameEmail(p.email, user.email)) || null
       : await findProfessor(svc, user);
-    if (!professor && !readOnly && role === 'professor') professor = await claimProfessor(svc, user);
 
     if (professor) {
       const rows = list(await svc.entities.Course.filter({ professor_id: professor.id }, { sort: 'code', limit: 100 }));

@@ -58,23 +58,38 @@ export default function BulkGradingPage() {
     const next = { ...drafts };
     let matched = 0;
     const missed = [];
+    const disputed = [];
     parsed.forEach(({ label, score }) => {
-      const key = label.toLowerCase();
-      const hit = rows.find(
+      // A student number identifies exactly one submission. A name does not, so it
+      // is accepted only when it matches a single row and is never matched partially.
+      const key = label.trim().toLowerCase();
+      if (!key) return;
+      const hits = rows.filter(
         (submission) =>
-          submission.student_name?.toLowerCase() === key ||
-          submission.student_id?.toLowerCase() === key ||
-          submission.student_name?.toLowerCase().includes(key)
+          submission.student_id?.toLowerCase() === key || submission.student_name?.toLowerCase() === key
       );
-      if (!hit) {
-        missed.push(label);
+      const ids = [...new Set(hits.map((submission) => submission.id))];
+      if (ids.length !== 1) {
+        if (ids.length) disputed.push(label);
+        else missed.push(label);
         return;
       }
-      next[hit.id] = String(Math.min(maxScore, Math.max(0, Math.round(score))));
+      next[hits[0].id] = String(Math.min(maxScore, Math.max(0, Math.round(score))));
       matched += 1;
     });
     setDrafts(next);
-    setError(missed.length ? `${missed.length} name${missed.length === 1 ? '' : 's'} could not be matched: ${missed.slice(0, 4).join(', ')}` : '');
+    const problems = [];
+    if (missed.length) {
+      problems.push(
+        `${missed.length} entr${missed.length === 1 ? 'y' : 'ies'} could not be matched: ${missed.slice(0, 4).join(', ')}`
+      );
+    }
+    if (disputed.length) {
+      problems.push(
+        `${disputed.length} entr${disputed.length === 1 ? 'y matches' : 'ies match'} more than one student, so ${disputed.length === 1 ? 'it was' : 'they were'} skipped: ${disputed.slice(0, 4).join(', ')}`
+      );
+    }
+    setError(problems.join('. '));
     setNotice(`${matched} mark${matched === 1 ? '' : 's'} read from the file — review, then commit.`);
   };
 
@@ -182,7 +197,7 @@ export default function BulkGradingPage() {
           </label>
         </div>
         <p className="mt-2 text-[10.5px] leading-relaxed text-mutedink">
-          File format: one student per line with their mark — <span className="font-medium text-ink">Student name, 85</span>. Commas, semicolons and tabs all work; the header row is ignored.
+          File format: one student per line with their mark — <span className="font-medium text-ink">MG-2024-1042, 85</span> or <span className="font-medium text-ink">Student name, 85</span>. Commas, semicolons and tabs all work; the header row is ignored, and a name is skipped if two students share it.
         </p>
       </Surface>
 
