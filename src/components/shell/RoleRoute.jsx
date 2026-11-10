@@ -1,12 +1,12 @@
+import AccessDenied from '@/pages/AccessDenied';
 import { useWorkspace } from '@/lib/workspaceRole';
-import AccessDenied from './AccessDenied';
 
 const LABELS = { student: 'Student', professor: 'Professor', dean: 'Administration' };
 
 /**
- * Route-level authorisation. The target workspace is compared with the role on
- * the authenticated account: authorised requests render, everything else is
- * refused explicitly instead of being redirected into another workspace.
+ * Second-line authorisation for a workspace page. The WorkspaceGuard above the
+ * shell already refuses a wrong-workspace request on the standalone page; this
+ * keeps the same rule at the page itself.
  */
 export default function RoleRoute({ role, children }) {
   const { canView } = useWorkspace();

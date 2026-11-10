@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import AccessDenied from './AccessDenied';
+import AccessDenied from '@/pages/AccessDenied';
 
 // Administration surface. The routing guard is a convenience only: the server
 // function behind every action re-verifies the administrator role itself.

@@ -68,7 +68,7 @@ import CompleteProfile from '@/pages/account/CompleteProfile';
 import AdminOnlyRoute from '@/components/shell/AdminOnlyRoute';
 import DeanAssistant from '@/pages/Assistant';
 import CommunicationCenter from '@/pages/communication/CommunicationCenter';
-import WorkspaceAccess from '@/pages/WorkspaceAccess';
+import WorkspaceGuard from '@/components/shell/WorkspaceGuard';
 import InvitationJoin from '@/pages/communication/InvitationJoin';
 import { AdminDataProvider } from '@/lib/AdminDataContext';
 // Add page imports here
@@ -107,7 +107,10 @@ const AuthenticatedApp = () => {
       <Route
         element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}
       >
-        <Route element={<AppShell />}>
+        {/* Authorisation resolves before the workspace shell mounts, so a denied
+            request renders on its own neutral page instead of inside a workspace. */}
+        <Route element={<WorkspaceGuard />}>
+          <Route element={<AppShell />}>
           <Route path="/dashboard" element={<RoleDashboard />} />
           <Route path="/complete-profile" element={<CompleteProfile />} />
           <Route
@@ -124,11 +127,7 @@ const AuthenticatedApp = () => {
           <Route path="/professor" element={<Navigate to={MODULE_PATHS.professor.dashboard} replace />} />
           <Route path="/dean" element={<Navigate to={MODULE_PATHS.dean.dashboard} replace />} />
 
-          {/* A requested workspace opens only when the role on the authenticated
-              account owns it; every other request is refused explicitly. */}
-          <Route path="/workspace/:key" element={<WorkspaceAccess />} />
-          <Route path="/administration" element={<WorkspaceAccess workspaceKey="administration" />} />
-          <Route path="/admin" element={<WorkspaceAccess workspaceKey="administration" />} />
+          {/* A requested workspace is checked by WorkspaceGuard above the shell. */}
 
           {/* Student workspace: dedicated pages, all owned by the student role. */}
           <Route
@@ -350,6 +349,7 @@ const AuthenticatedApp = () => {
           <Route path="/settings" element={<UserSettings />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/help" element={<Help />} />
+          </Route>
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
