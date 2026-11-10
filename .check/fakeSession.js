@@ -1,22 +1,21 @@
 export function useAccountSession() {
+  const user = (global.__SESSION__ || {}).user || {};
   return {
     loading: false,
     error: null,
+    refresh: () => {},
     data: {
-      role: 'student',
       provisioned: true,
       blocked: false,
       status: 'active',
+      role: user.role || 'student',
       profile: {
-        full_name: 'Sajere Stanley',
-        contact_email: 'sajere@dean.edu',
-        phone: '+371 2000 0000',
-        photo_uri: 'mp/private/photo.jpg',
+        phone: '+10000000000',
+        contact_email: user.email || 'account@digitaldean.edu',
+        photo_uri: 'profile.png',
+        faculty_id: 'faculty-1',
         group_name: 'IR-21A',
-        faculty_id: 'fac-governance',
-        programme: 'International Relations',
       },
     },
-    refresh: () => {},
   };
 }

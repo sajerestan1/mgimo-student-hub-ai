@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { useWorkspace, WORKSPACES } from '@/lib/workspaceRole';
 import AccessDenied from '@/pages/AccessDenied';
+import PageNotFound from '@/lib/PageNotFound';
 
 const LABELS = { student: 'Student', professor: 'Professor', dean: 'Administration' };
 
@@ -46,7 +47,8 @@ export default function WorkspaceGuard() {
 
   // An explicit workspace request: compare it with the account's real role.
   if (isEntry) {
-    if (!requested) return <AccessDenied requested="requested" detail="That workspace does not exist." />;
+    // An arbitrary workspace value is not a route in this app.
+    if (!requested) return <PageNotFound />;
     if (!canView(requested)) return <AccessDenied requested={LABELS[requested]} />;
     return <Navigate to={WORKSPACES[requested].home} replace />;
   }

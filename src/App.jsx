@@ -127,6 +127,14 @@ const AuthenticatedApp = () => {
           <Route path="/professor" element={<Navigate to={MODULE_PATHS.professor.dashboard} replace />} />
           <Route path="/dean" element={<Navigate to={MODULE_PATHS.dean.dashboard} replace />} />
 
+          {/* Workspace entry routes: /workspace/:workspace is the destination of the
+              welcome cards. WorkspaceGuard above resolves each request against the
+              account's real role, so an allowed one opens that workspace's home and
+              a denied one renders the standalone refusal page. Neither is a 404. */}
+          <Route path="/workspace/:workspace" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/administration" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
+
           {/* A requested workspace is checked by WorkspaceGuard above the shell. */}
 
           {/* Student workspace: dedicated pages, all owned by the student role. */}
