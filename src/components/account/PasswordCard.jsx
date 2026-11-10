@@ -3,12 +3,14 @@ import { base44 } from '@/api/base44Client';
 import { KeyRound, Loader2 } from 'lucide-react';
 import Surface from '@/components/shell/Surface';
 import { useAuth } from '@/lib/AuthContext';
+import { useI18n } from '@/i18n/I18nProvider';
 
 // Password changes stay with the account holder: the platform verifies the
 // current password and owns the credential. No password reaches this app's
 // database.
 export default function PasswordCard() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [form, setForm] = useState({ current: '', next: '', confirm: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -17,8 +19,8 @@ export default function PasswordCard() {
   const strength = (() => {
     const value = form.next;
     if (!value) return null;
-    if (value.length < 8) return 'Use at least 8 characters';
-    if (!/[A-Za-z]/.test(value) || !/[0-9]/.test(value)) return 'Mix letters and numbers';
+    if (value.length < 8) return t('password.tooShort');
+    if (!/[A-Za-z]/.test(value) || !/[0-9]/.test(value)) return t('password.mix');
     return null;
   })();
 
@@ -31,7 +33,7 @@ export default function PasswordCard() {
       return;
     }
     if (form.next !== form.confirm) {
-      setError('The two new passwords do not match.');
+      setError(t('password.mismatch'));
       return;
     }
     setBusy(true);
@@ -42,9 +44,9 @@ export default function PasswordCard() {
         newPassword: form.next,
       });
       setForm({ current: '', next: '', confirm: '' });
-      setDone('Your password has been updated.');
+      setDone(t('password.updated'));
     } catch (changeError) {
-      setError(changeError?.message || 'The password could not be changed.');
+      setError(changeError?.message || t('password.failed'));
     } finally {
       setBusy(false);
     }
@@ -53,14 +55,15 @@ export default function PasswordCard() {
   const field = 'mt-1 h-10 w-full rounded-lg border border-line bg-white px-3 text-[15px] text-ink';
 
   return (
-    <Surface title="Password" subtitle="Only you can change your password">
+    <Surface title={t('password.title')} subtitle={t('password.subtitle')}>
       <form onSubmit={submit} className="space-y-3">
         <div>
-          <label className="text-[15px] font-medium text-ink" htmlFor="current-password">Current password</label>
+          <label className="text-[15px] font-medium text-ink" htmlFor="current-password">{t('password.current')}</label>
           <input
             id="current-password"
             type="password"
             autoComplete="current-password"
+            dir="ltr"
             className={field}
             value={form.current}
             onChange={(event) => setForm({ ...form, current: event.target.value })}
@@ -69,11 +72,12 @@ export default function PasswordCard() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label className="text-[15px] font-medium text-ink" htmlFor="new-password">New password</label>
+            <label className="text-[15px] font-medium text-ink" htmlFor="new-password">{t('password.next')}</label>
             <input
               id="new-password"
               type="password"
               autoComplete="new-password"
+              dir="ltr"
               className={field}
               value={form.next}
               onChange={(event) => setForm({ ...form, next: event.target.value })}
@@ -81,11 +85,12 @@ export default function PasswordCard() {
             />
           </div>
           <div>
-            <label className="text-[15px] font-medium text-ink" htmlFor="confirm-password">Confirm new password</label>
+            <label className="text-[15px] font-medium text-ink" htmlFor="confirm-password">{t('password.confirm')}</label>
             <input
               id="confirm-password"
               type="password"
               autoComplete="new-password"
+              dir="ltr"
               className={field}
               value={form.confirm}
               onChange={(event) => setForm({ ...form, confirm: event.target.value })}
@@ -98,7 +103,7 @@ export default function PasswordCard() {
         {done && <p className="text-[13px] text-positive">{done}</p>}
         <button type="submit" className="btn-primary" disabled={busy}>
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
-          Update password
+          {t('password.update')}
         </button>
       </form>
     </Surface>

@@ -1,14 +1,16 @@
 import React from "react";
 import BrandMark from "@/components/shell/BrandMark";
 import { UNIVERSITY } from "@/lib/demoUniversity";
-
-const POINTS = [
-  "Student, professor and dean experiences",
-  "One academic record behind every view",
-  "Role-aware navigation and access",
-];
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function AuthLayout({ icon: Icon, title, subtitle, footer, children }) {
+  const { t } = useI18n();
+  const points = [
+    t("auth.points.experiences"),
+    t("auth.points.record"),
+    t("auth.points.roles"),
+  ];
+
   return (
     <div className="flex min-h-dvh bg-white">
       <aside className="relative hidden w-[46%] flex-col justify-between overflow-hidden bg-navy px-10 py-12 lg:flex xl:px-14">
@@ -18,20 +20,20 @@ export default function AuthLayout({ icon: Icon, title, subtitle, footer, childr
         <div className="relative flex items-center gap-2.5">
           <BrandMark className="h-9 w-9" />
           <div>
-            <p className="text-[13px] font-semibold tracking-tight text-white">Academic Intelligence</p>
+            <p className="text-[13px] font-semibold tracking-tight text-white">{t("common.appName")}</p>
             <p className="text-[10.5px] text-white/45">{UNIVERSITY.name}</p>
           </div>
         </div>
 
         <div className="relative">
           <h2 className="max-w-sm text-[28px] font-semibold leading-[1.18] tracking-[-0.02em] text-white xl:text-[32px]">
-            One intelligence layer for the whole university.
+            {t("auth.headline")}
           </h2>
           <p className="mt-3 max-w-sm text-[12.5px] leading-relaxed text-white/55">
-            Academic life, teaching and institutional oversight connected through a single academic record.
+            {t("auth.headlineBody")}
           </p>
           <ul className="mt-6 space-y-2.5">
-            {POINTS.map((point) => (
+            {points.map((point) => (
               <li key={point} className="flex items-center gap-2 text-[12px] text-white/70">
                 <span className="h-1.5 w-1.5 rounded-full bg-brand" /> {point}
               </li>
@@ -46,7 +48,7 @@ export default function AuthLayout({ icon: Icon, title, subtitle, footer, childr
         <div className="w-full max-w-[400px]">
           <div className="mb-6 flex items-center gap-2.5 lg:hidden">
             <BrandMark className="h-8 w-8" />
-            <p className="text-[13px] font-semibold tracking-tight text-ink">Academic Intelligence</p>
+            <p className="text-[13px] font-semibold tracking-tight text-ink">{t("common.appName")}</p>
           </div>
 
           <div className="mb-5 flex items-start gap-3">

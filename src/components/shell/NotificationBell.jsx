@@ -4,6 +4,7 @@ import { Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatStamp } from '@/lib/communication/api';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useI18n } from '@/i18n/I18nProvider';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,7 @@ const VISIBLE = 6;
 export default function NotificationBell() {
   const navigate = useNavigate();
   const { items, unread, loading, markRead, markAllRead } = useNotifications();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
   const openItem = async (item) => {
@@ -43,7 +45,11 @@ export default function NotificationBell() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <button type="button" className="icon-btn relative" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}>
+        <button
+          type="button"
+          className="icon-btn relative"
+          aria-label={unread ? t('notifications.ariaUnread', { count: unread }) : t('notifications.ariaLabel')}
+        >
           <Bell className="h-[18px] w-[18px]" />
           {unread > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex min-w-[17px] items-center justify-center rounded-full bg-critical px-1 text-[11px] font-semibold leading-[17px] text-white ring-2 ring-white">
@@ -55,8 +61,12 @@ export default function NotificationBell() {
       <DropdownMenuContent align="end" className="w-[22rem] max-w-[calc(100vw-1.5rem)]">
         <div className="flex items-center justify-between gap-2 px-2 py-1.5">
           <DropdownMenuLabel className="p-0 text-[14px] text-ink">
-            Notifications
-            {unread > 0 && <span className="ml-1.5 font-normal text-mutedink">({unread} new)</span>}
+            {t('notifications.title')}
+            {unread > 0 && (
+              <span className="ms-1.5 font-normal text-mutedink">
+                {t('notifications.newCount', { count: unread })}
+              </span>
+            )}
           </DropdownMenuLabel>
           {unread > 0 && (
             <button
@@ -64,15 +74,15 @@ export default function NotificationBell() {
               onClick={markEverything}
               className="text-[13px] font-medium text-brand hover:text-brand-deep"
             >
-              Mark all read
+              {t('notifications.markAllRead')}
             </button>
           )}
         </div>
         <DropdownMenuSeparator />
 
-        {loading && <p className="px-3 py-4 text-[13px] text-mutedink">Loading notifications…</p>}
+        {loading && <p className="px-3 py-4 text-[13px] text-mutedink">{t('notifications.loading')}</p>}
         {!loading && !preview.length && (
-          <p className="px-3 py-4 text-[13px] text-mutedink">No notifications yet.</p>
+          <p className="px-3 py-4 text-[13px] text-mutedink">{t('notifications.empty')}</p>
         )}
 
         {preview.map((item) => {
@@ -116,7 +126,7 @@ export default function NotificationBell() {
           }}
           className="w-full px-3 py-2 text-center text-[14px] font-medium text-brand hover:bg-canvas"
         >
-          View all notifications
+          {t('notifications.viewAll')}
         </button>
       </DropdownMenuContent>
     </DropdownMenu>

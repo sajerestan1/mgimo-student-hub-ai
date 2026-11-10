@@ -20,7 +20,7 @@ const WORKSPACE_SUMMARY = {
 export default function ComingSoon() {
   const { pathname } = useLocation();
   const { workspace } = useWorkspace();
-  const { t, isRTL } = useI18n();
+  const { t } = useI18n();
 
   const owner = Object.entries(PATH_OWNER).find(([prefix]) => pathname.startsWith(prefix))?.[1];
   if (owner && owner !== workspace.role) return <Navigate to={workspace.home} replace />;

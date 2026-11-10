@@ -4,45 +4,30 @@ import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useWorkspace } from '@/lib/workspaceRole';
+import { useI18n } from '@/i18n/I18nProvider';
 
-const FAQ = [
-  {
-    q: 'What is available in this stage?',
-    a: 'Stage 1 delivers the application shell, role-aware navigation and the student, professor and dean dashboards. Modules such as courses, the learning platform and analytics open a description of what Stage 2 will build.',
-  },
-  {
-    q: 'Why can’t I open another workspace?',
-    a: 'Your workspace follows the role assigned to your account, and each workspace has its own routes: a student account cannot open the professor or command-center dashboards, and those URLs redirect to your own dashboard.',
-  },
-  {
-    q: 'Is this connected to a real university?',
-    a: 'No. Digital Dean is a fictional institution created for this prototype, and every student, professor and record shown is synthetic demonstration data.',
-  },
-  {
-    q: 'When will the AI assistant be live?',
-    a: 'The risk radar and assistant entry points are designed, but the analysis layer is not implemented in Stage 1. Nothing in the interface claims a live AI analysis.',
-  },
-];
+const FAQ_KEYS = ['1', '2', '3', '4'];
 
 export default function Help() {
   const { workspace } = useWorkspace();
+  const { t } = useI18n();
 
   return (
     <div className="mx-auto max-w-3xl">
       <PageTitle
-        eyebrow="Support"
-        title="Help & support"
-        description="Guidance for the prototype and the workspace you are currently using."
+        eyebrow={t('help.eyebrow')}
+        title={t('help.title')}
+        description={t('help.description')}
       />
 
-      <Surface title="Frequently asked questions" bodyClassName="px-5 pb-1 pt-0">
+      <Surface title={t('help.faqTitle')} bodyClassName="px-5 pb-1 pt-0">
         <Accordion type="single" collapsible className="w-full">
-          {FAQ.map((item, index) => (
-            <AccordionItem key={item.q} value={`item-${index}`} className="border-b border-line last:border-0">
-              <AccordionTrigger className="py-3.5 text-left text-[13px] font-medium text-ink hover:no-underline">
-                {item.q}
+          {FAQ_KEYS.map((key) => (
+            <AccordionItem key={key} value={`item-${key}`} className="border-b border-line last:border-0">
+              <AccordionTrigger className="py-3.5 text-start text-[14px] font-medium text-ink hover:no-underline">
+                {t(`help.q${key}`)}
               </AccordionTrigger>
-              <AccordionContent className="pb-3.5 text-[12px] leading-relaxed text-mutedink">{item.a}</AccordionContent>
+              <AccordionContent className="pb-3.5 text-[13px] leading-relaxed text-mutedink">{t(`help.a${key}`)}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
@@ -53,38 +38,33 @@ export default function Help() {
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand/10 text-brand">
             <BookOpen className="h-4 w-4" />
           </span>
-          <p className="mt-2 text-[12.5px] font-medium text-ink">Getting started</p>
-          <p className="mt-1 text-[11px] leading-relaxed text-mutedink">
-            Start from your {workspace.label.toLowerCase()} dashboard, then use the sidebar groups to reach each area.
+          <p className="mt-2 text-[14px] font-medium text-ink">{t('help.gettingStarted')}</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-mutedink">
+            {t('help.gettingStartedBody', { workspace: t(workspace.label) })}
           </p>
         </div>
         <div className="card-surface p-4">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand/10 text-brand">
             <ShieldCheck className="h-4 w-4" />
           </span>
-          <p className="mt-2 text-[12.5px] font-medium text-ink">Access & privacy</p>
-          <p className="mt-1 text-[11px] leading-relaxed text-mutedink">
-            Workspaces follow the role on your account. Record-level permissions are prepared for Stage 2.
-          </p>
+          <p className="mt-2 text-[14px] font-medium text-ink">{t('help.accessTitle')}</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-mutedink">{t('help.accessBody')}</p>
         </div>
         <div className="card-surface p-4">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand/10 text-brand">
             <MessageCircle className="h-4 w-4" />
           </span>
-          <p className="mt-2 text-[12.5px] font-medium text-ink">Feedback</p>
-          <p className="mt-1 text-[11px] leading-relaxed text-mutedink">
-            This is a competition prototype — feedback shapes what gets built in the next stage.
-          </p>
+          <p className="mt-2 text-[14px] font-medium text-ink">{t('help.feedbackTitle')}</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-mutedink">{t('help.feedbackBody')}</p>
         </div>
       </div>
 
       <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-line bg-white px-5 py-3.5">
         <LifeBuoy className="mt-0.5 h-4 w-4 shrink-0 text-mutedink" />
-        <p className="text-[11px] leading-relaxed text-mutedink">
-          Academic Intelligence by Digital Dean. Digital Dean is a fictional institution; all records shown are
-          demonstration data.{' '}
+        <p className="text-[13px] leading-relaxed text-mutedink">
+          {t('help.footer')}{' '}
           <Link to={workspace.home} className="font-medium text-brand hover:underline">
-            Back to my workspace
+            {t('help.backToWorkspace')}
           </Link>
         </p>
       </div>
