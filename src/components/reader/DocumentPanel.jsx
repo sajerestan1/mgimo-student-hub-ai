@@ -1,26 +1,13 @@
+import SectionBody from './SectionBody';
 import { languageLabel } from '@/lib/materialTranslation';
 
-const escape = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-function Highlighted({ text, term }) {
-  if (!term) return text;
-  const parts = String(text).split(new RegExp(`(${escape(term)})`, 'gi'));
-  return parts.map((part, index) =>
-    part.toLowerCase() === term.toLowerCase() ? (
-      <mark key={`${part}-${index}`} className="rounded bg-gold-light px-0.5 text-ink">
-        {part}
-      </mark>
-    ) : (
-      part
-    )
-  );
-}
-
-const BODY_CLASS = {
-  heading: 'text-[length:var(--type-card)] font-semibold leading-[1.35] text-ink',
-  list: 'whitespace-pre-wrap text-[length:var(--type-reading)] leading-[var(--leading-reading)] text-ink/85',
-  table: 'overflow-x-auto whitespace-pre font-mono text-[13px] leading-[1.7] text-ink/85',
-  paragraph: 'text-[length:var(--type-reading)] leading-[var(--leading-reading)] text-ink/85',
+// Heading depth comes from the source (1-6). Without it every heading rendered at
+// the same size, which flattened the document hierarchy.
+const headingClass = (level, index) => {
+  const depth = level || (index === 0 ? 1 : 2);
+  if (depth <= 1) return 'text-[1.28rem] font-bold leading-[1.25] tracking-[-0.01em] text-ink';
+  if (depth === 2) return 'text-[1.1rem] font-semibold leading-[1.3] text-ink';
+  return 'text-[1rem] font-semibold leading-[1.4] text-ink/85';
 };
 
 // One side of the bilingual reader. Sections carry their document id as a data
@@ -34,7 +21,6 @@ export default function DocumentPanel({
   onSelect,
   containerRef,
   onScroll,
-  search,
   pendingLabel,
   emptyLabel,
   embedded = false,
@@ -51,18 +37,21 @@ export default function DocumentPanel({
         onScroll={onScroll}
         dir={direction}
         tabIndex={0}
-        className={`scroll-thin px-4 py-4 focus-visible:outline-none sm:px-6 ${
+        className={`scroll-thin px-4 pb-24 pt-4 focus-visible:outline-none sm:px-6 ${
           embedded ? '' : 'min-h-0 flex-1 overflow-y-auto'
         }`}
       >
-        {!sections.length && (
-          <p className="py-8 text-center text-[14px] text-mutedink">{emptyLabel}</p>
-        )}
+        {!sections.length && <p className="py-8 text-center text-[14px] text-mutedink">{emptyLabel}</p>}
 
-        <div className="space-y-4">
-          {sections.map((section) => {
+        <div className="space-y-5">
+          {sections.map((section, index) => {
             const heading = side === 'original' ? section.heading : section.translated_heading || section.heading;
-            const body = side === 'original' ? section.original : section.translated;
+            const translated = String(section.translated || '').trim();
+            const original = String(section.original || '').trim();
+            // A section that has no translation yet keeps its readable original,
+            // clearly labelled, instead of an empty box or invented text.
+            const missing = side === 'translation' && !translated && Boolean(original);
+            const body = side === 'original' ? original : translated || original;
             const active = activeId === section.id;
 
             return (
@@ -79,28 +68,28 @@ export default function DocumentPanel({
                     onSelect(section.id, side);
                   }
                 }}
-                className={`rounded-lg px-3 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 ${
+                className={`rounded-lg px-2 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 ${
                   active ? 'bg-brand-soft/70 ring-1 ring-brand/25' : 'hover:bg-canvas'
                 }`}
               >
-                <div className="mb-1 flex items-center gap-1.5">
-                  <span className="rounded bg-canvas px-1.5 py-0.5 font-mono text-[11px] text-mutedink">
+                <div className="mb-1 flex items-start gap-1.5">
+                  <span className="mt-1 shrink-0 rounded bg-canvas px-1.5 py-0.5 font-mono text-[11px] leading-tight text-mutedink">
                     {section.id}
                   </span>
-                  {heading && (
-                    <h3 className="min-w-0 text-[length:var(--type-card)] font-semibold leading-tight text-ink">
-                      <Highlighted text={heading} term={search} />
-                    </h3>
-                  )}
+                  {heading && <h3 className={`min-w-0 ${headingClass(section.level, index)}`}>{heading}</h3>}
                 </div>
 
-                {body ? (
-                  <div className={BODY_CLASS[section.kind] || BODY_CLASS.paragraph}>
-                    <Highlighted text={body} term={search} />
-                  </div>
-                ) : side === 'translation' && !heading ? (
+                {body ? <SectionBody kind={section.kind} text={body} muted={missing} /> : null}
+
+                {missing && (
+                  <p className="mt-1.5 inline-flex items-center rounded-md bg-canvas px-1.5 py-0.5 text-[12.5px] font-medium text-mutedink">
+                    {pendingLabel} · showing the original
+                  </p>
+                )}
+
+                {!body && side === 'translation' && !heading && (
                   <p className="text-[14px] italic text-mutedink">{pendingLabel}</p>
-                ) : null}
+                )}
               </section>
             );
           })}

@@ -54,7 +54,11 @@
           },
           "kind": {
             "type": "string",
-            "description": "heading | paragraph | list | table"
+            "description": "heading | paragraph | list | table | quote"
+          },
+          "level": {
+            "type": "number",
+            "description": "Heading depth from the source (1-6) so the reader keeps the document hierarchy"
           },
           "heading": {
             "type": "string"

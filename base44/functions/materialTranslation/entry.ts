@@ -17,8 +17,12 @@ const isSupported = (value) => SUPPORTED.includes(value);
 const languageName = (code) => LANGUAGES[code] || 'the requested language';
 
 const STAFF_ROLES = ['admin', 'dean', 'deputy_dean', 'academic_staff'];
-const MAX_CHUNK_CHARS = 3600;
-const MAX_CHUNK_SECTIONS = 8;
+// Smaller chunks keep every request short and let several of them run at once.
+// Four sections per chunk keeps a heading with the text it introduces, and the
+// character cap keeps a table or a long paragraph inside one request.
+const MAX_CHUNK_CHARS = 1800;
+const MAX_CHUNK_SECTIONS = 4;
+const CHUNK_CONCURRENCY = 3;
 const MAX_ATTEMPTS = 2;
 
 const RESPONSE_SCHEMA = {
@@ -69,6 +73,13 @@ const checksum = (text) => {
   return `${hash.toString(16).padStart(8, '0')}-${text.length}`;
 };
 
+// One definition of "this section is finished", used for chunk selection, for
+// progress and for completion. A heading-only section carries its translation in
+// translated_heading, so checking `translated` alone left the first chunk pending
+// forever and every request re-translated work that was already stored.
+const isTranslated = (section) =>
+  Boolean(String(section?.translated || '').trim() || String(section?.translated_heading || '').trim());
+
 // Language detection from the extracted text itself. Script evidence decides
 // Arabic, Chinese and Russian outright; Latin text is scored on frequent words
 // so French is not confused with English. Anything inconclusive is reported as
@@ -110,62 +121,67 @@ const detectLanguage = (text) => {
 };
 
 // Splits markdown/plain text into stable, numbered sections. Headings, lists,
-// tables and paragraphs each keep their own kind so the reader can rebuild the
-// document structure instead of flattening it into one blob.
+// tables, quotations and paragraphs each keep their own kind, and a heading keeps
+// its depth and travels with the text it introduces, so the reader can rebuild
+// the document structure instead of flattening it into one blob.
 function sectionize(text) {
   const lines = String(text).replace(/\r\n/g, '\n').split('\n');
   const sections = [];
   let buffer = [];
-  let heading = '';
   let kind = 'paragraph';
+  let heading = '';
+  let level = 0;
 
-  const flush = () => {
-    const body = buffer.join('\n').trim();
-    if (body || heading) {
-      const index = sections.length + 1;
-      sections.push({
-        id: `s${String(index).padStart(2, '0')}`,
-        kind,
-        heading,
-        original: body,
-        translated: '',
-      });
-    }
-    buffer = [];
+  const push = (bodyKind, body) => {
+    sections.push({
+      id: `s${String(sections.length + 1).padStart(2, '0')}`,
+      kind: bodyKind,
+      level,
+      heading,
+      original: body,
+      translated_heading: '',
+      translated: '',
+    });
     heading = '';
+    level = 0;
+  };
+
+  const flushBody = () => {
+    const body = buffer.join('\n').trim();
+    const bodyKind = kind;
+    buffer = [];
     kind = 'paragraph';
+    if (body) push(bodyKind, body);
   };
 
   lines.forEach((raw) => {
     const line = raw.replace(/\s+$/, '');
     const headingMatch = /^(#{1,6})\s+(.*)$/.exec(line);
     if (headingMatch) {
-      flush();
+      flushBody();
+      // A heading that never received text of its own stays its own section.
+      if (heading) push('heading', '');
       heading = headingMatch[2].trim();
-      kind = 'heading';
+      level = headingMatch[1].length;
       return;
     }
     if (!line.trim()) {
-      flush();
+      flushBody();
       return;
     }
-    const isList = /^\s*([-*+]|\d+[.)])\s+/.test(line);
     const isTable = /^\s*\|/.test(line);
-    if (isList || isTable) {
-      const wanted = isList ? 'list' : 'table';
-      if (kind !== wanted) {
-        flush();
-        kind = wanted;
-      }
-      buffer.push(line.trim());
-      return;
+    const isList = /^\s*([-*+]|\d+[.)])\s+/.test(line);
+    const isQuote = /^\s*>/.test(line);
+    const wanted = isTable ? 'table' : isList ? 'list' : isQuote ? 'quote' : 'paragraph';
+    if (kind !== wanted) {
+      flushBody();
+      kind = wanted;
     }
-    if (kind === 'list' || kind === 'table') flush();
-    kind = 'paragraph';
     buffer.push(line.trim());
   });
 
-  flush();
+  flushBody();
+  if (heading) push('heading', '');
   return sections;
 }
 
@@ -320,6 +336,19 @@ function glossaryFrom(sections) {
     .join('\n');
 }
 
+// Placeholder or fabricated output is rejected instead of being shown: the
+// section then keeps its original text and reports that it was not translated.
+const looksFabricated = (value) => {
+  const text = String(value || '');
+  if (!text) return false;
+  return (
+    /(^|[\s(])undefined([\s).,;:]|$)/i.test(text) ||
+    /(^|[\s(])null([\s).,;:]|$)/i.test(text) ||
+    /x{6,}/i.test(text) ||
+    /(\S)\1{9,}/.test(text)
+  );
+};
+
 async function translateSections(base44, sections, target, source, glossary) {
   const ids = sections.map((section) => section.id);
   const payload = sections.map((section) => ({
@@ -338,6 +367,9 @@ async function translateSections(base44, sections, target, source, glossary) {
     '- Keep personal names, institution names and titles of published works in their original form; transliterate only where the target script requires it.',
     '- Return "translated_heading" with the translated heading and "translated" with the translated text only — never repeat the heading inside the text.',
     '- When a section has a non-empty "heading", "translated_heading" must also be non-empty: never leave a heading in the source language. When a section has no heading, return "".',
+    '- Keep the document formatting of each section exactly: retain Markdown emphasis (**bold**, *italic*), bullet and numbered list markers, "|" table rows and ">" quotations in the translated text, translating the words and never the markers.',
+    '- Keep the paragraph breaks of the section: do not merge separate paragraphs and do not break one paragraph into fragments.',
+    '- Never produce filler or placeholder output: no repeated letters (such as "xxxxxx"), no "undefined", no "null", no empty section. If a word has no equivalent, translate it or keep it as it is.',
     '- Do not translate the id or kind values, and do not add commentary or notes.',
     `- Every returned text must be written in ${languageName(target)}. Never return a section unchanged in its source language.`,
     `- The source language is ${LANGUAGES[source] || 'not stated'}. Translate into ${LANGUAGES[target]} even where the source mixes languages.`,
@@ -372,14 +404,16 @@ async function translateSections(base44, sections, target, source, glossary) {
       }
     });
 
-    // A section is only accepted when its text arrived, and when it carries a
-    // heading, when that heading was translated too. This is what prevents a
-    // silently half-translated document.
+    // A section is only accepted when its text arrived, when it carries a heading
+    // the heading was translated too, and when the output is real text rather than
+    // placeholder markers. This is what prevents a silently half-translated or
+    // fabricated document from being stored.
     const incomplete = sections
       .filter((section) => {
         const entry = translations.get(section.id);
         if (!entry) return true;
         if (!entry.text.trim() && !entry.heading.trim()) return true;
+        if (looksFabricated(entry.text) || looksFabricated(entry.heading)) return true;
         return Boolean(section.heading) && Boolean(section.original.trim()) && !entry.heading.trim();
       })
       .map((section) => section.id);
@@ -612,8 +646,9 @@ export default async function (req) {
       return Response.json({ material, cached: false, ...created });
     }
 
-    // ── translate: one chunk per call, so progress is real and a timeout can
-    // never lose a whole document.
+    // ── translate: a bounded batch of chunks per call. Independent chunks run
+    // concurrently, every finished section is persisted before the response, and a
+    // failed chunk is retried on its own instead of failing the whole document.
     if (action === 'translate') {
       if (!record) {
         return Response.json({ error: 'Open the material before translating it.' }, { status: 400 });
@@ -639,84 +674,113 @@ export default async function (req) {
       }
 
       if (record.status === 'complete' && !payload.force) {
-        return Response.json({ material, ...record });
+        return Response.json({ material, done: true, ...record });
       }
-      if (record.status === 'outdated' || payload.force) {
+
+      // Only an explicit restart clears stored work. A retry after a failure keeps
+      // every section that already succeeded and re-runs nothing else.
+      if (payload.force) {
         record = await svc.entities.MaterialTranslation.update(record.id, {
           status: 'translating',
           attempts: 0,
           error: '',
           chunk_done: 0,
-          sections: record.sections.map((section) => ({ ...section, translated: '' })),
+          sections: (record.sections || []).map((section) => ({
+            ...section,
+            translated: '',
+            translated_heading: '',
+          })),
         });
       }
 
       const sections = record.sections || [];
       const chunks = buildChunks(sections);
-      const translatedIds = new Set(sections.filter((section) => section.translated).map((section) => section.id));
-      const chunkIndex =
-        typeof payload.chunk === 'number'
-          ? payload.chunk
-          : chunks.findIndex((chunk) => chunk.some((section) => !translatedIds.has(section.id)));
+      const pending = chunks
+        .map((_, index) => index)
+        .filter((index) => chunks[index].some((section) => !isTranslated(section)));
 
-      if (chunkIndex < 0 || !chunks[chunkIndex]) {
+      const progress = (rows) => {
+        const done = rows.filter(isTranslated).length;
+        return {
+          total_sections: rows.length,
+          translated_sections: done,
+          pending_sections: rows.length - done,
+          percent: rows.length ? Math.round((done / rows.length) * 100) : 0,
+        };
+      };
+
+      if (!pending.length) {
         const completed = await svc.entities.MaterialTranslation.update(record.id, {
           status: 'complete',
           chunk_total: chunks.length,
           chunk_done: chunks.length,
-          translated_at: new Date().toISOString(),
+          attempts: 0,
           error: '',
+          translated_at: new Date().toISOString(),
         });
-        return Response.json({ material, done: true, ...completed });
+        return Response.json({ material, done: true, progress: progress(sections), ...completed });
       }
 
-      const chunk = chunks[chunkIndex];
-      const result = await translateSections(
-        base44,
-        chunk.map((section) => ({
-          ...section,
-          translated: '',
-        })),
-        recordTarget,
-        recordSource || 'unknown',
-        glossaryFrom(sections)
+      const before = sections.filter(isTranslated).length;
+      const batch = pending.slice(0, CHUNK_CONCURRENCY);
+      const glossary = glossaryFrom(sections);
+      const results = await Promise.all(
+        batch.map((index) =>
+          translateSections(
+            base44,
+            chunks[index].map((section) => ({ ...section, translated: '', translated_heading: '' })),
+            recordTarget,
+            recordSource || 'unknown',
+            glossary
+          ).catch((error) => ({ ok: false, error: error.message }))
+        )
       );
 
-      if (!result.ok) {
-        const attempts = (record.attempts || 0) + 1;
-        const failed = await svc.entities.MaterialTranslation.update(record.id, {
-          attempts,
-          status: attempts >= MAX_ATTEMPTS ? 'failed' : 'translating',
-          error: result.error,
-        });
-        return Response.json({ material, ...failed });
-      }
+      const translations = new Map();
+      results.forEach((result) => {
+        if (result.ok) result.translations.forEach((value, key) => translations.set(key, value));
+      });
 
       const merged = sections.map((section) => {
-        const entry = result.translations.get(section.id);
+        const entry = translations.get(section.id);
         return entry
           ? { ...section, translated: entry.text, translated_heading: entry.heading || section.translated_heading || '' }
           : section;
       });
       const byId = new Map(merged.map((section) => [section.id, section]));
-      const translatedNow = merged.filter((section) => section.translated || section.translated_heading).length;
-      const isComplete = translatedNow === merged.length;
+      const translatedNow = merged.filter(isTranslated).length;
+      const isComplete = merged.length > 0 && translatedNow === merged.length;
+      const failures = results.filter((result) => !result.ok);
+      // A round with no progress at all counts against the attempt budget; a round
+      // that saved sections resets it. This stops a retry loop without discarding
+      // any finished work.
+      const progressed = translatedNow > before;
+      const attempts = failures.length && !progressed ? (record.attempts || 0) + 1 : 0;
+      const stopped = !isComplete && attempts >= MAX_ATTEMPTS;
+
       const updated = await svc.entities.MaterialTranslation.update(record.id, {
         sections: merged,
         chunk_total: chunks.length,
-        chunk_done: chunks.filter((entry) =>
-          entry.every((section) => {
-            const row = byId.get(section.id);
-            return Boolean(row?.translated || row?.translated_heading);
-          })
+        chunk_done: chunks.filter((chunk) =>
+          chunk.every((section) => isTranslated(byId.get(section.id) || section))
         ).length,
-        status: isComplete ? 'complete' : 'translating',
-        attempts: 0,
-        error: '',
+        status: isComplete ? 'complete' : stopped ? 'failed' : 'translating',
+        attempts,
+        error: isComplete
+          ? ''
+          : failures.length
+            ? `${failures.length} part(s) of the material could not be translated (${failures[0].error || 'no response'}). Every finished section is saved.`
+            : '',
         translated_at: isComplete ? new Date().toISOString() : '',
       });
 
-      return Response.json({ material, done: isComplete, ...updated });
+      return Response.json({
+        material,
+        done: isComplete,
+        failed_chunks: failures.length,
+        progress: progress(merged),
+        ...updated,
+      });
     }
 
     return Response.json({ error: 'Unknown action' }, { status: 400 });

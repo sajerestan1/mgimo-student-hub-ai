@@ -73,7 +73,10 @@ export const openTranslation = async (resourceId, target, sourceOverride) =>
     })
   );
 
-export const translateNextChunk = async (translationId, force = false) =>
+// One call translates a bounded batch of chunks concurrently on the server and
+// returns the sections and progress it actually saved, so the reader can show the
+// finished sections while the rest are still being translated.
+export const translateBatch = async (translationId, force = false) =>
   unwrap(
     await base44.functions.invoke('materialTranslation', {
       action: 'translate',

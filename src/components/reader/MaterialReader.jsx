@@ -5,7 +5,7 @@ import { openPrivateFile } from '@/lib/studentCourses';
 import {
   openTranslation,
   inspectMaterial,
-  translateNextChunk,
+  translateBatch,
   saveTargetPreference,
   resolveInitialTarget,
   dirFor,
@@ -55,9 +55,12 @@ export default function MaterialReader({ resource, onClose }) {
   const dragging = useRef(false);
   const cancelled = useRef(false);
 
+  // Each round translates a bounded batch of chunks on the server. Finished
+  // sections are painted as soon as the round returns, and a round that saved
+  // nothing stops the loop instead of retrying the same work forever.
   const run = useCallback(async (start) => {
     let current = start;
-    for (let step = 0; step < 40; step += 1) {
+    for (let round = 0; round < 14; round += 1) {
       if (cancelled.current || !current?.id) return;
       if (!['pending', 'translating'].includes(current.status)) {
         // Nothing left to generate (a cached or completed translation): stop
@@ -66,8 +69,9 @@ export default function MaterialReader({ resource, onClose }) {
         return;
       }
       setBusy(true);
+      const before = current.progress?.translated_sections ?? 0;
       try {
-        current = await translateNextChunk(current.id);
+        current = await translateBatch(current.id);
       } catch (caught) {
         if (!cancelled.current) setError(caught.message || 'The translation could not be completed.');
         setBusy(false);
@@ -75,6 +79,12 @@ export default function MaterialReader({ resource, onClose }) {
       }
       if (cancelled.current) return;
       setData((previous) => ({ ...previous, ...current }));
+      if (current.done) break;
+      const after = current.progress?.translated_sections ?? 0;
+      if (after <= before) {
+        setError(current.error || 'Some sections could not be translated. The rest of the document is saved.');
+        break;
+      }
     }
     setBusy(false);
   }, []);
@@ -223,7 +233,6 @@ export default function MaterialReader({ resource, onClose }) {
     if (!sync) return;
     const targetPanel = origin === 'left' ? rightRef.current : leftRef.current;
     if (mode === 'both' && targetPanel) scrollToSection(targetPanel, id, 8);
-    if (origin === 'stack' && stackRef.current) scrollToSection(stackRef.current, id, 8);
   };
 
   const jumpTo = (id) => {
@@ -268,7 +277,9 @@ export default function MaterialReader({ resource, onClose }) {
     setError('');
     setBusy(true);
     try {
-      const refreshed = await translateNextChunk(data.id, true);
+      // A failed or interrupted document resumes only the missing sections; only a
+      // changed source restarts the whole translation.
+      const refreshed = await translateBatch(data.id, data.status === 'outdated');
       setData((previous) => ({ ...previous, ...refreshed }));
       await run(refreshed);
     } catch (caught) {
@@ -297,8 +308,15 @@ export default function MaterialReader({ resource, onClose }) {
   const status = data?.status || 'pending';
   const bilingual = mode === 'both';
 
+  // 100dvh, not the layout viewport: with `inset-0` alone the panel was taller than
+  // the visible area on mobile browsers, so the last sections sat below the screen.
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-canvas" role="dialog" aria-modal="true" aria-label="Course material translation reader">
+    <div
+      className="fixed inset-0 z-50 flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-canvas"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Course material translation reader"
+    >
       <ReaderHeader
         material={data?.material || meta?.material}
         status={data ? status : 'idle'}
@@ -324,6 +342,8 @@ export default function MaterialReader({ resource, onClose }) {
           canTranslate={canTranslate}
           onTranslate={startTranslation}
           cachedLanguages={cachedLanguages}
+          complete={data?.status === 'complete'}
+          percent={data?.progress?.percent ?? 0}
         />
       )}
 
@@ -341,8 +361,9 @@ export default function MaterialReader({ resource, onClose }) {
       {data && (
         <TranslationStatusBanner
           status={status}
-          chunkDone={data.chunk_done || 0}
-          chunkTotal={data.chunk_total || 0}
+          totalSections={data.progress?.total_sections ?? sections.length}
+          translatedSections={data.progress?.translated_sections ?? translatedCount}
+          failedSections={status === 'failed' ? data.progress?.pending_sections ?? 0 : 0}
           error={data.error || error}
           note={data.note}
           busy={busy}
@@ -371,7 +392,13 @@ export default function MaterialReader({ resource, onClose }) {
 
       {loading && (
         <div className="flex flex-1 items-center justify-center gap-2 text-[14px] text-mutedink">
-          <Loader2 className="h-4 w-4 animate-spin" /> Opening material…
+          <Loader2 className="h-4 w-4 animate-spin" /> Preparing document…
+        </div>
+      )}
+
+      {!loading && !data && !error && started && (
+        <div className="flex flex-1 items-center justify-center gap-2 text-[14px] text-mutedink">
+          <Loader2 className="h-4 w-4 animate-spin" /> Extracting document…
         </div>
       )}
 

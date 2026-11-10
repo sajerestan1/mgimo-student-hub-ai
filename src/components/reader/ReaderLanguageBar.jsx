@@ -1,9 +1,13 @@
+import { useRef } from 'react';
+import { Check, ChevronDown, Languages, Loader2 } from 'lucide-react';
 import { READER_LANGUAGES, languageLabel } from '@/lib/materialTranslation';
 
 /**
- * The reader's language controls: the detected original language and the
- * language the student explicitly chooses to translate into. Nothing is
- * translated until a target different from the source is confirmed.
+ * The reader's language controls. The detected original language and the chosen
+ * target language are two separate, clearly labelled fields so they can never be
+ * confused, and the single action that starts work is the red Translate Material
+ * button. Nothing is translated until a target different from the source is
+ * confirmed.
  */
 export default function ReaderLanguageBar({
   source,
@@ -18,10 +22,13 @@ export default function ReaderLanguageBar({
   canTranslate,
   onTranslate,
   cachedLanguages,
+  complete,
+  percent = 0,
 }) {
+  const selectRef = useRef(null);
   const sourceLabel = languageLabel(source);
   const targetLabel = languageLabel(target);
-  const cached = cachedLanguages.includes(target) && target !== source;
+  const cached = (cachedLanguages || []).includes(target) && target !== source;
 
   const notice = !sourceKnown
     ? 'Select the language of the original material so the translation can be checked against it.'
@@ -29,28 +36,31 @@ export default function ReaderLanguageBar({
       ? `The original material is already in ${sourceLabel}. Please select another language.`
       : '';
 
+  const focusLanguage = () => {
+    selectRef.current?.focus();
+    selectRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  };
+
   return (
-    <div className="border-b border-line bg-white px-3 py-2 sm:px-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
-        <div className="flex min-w-0 flex-col gap-1">
-          <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-mutedink">
-            Original
-          </span>
+    <div className="border-b border-line bg-white px-3 py-3 sm:px-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
+        <div className="flex flex-col gap-1 sm:w-44">
+          <span className="text-[12px] font-semibold uppercase tracking-[0.07em] text-mutedink">Original</span>
           {sourceKnown ? (
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-canvas px-2 py-1.5 text-[13px] font-medium text-ink">
-              {sourceLabel}
-              <span className="text-[11px] font-normal text-mutedink">
+            <div className="flex h-11 items-center justify-between gap-2 rounded-xl border border-line bg-canvas px-3">
+              <span className="truncate text-[15px] font-semibold text-ink">{sourceLabel}</span>
+              <span className="shrink-0 text-[12px] font-normal text-mutedink">
                 {sourceDetection === 'manual' ? 'selected' : 'detected'}
               </span>
-            </span>
+            </div>
           ) : (
             <select
               value=""
               onChange={(event) => onSource(event.target.value)}
-              className="w-full rounded-lg border border-warning/50 bg-gold-light px-2 py-1.5 text-[13px] text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 sm:w-auto"
               aria-label="Original language"
+              className="h-11 w-full rounded-xl border-2 border-welcome-red/40 bg-[#FDF4F4] px-3 text-[15px] font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-welcome-red/30"
             >
-              <option value="">Select source language</option>
+              <option value="">Select language</option>
               {READER_LANGUAGES.map((language) => (
                 <option key={language.code} value={language.code}>
                   {language.label}
@@ -60,46 +70,78 @@ export default function ReaderLanguageBar({
           )}
         </div>
 
-        <span className="hidden pb-2 text-[13px] text-mutedink sm:inline">→</span>
+        <Languages className="hidden h-5 w-5 shrink-0 self-center text-mutedink sm:block" aria-hidden="true" />
 
-        <label className="flex min-w-0 flex-col gap-1">
-          <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-mutedink">
-            Translate to
-          </span>
-          <select
-            value={target || ''}
-            onChange={(event) => onTarget(event.target.value)}
-            disabled={busy}
-            className="w-full rounded-lg border border-line bg-white px-2 py-1.5 text-[13px] font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 disabled:opacity-60 sm:w-auto"
-            aria-label="Translation language"
-          >
-            {!target && <option value="">Choose a language</option>}
-            {READER_LANGUAGES.map((language) => (
-              <option key={language.code} value={language.code}>
-                {language.native} · {language.label}
-              </option>
-            ))}
-          </select>
+        <label className="flex flex-col gap-1 sm:w-56">
+          <span className="text-[12px] font-semibold uppercase tracking-[0.07em] text-brand-deep">Translate to</span>
+          <div className="relative">
+            <select
+              ref={selectRef}
+              value={target || ''}
+              onChange={(event) => onTarget(event.target.value)}
+              disabled={busy}
+              aria-label="Translation language"
+              className="h-11 w-full appearance-none rounded-xl border-2 border-brand/50 bg-brand-soft px-3 pe-9 text-[15px] font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:opacity-60"
+            >
+              {!target && <option value="">Choose a language</option>}
+              {READER_LANGUAGES.map((language) => (
+                <option key={language.code} value={language.code}>
+                  {language.native} · {language.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-deep"
+              aria-hidden="true"
+            />
+          </div>
         </label>
 
-        <div className="flex items-center gap-2 sm:ms-auto">
-          {cached && <span className="text-[12px] text-positive">Cached</span>}
-          {!started ? (
+        <div className="flex flex-wrap items-center gap-2 sm:ms-auto">
+          {cached && !complete && (
+            <span className="inline-flex h-7 items-center rounded-md bg-[#EDF1FE] px-2 text-[12.5px] font-semibold text-brand-deep">
+              Cached
+            </span>
+          )}
+
+          {complete ? (
+            <>
+              <span className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-[#E9F5EF] px-3 text-[14px] font-semibold text-[#1D7A50]">
+                <Check className="h-4 w-4" aria-hidden="true" />
+                Translation Ready
+              </span>
+              <button type="button" onClick={focusLanguage} className="btn-quiet h-11 px-3.5 text-[14px]">
+                Change Language
+              </button>
+            </>
+          ) : (
             <button
               type="button"
               onClick={onTranslate}
-              disabled={!canTranslate || busy}
-              className="btn-primary btn-sm w-full disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              disabled={!canTranslate || busy || started}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-welcome-red px-5 text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-welcome-redDeep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-welcome-red/40 focus-visible:ring-offset-2 active:bg-welcome-redDeep disabled:cursor-not-allowed disabled:bg-welcome-red/50 sm:w-auto"
             >
-              {busy ? 'Translating…' : `Translate into ${targetLabel || 'a language'}`}
+              {started ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  {percent ? `Translating ${percent}%` : 'Translating material…'}
+                </>
+              ) : (
+                <>
+                  <Languages className="h-4 w-4" aria-hidden="true" />
+                  Translate Material
+                </>
+              )}
             </button>
-          ) : (
-            <span className="text-[12px] text-mutedink">
-              {busy ? `Translating into ${targetLabel}…` : `Showing ${targetLabel}`}
-            </span>
           )}
         </div>
       </div>
+
+      {!complete && started && targetLabel && !notice && (
+        <p className="mt-2 text-[13px] text-mutedink">
+          Translating into {targetLabel}. Finished sections appear as they arrive.
+        </p>
+      )}
 
       {notice && (
         <p
