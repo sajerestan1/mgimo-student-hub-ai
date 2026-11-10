@@ -368,6 +368,16 @@ const fr = {
     backToWorkspace: 'Retour à mon espace',
   },
 
+  studentPreview: {
+    eyebrow: 'Espace étudiant',
+    profileTitle: 'Profil',
+    unlinked: 'Votre compte n’est pas encore associé à un dossier étudiant.',
+    backToDashboard: 'Retour au tableau de bord',
+    title: 'Aperçu de l’espace étudiant',
+    body: 'Ce compte du personnel n’a pas de dossier étudiant : aucun cours, emploi du temps ni résultat ne s’affiche ici. Les comptes étudiants ouvrent leur propre dossier dans cet espace ; votre rôle et vos accès restent inchangés.',
+    back: 'Revenir à mon espace',
+  },
+
   roles: {
     admin: 'Administrateur',
     dean: 'Doyen',

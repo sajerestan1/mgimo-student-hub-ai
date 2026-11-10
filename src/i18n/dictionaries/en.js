@@ -365,6 +365,16 @@ const en = {
     backToWorkspace: 'Back to my workspace',
   },
 
+  studentPreview: {
+    eyebrow: 'Student workspace',
+    profileTitle: 'Profile',
+    unlinked: 'Your account is not linked to a student record yet.',
+    backToDashboard: 'Back to dashboard',
+    title: 'Student workspace preview',
+    body: 'This staff account has no student record of its own, so no courses, timetable or results are shown here. Student accounts open their own record in this workspace; your role and access are unchanged.',
+    back: 'Back to my workspace',
+  },
+
   roles: {
     admin: 'Administrator',
     dean: 'Dean',

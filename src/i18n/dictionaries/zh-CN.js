@@ -357,6 +357,16 @@ const zhCN = {
     backToWorkspace: '返回我的工作区',
   },
 
+  studentPreview: {
+    eyebrow: '学生工作区',
+    profileTitle: '个人资料',
+    unlinked: '你的账号尚未关联学生档案。',
+    backToDashboard: '返回仪表板',
+    title: '学生工作区预览',
+    body: '此教职账号没有自己的学生档案，因此这里不显示课程、课表或成绩。学生账号会在此打开自己的档案；你的角色与访问权限没有变化。',
+    back: '返回我的工作区',
+  },
+
   roles: {
     admin: '管理员',
     dean: '院长',

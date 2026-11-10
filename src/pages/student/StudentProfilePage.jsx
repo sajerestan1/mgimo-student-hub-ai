@@ -4,8 +4,12 @@ import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { loadStudentPortal } from '@/lib/studentPortal';
+import { useWorkspace } from '@/lib/workspaceRole';
+import { useI18n } from '@/i18n/I18nProvider';
 
 export default function StudentProfilePage() {
+  const { preview, workspace } = useWorkspace();
+  const { t } = useI18n();
   const [context, setContext] = useState(null);
   const [error, setError] = useState('');
 
@@ -22,10 +26,15 @@ export default function StudentProfilePage() {
   if (!profile) {
     return (
       <div>
-        <PageTitle eyebrow="Student workspace" title="Profile" />
-        <p className="card-surface px-5 py-8 text-[15px] text-mutedink">
-          {context.scopeNote || 'Your account is not linked to a student record yet.'}
-        </p>
+        <PageTitle eyebrow={t('studentPreview.eyebrow')} title={t('studentPreview.profileTitle')} />
+        <div className="card-surface px-5 py-8">
+          <p className="text-[15px] leading-relaxed text-mutedink">
+            {preview ? t('studentPreview.body') : context.scopeNote || t('studentPreview.unlinked')}
+          </p>
+          <Link to={preview ? workspace.home : P.student.dashboard} className="btn-quiet mt-4 inline-flex">
+            {preview ? t('studentPreview.back') : t('studentPreview.backToDashboard')}
+          </Link>
+        </div>
       </div>
     );
   }

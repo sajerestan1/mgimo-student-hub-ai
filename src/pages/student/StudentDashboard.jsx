@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { loadStudentPortal } from '@/lib/studentPortal';
+import { useWorkspace } from '@/lib/workspaceRole';
+import { useI18n } from '@/i18n/I18nProvider';
 import WelcomeHeader from '@/components/student/dashboard/WelcomeHeader';
 import SnapshotStrip from '@/components/student/dashboard/SnapshotStrip';
 import TodaysClasses from '@/components/student/dashboard/TodaysClasses';
@@ -11,6 +13,8 @@ import AcademicBriefing from '@/components/student/dashboard/AcademicBriefing';
 import AcademicPerformance from '@/components/student/dashboard/AcademicPerformance';
 
 export default function StudentDashboard() {
+  const { preview, workspace } = useWorkspace();
+  const { t } = useI18n();
   const [context, setContext] = useState(null);
   const [error, setError] = useState('');
 
@@ -37,6 +41,22 @@ export default function StudentDashboard() {
           <div className="h-64 animate-pulse rounded-xl bg-white" />
           <div className="h-64 animate-pulse rounded-xl bg-white" />
         </div>
+      </div>
+    );
+  }
+
+  // A staff account may open this workspace to inspect it. It has no student
+  // record of its own, so it must not be told its record "is not linked".
+  if (!context.linked && preview) {
+    return (
+      <div className="card-surface px-5 py-10 text-center">
+        <h1 className="text-[length:var(--type-section)] font-semibold tracking-[-0.02em] text-ink">
+          {t('studentPreview.title')}
+        </h1>
+        <p className="mx-auto mt-2 max-w-md text-[15px] leading-relaxed text-mutedink">{t('studentPreview.body')}</p>
+        <Link to={workspace.home} className="btn-quiet mt-4 inline-flex">
+          {t('studentPreview.back')}
+        </Link>
       </div>
     );
   }
