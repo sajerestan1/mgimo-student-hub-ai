@@ -7,6 +7,7 @@ import EngineStatusPanel from '@/components/integrity/EngineStatusPanel';
 import IntegrityReport from '@/components/integrity/IntegrityReport';
 import HistoryList from '@/components/integrity/HistoryList';
 import { loadAnalysis, loadEngineStatus, loadHistory, refreshAnalysis, runAnalysis } from '@/lib/integrity/api';
+import { useI18n } from '@/i18n/I18nProvider';
 
 /**
  * Academic Integrity: an isolated workspace reporting three separate
@@ -15,6 +16,7 @@ import { loadAnalysis, loadEngineStatus, loadHistory, refreshAnalysis, runAnalys
  * touches no academic record, grade or existing workspace module.
  */
 export default function AcademicIntegrityPage() {
+  const { t } = useI18n();
   const [analysis, setAnalysis] = useState(null);
   const [history, setHistory] = useState([]);
   const [status, setStatus] = useState(null);
@@ -29,8 +31,8 @@ export default function AcademicIntegrityPage() {
         setHistory(data.items || []);
         setHistoryError('');
       })
-      .catch((caught) => setHistoryError(caught.message || 'Your previous analyses could not be loaded.'));
-  }, []);
+      .catch((caught) => setHistoryError(caught.message || t('integrity.form.errorHistory')));
+  }, [t]);
 
   useEffect(() => {
     refreshHistory();
@@ -39,8 +41,8 @@ export default function AcademicIntegrityPage() {
         setStatus(data);
         setStatusError('');
       })
-      .catch((caught) => setStatusError(caught.message || 'Engine status could not be loaded.'));
-  }, [refreshHistory]);
+      .catch((caught) => setStatusError(caught.message || t('integrity.form.errorStatus')));
+  }, [refreshHistory, t]);
 
   const engines = status?.engines || null;
   const externalConfigured = engines?.find((row) => row.id === 'plagiarism')?.configured === true;
@@ -54,7 +56,7 @@ export default function AcademicIntegrityPage() {
       setAnalysis(data);
       refreshHistory();
     } catch (caught) {
-      setError(caught.message || 'The analysis could not be completed.');
+      setError(caught.message || t('integrity.form.errorAnalyze'));
     } finally {
       setBusy(false);
     }
@@ -67,7 +69,7 @@ export default function AcademicIntegrityPage() {
     try {
       setAnalysis(await loadAnalysis(id));
     } catch (caught) {
-      setError(caught.message || 'That analysis could not be opened.');
+      setError(caught.message || t('integrity.form.errorOpen'));
     } finally {
       setBusy(false);
     }
@@ -79,38 +81,31 @@ export default function AcademicIntegrityPage() {
     try {
       setAnalysis(await refreshAnalysis(analysis.record.id));
     } catch (caught) {
-      setError(caught.message || 'The report could not be refreshed.');
+      setError(caught.message || t('integrity.form.errorRefresh'));
     }
   };
 
   return (
     <div>
       <PageTitle
-        eyebrow="Academic integrity"
-        title="Academic Integrity"
-        description="External similarity, internal similarity and AI-writing detection reported separately, with the provider and status of each."
+        eyebrow={t('integrity.eyebrow')}
+        title={t('integrity.title')}
+        description={t('integrity.description')}
         meta={[
-          externalConfigured ? 'External similarity · configured' : 'External similarity · engine not configured',
-          'Internal similarity · supplementary',
-          detectorConfigured ? 'AI detection · configured' : 'AI detection · engine not configured',
-          'Private to your account',
+          externalConfigured ? t('integrity.meta.externalOn') : t('integrity.meta.externalOff'),
+          t('integrity.meta.internal'),
+          detectorConfigured ? t('integrity.meta.detectionOn') : t('integrity.meta.detectionOff'),
+          t('integrity.meta.private'),
         ]}
       />
 
       <AnalysisCards engines={engines} />
 
-      <Surface
-        title="Detection engines"
-        subtitle="Which engines are actually wired to a provider. Nothing here substitutes a language model for a detector."
-      >
+      <Surface title={t('integrity.engines.title')} subtitle={t('integrity.engines.subtitle')}>
         <EngineStatusPanel status={status} error={statusError} />
       </Surface>
 
-      <Surface
-        className="mt-4"
-        title="Analyse a submission"
-        subtitle="Nothing is analysed until you press Analyse. The text is stored with the report so it can be reproduced."
-      >
+      <Surface className="mt-4" title={t('integrity.form.title')} subtitle={t('integrity.form.subtitle')}>
         <AnalysisForm onAnalyze={handleAnalyze} busy={busy} error={error} engines={engines} />
       </Surface>
 
@@ -125,11 +120,7 @@ export default function AcademicIntegrityPage() {
         </div>
       )}
 
-      <Surface
-        className="mt-4"
-        title="Previous analyses"
-        subtitle="Stored for your account only, and used as the internal comparison set for the next submission"
-      >
+      <Surface className="mt-4" title={t('integrity.history.title')} subtitle={t('integrity.history.subtitle')}>
         <HistoryList
           items={history}
           onOpen={handleOpen}

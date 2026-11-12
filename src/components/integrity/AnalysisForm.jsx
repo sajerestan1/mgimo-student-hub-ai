@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { countWords, MAX_CHARS, MIN_WORDS } from '@/lib/integrity/api';
+import { useI18n } from '@/i18n/I18nProvider';
 
 const ACCEPTED = ['.txt', '.md', '.csv', '.json'];
 const MAX_FILE_BYTES = 1000000;
@@ -13,12 +14,13 @@ function readTextFile(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('That file could not be read.'));
+    reader.onerror = () => reject(new Error('unreadable'));
     reader.readAsText(file);
   });
 }
 
 function EngineOption({ engine, checked, onChange, busy }) {
+  const { t } = useI18n();
   const configured = engine.configured === true;
   return (
     <label className={cn('flex items-start gap-2.5', (!configured || busy) && 'opacity-90')}>
@@ -37,9 +39,9 @@ function EngineOption({ engine, checked, onChange, busy }) {
         <span className="mt-0.5 block text-[12.5px] leading-[1.5] text-mutedink">
           {configured
             ? engine.description
-            : `DETECTION ENGINE NOT CONFIGURED${
+            : `${t('integrity.engines.notConfigured')}${
                 engine.waitingFor && engine.waitingFor.length
-                  ? ` — awaiting ${engine.waitingFor.join(', ')}`
+                  ? t('integrity.form.awaitingSuffix', { names: engine.waitingFor.join(', ') })
                   : ''
               }`}
         </span>
@@ -49,6 +51,7 @@ function EngineOption({ engine, checked, onChange, busy }) {
 }
 
 export default function AnalysisForm({ onAnalyze, busy, error, engines }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState('');
   const [reference, setReference] = useState('');
   const [text, setText] = useState('');
@@ -92,14 +95,12 @@ export default function AnalysisForm({ onAnalyze, busy, error, engines }) {
     setFileError('');
     const name = file.name.toLowerCase();
     if (!ACCEPTED.some((extension) => name.endsWith(extension))) {
-      setFileError(
-        'Supported formats are .txt, .md, .csv and .json. PDF and Word files are not extracted — paste the text instead.',
-      );
+      setFileError(t('integrity.form.fileFormat'));
       event.target.value = '';
       return;
     }
     if (file.size > MAX_FILE_BYTES) {
-      setFileError('That file is larger than 1 MB. Paste the text instead.');
+      setFileError(t('integrity.form.fileSize'));
       event.target.value = '';
       return;
     }
@@ -108,7 +109,7 @@ export default function AnalysisForm({ onAnalyze, busy, error, engines }) {
       setText(value);
       if (!title.trim()) setTitle(file.name.replace(/\.[^.]+$/, ''));
     } catch (caught) {
-      setFileError(caught.message);
+      setFileError(caught.message === 'unreadable' ? t('integrity.form.fileUnreadable') : caught.message);
     }
   };
 
@@ -129,38 +130,39 @@ export default function AnalysisForm({ onAnalyze, busy, error, engines }) {
     <form onSubmit={submit} className="space-y-3.5">
       <div className="grid gap-3 md:grid-cols-2">
         <label className="block">
-          <span className="mb-1.5 block text-[13.5px] font-medium text-ink">Submission title</span>
+          <span className="mb-1.5 block text-[13.5px] font-medium text-ink">{t('integrity.form.titleLabel')}</span>
           <input
             type="text"
             value={title}
             maxLength={180}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="e.g. Essay 2 — Sovereignty in the 21st century"
+            placeholder={t('integrity.form.titlePlaceholder')}
             className={field}
           />
         </label>
         <label className="block">
           <span className="mb-1.5 block text-[13.5px] font-medium text-ink">
-            Student name or submission identifier <span className="font-normal text-mutedink">(optional)</span>
+            {t('integrity.form.referenceLabel')}{' '}
+            <span className="font-normal text-mutedink">{t('integrity.form.optional')}</span>
           </span>
           <input
             type="text"
             value={reference}
             maxLength={180}
             onChange={(event) => setReference(event.target.value)}
-            placeholder="e.g. Ivanova A. / sub-2026-118"
+            placeholder={t('integrity.form.referencePlaceholder')}
             className={field}
           />
         </label>
       </div>
 
       <label className="block">
-        <span className="mb-1.5 block text-[13.5px] font-medium text-ink">Submitted text</span>
+        <span className="mb-1.5 block text-[13.5px] font-medium text-ink">{t('integrity.form.textLabel')}</span>
         <textarea
           value={text}
           onChange={(event) => setText(event.target.value)}
           rows={10}
-          placeholder="Paste the academic text you want to analyse."
+          placeholder={t('integrity.form.textPlaceholder')}
           className={cn(field, 'min-h-[190px] resize-y leading-[1.65]')}
         />
       </label>
@@ -174,7 +176,7 @@ export default function AnalysisForm({ onAnalyze, busy, error, engines }) {
             disabled={busy}
           >
             <Upload className="h-4 w-4" strokeWidth={1.9} />
-            Upload a text file
+            {t('integrity.form.upload')}
           </button>
           <input
             ref={fileRef}
@@ -183,28 +185,30 @@ export default function AnalysisForm({ onAnalyze, busy, error, engines }) {
             onChange={handleFile}
             className="hidden"
           />
-          <span className="text-[12.5px] text-mutedink">.txt, .md, .csv, .json — up to 1 MB</span>
+          <span className="text-[12.5px] text-mutedink">{t('integrity.form.fileHint')}</span>
         </div>
         <div className="flex items-center gap-3 text-[12.5px] text-mutedink">
           <span className={cn(words >= MIN_WORDS ? 'text-ink' : 'text-warning')}>
-            {words} {words === 1 ? 'word' : 'words'}
+            {t(words === 1 ? 'integrity.form.wordOne' : 'integrity.form.wordMany', {
+              count: words.toLocaleString(),
+            })}
           </span>
-          <span>minimum {MIN_WORDS}</span>
-          {tooLong && <span className="text-critical">over the character limit</span>}
+          <span>{t('integrity.form.minimum', { count: MIN_WORDS })}</span>
+          {tooLong && <span className="text-critical">{t('integrity.form.overLimit')}</span>}
         </div>
       </div>
 
       <div className="space-y-2.5 rounded-lg border border-line bg-canvas px-3 py-2.5">
         <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-mutedink">
-          Detection engines — the internal check always runs
+          {t('integrity.form.enginesHeading')}
         </p>
 
         <label className="flex items-start gap-2.5">
           <input type="checkbox" checked readOnly disabled className="mt-0.5 h-4 w-4 rounded border-line accent-brand" />
           <span className="min-w-0">
-            <span className="block text-[13.5px] font-medium text-ink">Internal similarity (always on)</span>
+            <span className="block text-[13.5px] font-medium text-ink">{t('integrity.form.internalLabel')}</span>
             <span className="mt-0.5 block text-[12.5px] leading-[1.5] text-mutedink">
-              Compares the text only with submissions already analysed in this workspace. Nothing leaves the platform.
+              {t('integrity.form.internalBody')}
             </span>
           </span>
         </label>
@@ -243,9 +247,7 @@ export default function AnalysisForm({ onAnalyze, busy, error, engines }) {
               className="mt-0.5 h-4 w-4 rounded border-line accent-brand"
             />
             <span className="min-w-0 text-[12.5px] leading-[1.55] text-ink">
-              I authorise sending this submission text to{' '}
-              <span className="font-medium">{providerNames.join(' and ')}</span> for the selected checks. The provider
-              stores and processes it under its own academic-integrity terms.
+              {t('integrity.form.consent', { providers: providerNames.join(t('integrity.form.consentJoin')) })}
             </span>
           </label>
         )}
@@ -259,10 +261,10 @@ export default function AnalysisForm({ onAnalyze, busy, error, engines }) {
 
       <div className="flex flex-wrap items-center gap-2">
         <button type="submit" disabled={!canSubmit} className={cn('btn-primary', !canSubmit && 'opacity-60')}>
-          {busy ? 'Analysing…' : 'Analyse submission'}
+          {busy ? t('integrity.form.submitBusy') : t('integrity.form.submit')}
         </button>
         <button type="button" onClick={reset} disabled={busy} className="btn-quiet">
-          Clear input
+          {t('integrity.form.clear')}
         </button>
       </div>
     </form>

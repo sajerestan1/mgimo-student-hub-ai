@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { loadAttendancePolicy, saveAttendancePolicy } from '@/lib/academicIntelligence';
+import { useI18n } from '@/i18n/I18nProvider';
 
 /**
  * Institutional attendance policy. Only administrative staff can change it:
@@ -9,6 +10,7 @@ import { loadAttendancePolicy, saveAttendancePolicy } from '@/lib/academicIntell
  */
 export default function AttendancePolicyPanel() {
   const { toast } = useToast();
+  const { t } = useI18n();
   const [policy, setPolicy] = useState(null);
   const [limit, setLimit] = useState('');
   const [institution, setInstitution] = useState('');
@@ -30,9 +32,9 @@ export default function AttendancePolicyPanel() {
       const { policy: saved } = await saveAttendancePolicy({ absenceLimit: Number(limit), institution });
       setPolicy(saved);
       setLimit(String(saved.absenceLimit));
-      toast({ title: 'Attendance policy saved' });
+      toast({ title: t('intel.policy.saved') });
     } catch (error) {
-      toast({ title: 'Policy was not saved', description: error.message, variant: 'destructive' });
+      toast({ title: t('intel.policy.notSaved'), description: error.message, variant: 'destructive' });
     } finally {
       setBusy(false);
     }
@@ -42,15 +44,15 @@ export default function AttendancePolicyPanel() {
     <div className="card-surface mb-4 px-4 py-3.5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-mutedink">Attendance policy</p>
+          <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-mutedink">{t('intel.policy.title')}</p>
           <p className="mt-1 text-[13px] leading-relaxed text-mutedink">
-            Permitted missed classes per semester, used by every student allowance and threshold alert.
-            {policy?.configured ? '' : ' Currently the prototype default.'}
+            {t('intel.policy.body')}
+            {policy?.configured ? '' : ` ${t('intel.policy.defaultNote')}`}
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-2">
           <label className="text-[12.5px] text-mutedink">
-            Institution
+            {t('intel.policy.institution')}
             <input
               value={institution}
               onChange={(event) => setInstitution(event.target.value)}
@@ -58,7 +60,7 @@ export default function AttendancePolicyPanel() {
             />
           </label>
           <label className="text-[12.5px] text-mutedink">
-            Permitted absences
+            {t('intel.policy.permitted')}
             <input
               type="number"
               min="1"
@@ -69,7 +71,7 @@ export default function AttendancePolicyPanel() {
             />
           </label>
           <button type="button" onClick={save} disabled={busy || !policy} className="btn-primary disabled:opacity-60">
-            {busy ? 'Saving…' : 'Save policy'}
+            {busy ? t('intel.policy.saving') : t('intel.policy.save')}
           </button>
         </div>
       </div>

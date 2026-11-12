@@ -34,6 +34,7 @@ const fr = {
       grades: 'Notes et relevé',
       attendance: 'Assiduité',
       intelligence: 'Analyse académique',
+      academicIntegrity: 'Intégrité académique',
       applications: 'Demandes et attestations',
       library: 'Bibliothèque',
       studyGroups: 'Groupes de travail',

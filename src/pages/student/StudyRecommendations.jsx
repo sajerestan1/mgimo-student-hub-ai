@@ -15,10 +15,12 @@ import {
   loadRecommendations,
   savePlan,
 } from '@/lib/studyRecommendations';
+import { useI18n } from '@/i18n/I18nProvider';
 
 const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
 
 export default function StudyRecommendations() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [context, setContext] = useState(null);
@@ -75,7 +77,7 @@ export default function StudyRecommendations() {
       });
       setItems(await loadRecommendations(user.id));
     } catch {
-      setError('The plan could not be built just now. Please try again in a moment.');
+      setError(t('office.recommendations.error'));
     } finally {
       setGenerating(false);
     }
@@ -101,13 +103,13 @@ export default function StudyRecommendations() {
   return (
     <div>
       <PageTitle
-        eyebrow="Student workspace"
-        title="Study recommendations"
-        description="A plan built from your own marks, attendance and open work: the readings and tasks most likely to lift your weakest results."
+        eyebrow={t('student.common.studentWorkspace')}
+        title={t('office.recommendations.title')}
+        description={t('office.recommendations.description')}
         meta={[
-          `${courses.length} courses analysed`,
-          `${materials.length} published materials in scope`,
-          'AI-generated guidance',
+          t('office.recommendations.metaCourses', { count: courses.length }),
+          t('office.recommendations.metaMaterials', { count: materials.length }),
+          t('office.recommendations.metaAi'),
         ]}
         actions={
           <button
@@ -118,11 +120,12 @@ export default function StudyRecommendations() {
           >
             {generating ? (
               <>
-                <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Building plan…
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" /> {t('office.recommendations.building')}
               </>
             ) : (
               <>
-                <Sparkles className="h-3.5 w-3.5" /> {items.length ? 'Refresh plan' : 'Build my plan'}
+                <Sparkles className="h-3.5 w-3.5" />{' '}
+                {items.length ? t('office.recommendations.refresh') : t('office.recommendations.build')}
               </>
             )}
           </button>
@@ -134,21 +137,23 @@ export default function StudyRecommendations() {
         columns={4}
         items={[
           {
-            label: 'Weighted average',
+            label: t('office.recommendations.kpiAverage'),
             value: context.summary.average === null ? '—' : context.summary.average.toFixed(1),
             delta: context.summary.averageLetter,
             tone: 'neutral',
-            hint: context.summary.average === null ? 'No result recorded yet' : 'Drives the plan',
+            hint: context.summary.average === null ? t('office.recommendations.kpiAverageHint') : t('office.recommendations.kpiAverageHintReady'),
           },
           {
-            label: 'Weakest course',
+            label: t('office.recommendations.kpiWeakest'),
             value: weakest ? weakest.weighted.toFixed(1) : '—',
             delta: weakest ? weakest.code : '',
             tone: weakest ? 'critical' : 'neutral',
-            hint: weakest ? `Grade ${weakest.letter}` : 'Not enough results',
+            hint: weakest
+              ? t('office.recommendations.kpiWeakestHint', { letter: weakest.letter })
+              : t('office.recommendations.kpiWeakestHintNone'),
           },
-          { label: 'Steps to work through', value: open.length, hint: 'Suggested or in progress' },
-          { label: 'Completed', value: completed, hint: 'Marked done by you' },
+          { label: t('office.recommendations.kpiSteps'), value: open.length, hint: t('office.recommendations.kpiStepsHint') },
+          { label: t('office.recommendations.kpiCompleted'), value: completed, hint: t('office.recommendations.kpiCompletedHint') },
         ]}
       />
 
@@ -156,14 +161,14 @@ export default function StudyRecommendations() {
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
         <Surface
-          title="Your plan"
-          subtitle={summary || 'Each step names the exact reading or task to work through next.'}
+          title={t('office.recommendations.plan')}
+          subtitle={summary || t('office.recommendations.planSub')}
           bodyClassName="px-0 pb-0 pt-0"
           action={
             items.length ? (
-              <StatusChip tone="brand">{open.length} open</StatusChip>
+              <StatusChip tone="brand">{t('office.recommendations.openCount', { count: open.length })}</StatusChip>
             ) : (
-              <StatusChip tone="neutral">Not built yet</StatusChip>
+              <StatusChip tone="neutral">{t('office.recommendations.notBuilt')}</StatusChip>
             )
           }
         >
@@ -173,16 +178,16 @@ export default function StudyRecommendations() {
                 <Sparkles className="h-5 w-5" />
               </span>
               <p className="mt-3 text-[15px] font-medium text-ink">
-                {generating ? 'Reading your record…' : ready ? 'No plan yet' : 'More academic activity needed'}
+                {generating ? t('office.recommendations.readingRecord') : ready ? t('office.recommendations.noPlan') : t('office.recommendations.needActivity')}
               </p>
               <p className="mx-auto mt-1 max-w-sm text-[14px] leading-relaxed text-mutedink">
                 {ready
-                  ? 'Your adviser reviews every course result, attendance record and open deadline, then proposes work you can start today.'
-                  : 'A plan is built from graded work and recorded attendance. Once your first result is published in your courses, you can build one here.'}
+                  ? t('office.recommendations.readyBody')
+                  : t('office.recommendations.notReadyBody')}
               </p>
               {ready && !generating && (
                 <button type="button" onClick={generate} className="btn-primary mx-auto mt-4">
-                  <Sparkles className="h-3.5 w-3.5" /> Build my study plan
+                  <Sparkles className="h-3.5 w-3.5" /> {t('office.recommendations.buildLong')}
                 </button>
               )}
             </div>
@@ -201,7 +206,7 @@ export default function StudyRecommendations() {
         </Surface>
 
         <div className="space-y-4">
-          <Surface title="Where the plan starts" subtitle="Recorded course results">
+          <Surface title={t('office.recommendations.whereStarts')} subtitle={t('office.recommendations.courseResults')}>
             {courses.length ? (
               <ul className="space-y-2">
                 {[...courses]
@@ -212,25 +217,24 @@ export default function StudyRecommendations() {
                         <span className="font-medium">{course.code}</span>
                       </span>
                       <span className="shrink-0 tabular-nums text-mutedink">
-                        {course.weighted === null ? 'not graded' : `${course.weighted.toFixed(1)} · ${course.letter}`}
+                        {course.weighted === null ? t('office.recommendations.notGraded') : `${course.weighted.toFixed(1)} · ${course.letter}`}
                       </span>
                     </li>
                   ))}
               </ul>
             ) : (
-              <p className="text-[14px] text-mutedink">No published courses yet.</p>
+              <p className="text-[14px] text-mutedink">{t('office.recommendations.noCourses')}</p>
             )}
           </Surface>
 
-          <Surface title="How this works">
+          <Surface title={t('office.recommendations.howTitle')}>
             <ul className="space-y-1.5 text-[14px] leading-relaxed text-ink/80">
-              <li>· Reads your own marks, attendance and open assignments</li>
-              <li>· Recommends only materials published for your courses</li>
-              <li>· Regenerating replaces the steps you have not started</li>
+              <li>· {t('office.recommendations.howReads')}</li>
+              <li>· {t('office.recommendations.howMaterials')}</li>
+              <li>· {t('office.recommendations.howRegenerate')}</li>
             </ul>
             <p className="mt-3 border-t border-line pt-3 text-[13px] leading-relaxed text-mutedink">
-              These are AI-generated suggestions, not official academic decisions. Grades are changed only by your
-              professors.
+              {t('office.recommendations.aiNote')}
             </p>
           </Surface>
         </div>

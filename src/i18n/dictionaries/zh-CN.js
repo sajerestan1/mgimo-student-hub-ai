@@ -34,6 +34,7 @@ const zhCN = {
       grades: '成绩与成绩单',
       attendance: '出勤',
       intelligence: '学业智能分析',
+      academicIntegrity: '学术诚信',
       applications: '申请与证明',
       library: '图书馆',
       studyGroups: '学习小组',

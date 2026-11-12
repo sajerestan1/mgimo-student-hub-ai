@@ -5,28 +5,37 @@ import StatusChip from '@/components/shell/StatusChip';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { APPLICATIONS, STUDENT, formatDate, isoIn } from '@/lib/studentWorkspace';
+import { useI18n } from '@/i18n/I18nProvider';
 
-const TYPES = ['Enrolment certificate', 'Transcript (English)', 'Transcript (Russian)', 'Academic leave request'];
+// The stored value stays the canonical English label so a request keeps its
+// meaning when the interface language changes.
+const TYPES = [
+  { value: 'Enrolment certificate', key: 'enrolment' },
+  { value: 'Transcript (English)', key: 'transcriptEn' },
+  { value: 'Transcript (Russian)', key: 'transcriptRu' },
+  { value: 'Academic leave request', key: 'leave' },
+];
 
 const REQUEST_STATUS = {
-  submitted: { label: 'Submitted', tone: 'brand' },
-  under_review: { label: 'In review', tone: 'warning' },
-  approved: { label: 'Approved', tone: 'positive' },
-  rejected: { label: 'Rejected', tone: 'critical' },
-  completed: { label: 'Completed', tone: 'positive' },
-  draft: { label: 'Draft', tone: 'neutral' },
+  submitted: { key: 'submitted', tone: 'brand' },
+  under_review: { key: 'under_review', tone: 'warning' },
+  approved: { key: 'approved', tone: 'positive' },
+  rejected: { key: 'rejected', tone: 'critical' },
+  completed: { key: 'completed', tone: 'positive' },
+  draft: { key: 'draft', tone: 'neutral' },
 };
 
 const RECORD_STATUS = {
-  ready: { label: 'Ready to collect', tone: 'positive' },
-  in_review: { label: 'In review', tone: 'warning' },
-  rejected: { label: 'Rejected', tone: 'critical' },
+  ready: { key: 'ready', tone: 'positive' },
+  in_review: { key: 'in_review', tone: 'warning' },
+  rejected: { key: 'rejected', tone: 'critical' },
 };
 
 export default function ApplicationsPage() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const [requests, setRequests] = useState(null);
-  const [form, setForm] = useState({ certificate_type: TYPES[0], purpose: '', needed_by: '' });
+  const [form, setForm] = useState({ certificate_type: TYPES[0].value, purpose: '', needed_by: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -42,7 +51,7 @@ export default function ApplicationsPage() {
   const submit = async (event) => {
     event.preventDefault();
     if (!form.purpose.trim()) {
-      setError('Describe what the document is needed for.');
+      setError(t('office.applications.errorPurpose'));
       return;
     }
     setBusy(true);
@@ -57,10 +66,10 @@ export default function ApplicationsPage() {
         status: 'submitted',
         submitted_date: isoIn(0),
       });
-      setForm({ certificate_type: TYPES[0], purpose: '', needed_by: '' });
+      setForm({ certificate_type: TYPES[0].value, purpose: '', needed_by: '' });
       await load();
     } catch {
-      setError('The request could not be submitted. Please try again.');
+      setError(t('office.applications.errorSubmit'));
     } finally {
       setBusy(false);
     }
@@ -72,42 +81,42 @@ export default function ApplicationsPage() {
   return (
     <div>
       <PageTitle
-        eyebrow="Student workspace"
-        title="Applications & certificates"
-        description="Request enrolment certificates and transcripts, and follow the status of documents already in progress."
-        meta={['Student office · Building 2, window 4', 'Turnaround 2–3 working days']}
+        eyebrow={t('student.common.studentWorkspace')}
+        title={t('office.applications.title')}
+        description={t('office.applications.description')}
+        meta={['Student office · Building 2, window 4', t('office.applications.metaTurnaround')]}
       />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
-        <Surface title="New request" subtitle="Sent to the student office">
+        <Surface title={t('office.applications.newRequest')} subtitle={t('office.applications.newRequestSub')}>
           <form onSubmit={submit} className="space-y-3">
             <label className="block">
-              <span className="mb-1 block text-[11px] font-medium text-ink">Document</span>
+              <span className="mb-1 block text-[11px] font-medium text-ink">{t('office.applications.document')}</span>
               <select
                 value={form.certificate_type}
                 onChange={(event) => setForm((prev) => ({ ...prev, certificate_type: event.target.value }))}
                 className={fieldClass}
               >
                 {TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
+                  <option key={type.value} value={type.value}>
+                    {t(`office.applications.types.${type.key}`)}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-[11px] font-medium text-ink">Purpose</span>
+              <span className="mb-1 block text-[11px] font-medium text-ink">{t('office.applications.purpose')}</span>
               <input
                 value={form.purpose}
                 onChange={(event) => setForm((prev) => ({ ...prev, purpose: event.target.value }))}
-                placeholder="e.g. Bank account opening"
+                placeholder={t('office.applications.purposePlaceholder')}
                 className={fieldClass}
               />
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-[11px] font-medium text-ink">Needed by (optional)</span>
+              <span className="mb-1 block text-[11px] font-medium text-ink">{t('office.applications.neededBy')}</span>
               <input
                 type="date"
                 value={form.needed_by}
@@ -119,24 +128,23 @@ export default function ApplicationsPage() {
             {error && <p className="text-[11px] text-critical">{error}</p>}
 
             <button type="submit" disabled={busy} className="btn-primary w-full disabled:opacity-60">
-              {busy ? 'Submitting…' : 'Submit request'}
+              {busy ? t('office.applications.submitting') : t('office.applications.submit')}
             </button>
             <p className="text-[10.5px] leading-relaxed text-mutedink">
-              Requests are stored in the app database against your account ({STUDENT.studentId}). This prototype does
-              not send them on to the student office yet.
+              {t('office.applications.storageNote', { studentId: STUDENT.studentId })}
             </p>
           </form>
         </Surface>
 
         <div className="space-y-4">
           <Surface
-            title="Your submitted requests"
-            subtitle={requests === null ? 'Loading…' : `${requests.length} in the database`}
+            title={t('office.applications.yourRequests')}
+            subtitle={requests === null ? t('common.loading') : t('office.applications.inDatabase', { count: requests.length })}
             bodyClassName="px-0 pb-0 pt-1"
           >
             {requests && requests.length === 0 && (
               <p className="px-5 py-6 text-[11.5px] text-mutedink">
-                No requests submitted from this prototype yet.
+                {t('office.applications.empty')}
               </p>
             )}
             {requests && requests.length > 0 && (
@@ -151,11 +159,11 @@ export default function ApplicationsPage() {
                           <p className="mt-0.5 truncate text-[10.5px] text-mutedink">{request.purpose}</p>
                           {request.submitted_date && (
                             <p className="mt-0.5 text-[10px] text-mutedink">
-                              Submitted {formatDate(request.submitted_date)}
+                              {t('office.applications.submittedOn', { date: formatDate(request.submitted_date) })}
                             </p>
                           )}
                         </div>
-                        <StatusChip tone={status.tone}>{status.label}</StatusChip>
+                        <StatusChip tone={status.tone}>{t(`office.applications.requestStatus.${status.key}`)}</StatusChip>
                       </div>
                     </li>
                   );
@@ -165,8 +173,8 @@ export default function ApplicationsPage() {
           </Surface>
 
           <Surface
-            title="Example requests"
-            subtitle="From the demonstration academic record"
+            title={t('office.applications.examples')}
+            subtitle={t('office.applications.examplesSub')}
             bodyClassName="px-0 pb-0 pt-1"
           >
             <ul className="divide-y divide-line">
@@ -180,7 +188,7 @@ export default function ApplicationsPage() {
                         <p className="mt-0.5 truncate text-[10.5px] text-mutedink">{item.purpose}</p>
                         <p className="mt-1 text-[10.5px] leading-relaxed text-mutedink">{item.note}</p>
                       </div>
-                      <StatusChip tone={status.tone}>{status.label}</StatusChip>
+                      <StatusChip tone={status.tone}>{t(`office.applications.recordStatus.${status.key}`)}</StatusChip>
                     </div>
                   </li>
                 );

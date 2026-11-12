@@ -1,29 +1,25 @@
 import { ExternalLink, KeyRound, ShieldAlert, ShieldCheck } from 'lucide-react';
 import StatusChip from '@/components/shell/StatusChip';
+import { useI18n } from '@/i18n/I18nProvider';
 
-const ENGINE_COPY = {
-  plagiarism: {
-    title: 'External similarity (plagiarism)',
-    detail:
-      'Submits the text to a licensed similarity provider that searches internet and publisher sources and returns its own score, sources and matched passages.',
-  },
-  ai_detection: {
-    title: 'AI-writing detection',
-    detail:
-      'Submits the text to a dedicated AI-text detector and reports that detector’s own classification and probability.',
-  },
+const ENGINE_KEYS = {
+  plagiarism: { title: 'integrity.engines.plagiarismTitle', detail: 'integrity.engines.plagiarismBody' },
+  ai_detection: { title: 'integrity.engines.detectionTitle', detail: 'integrity.engines.detectionBody' },
 };
 
 function EngineTile({ engine }) {
-  const copy = ENGINE_COPY[engine.id] || { title: engine.label, detail: engine.description };
+  const { t } = useI18n();
+  const keys = ENGINE_KEYS[engine.id];
+  const title = keys ? t(keys.title) : engine.label;
+  const detail = keys ? t(keys.detail) : engine.description;
   const provider = engine.selectedProvider;
 
   return (
     <div className="rounded-xl border border-line bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[13px] font-semibold uppercase tracking-[0.06em] text-mutedink">{copy.title}</p>
-          <p className="mt-1 text-[13px] leading-[1.55] text-mutedink">{copy.detail}</p>
+          <p className="text-[13px] font-semibold uppercase tracking-[0.06em] text-mutedink">{title}</p>
+          <p className="mt-1 text-[13px] leading-[1.55] text-mutedink">{detail}</p>
         </div>
         <span
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
@@ -40,20 +36,22 @@ function EngineTile({ engine }) {
 
       {engine.configured ? (
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          <StatusChip tone="positive">Detection engine configured</StatusChip>
+          <StatusChip tone="positive">{t('integrity.engines.configured')}</StatusChip>
           <StatusChip tone="brand">{provider.label}</StatusChip>
-          {provider.credentials.length > 0 && <span className="text-[12.5px] text-mutedink">credentials present</span>}
+          {provider.credentials.length > 0 && (
+            <span className="text-[12.5px] text-mutedink">{t('integrity.engines.credentials')}</span>
+          )}
         </div>
       ) : (
         <div className="mt-3 space-y-2">
           <p className="inline-flex items-center gap-1.5 rounded-md bg-[#FCF3E4] px-2 py-1 text-[13px] font-semibold text-[#8E6018]">
             <ShieldAlert className="h-4 w-4" strokeWidth={2} />
-            DETECTION ENGINE NOT CONFIGURED
+            {t('integrity.engines.notConfigured')}
           </p>
           {engine.waitingFor.length > 0 ? (
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12.5px] text-mutedink">
               <KeyRound className="h-3.5 w-3.5" strokeWidth={1.9} />
-              Awaiting credentials:
+              {t('integrity.engines.awaiting')}
               {engine.waitingFor.map((name) => (
                 <code key={name} className="rounded bg-canvas px-1.5 py-0.5 font-mono text-[11.5px] text-ink">
                   {name}
@@ -61,12 +59,14 @@ function EngineTile({ engine }) {
               ))}
             </div>
           ) : (
-            <p className="text-[12.5px] text-mutedink">No provider with a usable API is available for this engine.</p>
+            <p className="text-[12.5px] text-mutedink">{t('integrity.engines.noProvider')}</p>
           )}
           {engine.candidates.length > 0 && (
             <p className="text-[12.5px] leading-[1.55] text-mutedink">
-              Supported provider: {engine.candidates.map((row) => row.label).join(', ')}.{' '}
-              {engine.candidates[0].accessModel}
+              {t('integrity.engines.supported', {
+                providers: engine.candidates.map((row) => row.label).join(', '),
+                model: engine.candidates[0].accessModel,
+              })}
             </p>
           )}
         </div>
@@ -80,15 +80,17 @@ function EngineTile({ engine }) {
  * waiting for credentials. It never implies a capability the app does not have.
  */
 export default function EngineStatusPanel({ status, error }) {
+  const { t } = useI18n();
+
   if (error) {
     return (
       <p className="rounded-lg border border-[#F3D6D6] bg-[#FBECEC] px-3 py-2 text-[13.5px] text-[#A23B3B]">
-        Detection engine status could not be loaded: {error}
+        {t('integrity.engines.error', { error })}
       </p>
     );
   }
   if (!status) {
-    return <p className="text-[13.5px] text-mutedink">Checking which detection engines are configured…</p>;
+    return <p className="text-[13.5px] text-mutedink">{t('integrity.engines.loading')}</p>;
   }
 
   const unavailable = (status.engines || []).flatMap((engine) => engine.unavailableProviders || []);
@@ -103,14 +105,13 @@ export default function EngineStatusPanel({ status, error }) {
 
       {status.sandboxAvailable && (
         <p className="rounded-lg border border-[#EBD9B4] bg-[#FCF7EA] px-3 py-2 text-[12.5px] text-[#8E6018]">
-          Copyleaks sandbox mode is switched on: provider scans return simulated results and consume no credits. Turn it
-          off before relying on a report.
+          {t('integrity.engines.sandbox')}
         </p>
       )}
 
       {unavailable.length > 0 && (
         <div className="rounded-lg border border-line bg-canvas px-3 py-2.5">
-          <p className="text-[13px] font-semibold text-ink">Providers not available to this app</p>
+          <p className="text-[13px] font-semibold text-ink">{t('integrity.engines.unavailableTitle')}</p>
           <ul className="mt-1.5 space-y-1.5">
             {unavailable.map((provider) => (
               <li key={`${provider.id}-${provider.label}`} className="text-[12.5px] leading-[1.55] text-mutedink">
@@ -121,7 +122,7 @@ export default function EngineStatusPanel({ status, error }) {
                   rel="noreferrer noopener"
                   className="inline-flex items-center gap-0.5 text-brand hover:text-[#3B5AE0]"
                 >
-                  documentation
+                  {t('integrity.engines.documentation')}
                   <ExternalLink className="h-3 w-3" strokeWidth={2} />
                 </a>
               </li>

@@ -1,5 +1,6 @@
 import { GraduationCap } from 'lucide-react';
 import { longWeekLabel, timeLabel, weekDays } from '@/lib/timetable/week';
+import { useI18n } from '@/i18n/I18nProvider';
 
 // Kind identity for the exported document: navy, blue and green accents keep
 // the sheet inside the institution palette (no new colour system).
@@ -19,6 +20,7 @@ const kindMeta = (kind) => KIND[kind] || { label: kind || 'Session', accent: '#6
  * interface text, so it keeps its own compact sizes.
  */
 export default function TimetableSheet({ sessions, title, subtitle, identity, weekStart }) {
+  const { t } = useI18n();
   const days = weekDays(weekStart);
   const byDate = {};
   (sessions || []).forEach((session) => {
@@ -48,10 +50,10 @@ export default function TimetableSheet({ sessions, title, subtitle, identity, we
               </td>
               <td className="pl-3 align-middle">
                 <p className="t-15 font-semibold tracking-[-0.01em]">Academic Intelligence</p>
-                <p className="t-11 text-white/70">Weekly timetable · issued from the academic register</p>
+                <p className="t-11 text-white/70">{t('office.timetable.sheetSubtitle')}</p>
               </td>
               <td className="align-middle text-right">
-                <p className="t-10 font-semibold uppercase tracking-[0.16em] text-white/60">Week</p>
+                <p className="t-10 font-semibold uppercase tracking-[0.16em] text-white/60">{t('office.timetable.week')}</p>
                 <p className="t-15 mt-1 font-semibold">{longWeekLabel(weekStart)}</p>
               </td>
             </tr>
@@ -69,7 +71,7 @@ export default function TimetableSheet({ sessions, title, subtitle, identity, we
             </td>
             {identity && (
               <td className="pb-3 text-right align-bottom">
-                <p className="t-10 font-semibold uppercase tracking-[0.12em] text-mutedink">Issued to</p>
+                <p className="t-10 font-semibold uppercase tracking-[0.12em] text-mutedink">{t('office.timetable.issuedTo')}</p>
                 <p className="t-12 font-semibold text-ink">{identity}</p>
               </td>
             )}
@@ -128,7 +130,7 @@ export default function TimetableSheet({ sessions, title, subtitle, identity, we
                   })}
                   {!items.length && (
                     <div className="rounded-md border border-dashed border-line px-1 py-5 text-center">
-                      <p className="t-9 leading-snug text-mutedink">No classes</p>
+                      <p className="t-9 leading-snug text-mutedink">{t('office.timetable.noClasses')}</p>
                     </div>
                   )}
                 </td>
@@ -149,13 +151,13 @@ export default function TimetableSheet({ sessions, title, subtitle, identity, we
                     className="mr-1.5 inline-block align-middle"
                     style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: meta.accent }}
                   />
-                  <span className="t-9 align-middle text-ink/80">{meta.label}</span>
+                  <span className="t-9 align-middle text-ink/80">{t(`student.dashboard.kinds.${key}`)}</span>
                 </span>
               ))}
             </td>
             <td className="px-3 py-2 text-right align-middle">
-              <p className="t-9 text-mutedink">Generated {generated}</p>
-              <p className="t-9 text-mutedink">Confidential — issued to the named account.</p>
+              <p className="t-9 text-mutedink">{t('office.timetable.generated', { date: generated })}</p>
+              <p className="t-9 text-mutedink">{t('office.timetable.confidential')}</p>
             </td>
           </tr>
         </tbody>
