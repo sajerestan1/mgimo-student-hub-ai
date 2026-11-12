@@ -17,6 +17,10 @@ import { student } from '../src/i18n/dictionaries/modules/student.js';
 import { assessment } from '../src/i18n/dictionaries/modules/assessment.js';
 import { studyGroups } from '../src/i18n/dictionaries/modules/studyGroups.js';
 import { integrity } from '../src/i18n/dictionaries/modules/integrity.js';
+import { intel } from '../src/i18n/dictionaries/modules/intel.js';
+import { office } from '../src/i18n/dictionaries/modules/office.js';
+
+const rootPacks = [integrity, intel, office];
 
 const base = { en, ru, fr, 'zh-CN': zhCN, ar };
 const packs = [student, assessment, studyGroups];
@@ -35,7 +39,11 @@ const merged = Object.fromEntries(
       base[language]
     );
     // Shared packs keep their own root namespace, exactly as modules/index.js does.
-    return [language, { ...withPacks, integrity: (integrity[language] || integrity.en).integrity }];
+    const withRootPacks = rootPacks.reduce(
+      (acc, pack) => ({ ...acc, ...(pack[language] || pack.en) }),
+      withPacks
+    );
+    return [language, withRootPacks];
   })
 );
 
@@ -92,8 +100,10 @@ console.log(`interpolation: ${interpolationIssues ? `${interpolationIssues} mism
 
 // Coverage per surface, so each workspace can be reported on its own.
 const groups = [
-  ['shared shell / auth / account', (key) => !key.startsWith('student.') && !key.startsWith('integrity.')],
+  ['shared shell / auth / account', (key) => !/^(student|integrity|intel|office)\./.test(key)],
   ['academic integrity workspace', (key) => key.startsWith('integrity.')],
+  ['academic intelligence panels', (key) => key.startsWith('intel.')],
+  ['student office screens', (key) => key.startsWith('office.')],
   ['student dashboard & courses', (key) => key.startsWith('student.') && !/^student\.(quizzes|grades|attendance)\./.test(key)],
   ['student quizzes', (key) => key.startsWith('student.quizzes.')],
   ['student grades & transcript', (key) => key.startsWith('student.grades.')],

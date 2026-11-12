@@ -62,6 +62,8 @@ export const intel = {
         outsideEnrolment: 'outside current enrolment',
         registerNote: 'Counted from the official class register: one entry per course per day, so a duplicated register row is never a second absence, and a cancelled class is neither attended nor missed. Late and excused sessions count as attended.',
         policyLine: 'Policy: {limit} permitted missed classes per semester — {note}',
+        noEntries: 'No register entries recorded yet.',
+        bySemester: 'By semester',
       },
       work: {
         open: 'Open',
@@ -189,6 +191,8 @@ export const intel = {
         outsideEnrolment: 'вне текущего зачисления',
         registerNote: 'Считается по официальному журналу занятий: одна запись на курс в день, поэтому дублирующая строка журнала не становится вторым пропуском, а отменённое занятие не считается ни посещённым, ни пропущенным. Опоздания и пропуски по уважительной причине считаются посещением.',
         policyLine: 'Правило: {limit} допустимых пропусков за семестр — {note}',
+        noEntries: 'Записей в журнале пока нет.',
+        bySemester: 'По семестру',
       },
       work: {
         open: 'Открыть',
@@ -316,6 +320,8 @@ export const intel = {
         outsideEnrolment: 'hors inscription actuelle',
         registerNote: 'Calculé à partir du registre officiel : une entrée par cours et par jour, une ligne dupliquée ne compte donc jamais comme une seconde absence, et une séance annulée n’est ni suivie ni manquée. Les retards et les absences justifiées comptent comme présence.',
         policyLine: 'Règle : {limit} séances manquées autorisées par semestre — {note}',
+        noEntries: 'Aucune entrée de registre enregistrée pour l’instant.',
+        bySemester: 'Par semestre',
       },
       work: {
         open: 'Ouvrir',
@@ -443,6 +449,8 @@ export const intel = {
         outsideEnrolment: '不在当前选课范围',
         registerNote: '依据官方考勤记录统计：每门课程每天一条记录，因此重复的记录行不会构成第二次缺课，已取消的课程既不算出勤也不算缺课。迟到与请假均计为出勤。',
         policyLine: '规定：每学期允许缺课 {limit} 次 — {note}',
+        noEntries: '尚无已记录的考勤条目。',
+        bySemester: '按学期',
       },
       work: {
         open: '打开',
@@ -568,6 +576,8 @@ export const intel = {
         perCourse: 'بحسب المقرر',
         courseRow: 'حاضر {present} · متأخر {late} · بعذر {excused} · غائب {absent}',
         outsideEnrolment: 'خارج التسجيل الحالي',
+        noEntries: 'لا توجد قيود مسجّلة في السجل بعد.',
+        bySemester: 'بحسب الفصل',
         registerNote: 'محسوب من سجل الحضور الرسمي: قيد واحد لكل مقرر في اليوم، لذلك لا يُحتسب القيد المكرّر غيابًا ثانيًا، ولا تُعدّ الجلسة الملغاة حضورًا ولا غيابًا. يُحتسب التأخر والغياب بعذر حضورًا.',
         policyLine: 'السياسة: {limit} غيابات مسموحة لكل فصل — {note}',
       },

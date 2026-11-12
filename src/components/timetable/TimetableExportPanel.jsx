@@ -6,14 +6,14 @@ import SyncStatus from '@/components/timetable/SyncStatus';
 import TimetableSheet from '@/components/timetable/TimetableSheet';
 import { exportPdf, exportPng, printSheet, shareSheet } from '@/lib/timetable/exportFile';
 import { timeLabel, weekDays } from '@/lib/timetable/week';
-
-const KIND = { lecture: 'Lecture', seminar: 'Seminar', practice: 'Practice' };
+import { useI18n } from '@/i18n/I18nProvider';
 
 /**
  * The shared weekly timetable view: one visual language, one export path, in
  * every workspace. Data arrives already authorised from the server.
  */
 export default function TimetableExportPanel({ timetable, title, slug }) {
+  const { t } = useI18n();
   const { weekStart, setWeekStart, payload, syncedAt, source, error, loading, syncing, online, sync } = timetable;
   const sheetRef = useRef(null);
   const [busy, setBusy] = useState('');
@@ -71,10 +71,10 @@ export default function TimetableExportPanel({ timetable, title, slug }) {
 
       <div className="divide-y divide-line">
         {loading && !payload && (
-          <p className="px-5 py-10 text-center text-[14px] text-mutedink">Loading your timetable…</p>
+          <p className="px-5 py-10 text-center text-[14px] text-mutedink">{t('office.timetable.loading')}</p>
         )}
         {!loading && !payload && !error && (
-          <p className="px-5 py-10 text-center text-[14px] text-mutedink">No timetable is available for this week.</p>
+          <p className="px-5 py-10 text-center text-[14px] text-mutedink">{t('office.timetable.emptyWeek')}</p>
         )}
 
         {(payload ? days : []).map((day) => {
@@ -87,7 +87,7 @@ export default function TimetableExportPanel({ timetable, title, slug }) {
                 <p className="text-[13px] font-semibold text-ink">
                   {day.weekday} <span className="text-mutedink">{day.day} {day.month}</span>
                 </p>
-                <p className="text-[11px] text-mutedink">{items.length ? `${items.length} scheduled` : 'Free'}</p>
+                <p className="text-[11px] text-mutedink">{items.length ? t('office.timetable.scheduled', { count: items.length }) : t('office.timetable.free')}</p>
               </div>
               {items.length ? (
                 <ul className="mt-2 space-y-1.5">
@@ -103,7 +103,7 @@ export default function TimetableExportPanel({ timetable, title, slug }) {
                           {session.course_title}
                         </span>
                         <span className="mt-0.5 block text-[12px] text-mutedink">
-                          {[KIND[session.kind] || session.kind, session.room, session.group_name, session.professor_name]
+                          {[session.kind ? t(`student.dashboard.kinds.${session.kind}`) : session.kind, session.room, session.group_name, session.professor_name]
                             .filter(Boolean)
                             .join(' · ')}
                         </span>
@@ -112,7 +112,7 @@ export default function TimetableExportPanel({ timetable, title, slug }) {
                   ))}
                 </ul>
               ) : (
-                <p className="mt-1.5 text-[12px] text-mutedink">No classes scheduled.</p>
+                <p className="mt-1.5 text-[12px] text-mutedink">{t('office.timetable.noClassesScheduled')}</p>
               )}
             </div>
           );

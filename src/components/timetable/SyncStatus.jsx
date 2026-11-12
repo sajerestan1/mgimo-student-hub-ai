@@ -1,5 +1,6 @@
 import { CloudOff, RefreshCw, ShieldCheck, Wifi } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n/I18nProvider';
 
 const stamp = (iso) => {
   if (!iso) return 'never';
@@ -12,6 +13,7 @@ const stamp = (iso) => {
  * stale warning. Cached data is labelled as cached — never presented as live.
  */
 export default function SyncStatus({ online, syncing, syncedAt, source, error, onSync }) {
+  const { t } = useI18n();
   const offline = !online;
   const stale = source === 'cache' && !offline;
   return (
@@ -23,15 +25,15 @@ export default function SyncStatus({ online, syncing, syncedAt, source, error, o
     >
       <span className="inline-flex items-center gap-1.5 font-medium">
         {offline ? <CloudOff className="h-3.5 w-3.5" /> : <Wifi className="h-3.5 w-3.5" />}
-        {offline ? 'Offline — showing your saved timetable' : 'Online'}
+        {offline ? t('office.timetable.offlineSaved') : t('office.timetable.online')}
       </span>
-      <span>Last synced {stamp(syncedAt)}</span>
-      {source === 'cache' && <span>· saved copy</span>}
-      {stale && !error && <span className="text-[#8E6018]">· may be out of date</span>}
+      <span>{t('office.timetable.lastSynced', { stamp: syncedAt ? stamp(syncedAt) : t('office.profile.notRecorded') })}</span>
+      {source === 'cache' && <span>· {t('office.timetable.savedCopy')}</span>}
+      {stale && !error && <span className="text-[#8E6018]">· {t('office.timetable.outOfDate')}</span>}
       {!offline && (
         <button type="button" onClick={onSync} disabled={syncing} className="ml-auto inline-flex items-center gap-1 font-medium text-brand hover:underline">
           <RefreshCw className={cn('h-3 w-3', syncing && 'animate-spin')} />
-          {syncing ? 'Syncing…' : 'Sync now'}
+          {syncing ? t('office.timetable.syncing') : t('office.timetable.syncNow')}
         </button>
       )}
       {offline && (

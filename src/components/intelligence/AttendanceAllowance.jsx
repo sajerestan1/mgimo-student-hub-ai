@@ -74,13 +74,13 @@ export default function AttendanceAllowance({ attendance, policy }) {
               <p className="shrink-0 text-[13.5px] font-semibold tabular-nums text-ink">{course.rate === null ? '—' : `${course.rate}%`}</p>
             </li>
           ))}
-          {!attendance.perCourse.length && <li className="py-2 text-[13px] text-mutedink">No register entries recorded yet.</li>}
+          {!attendance.perCourse.length && <li className="py-2 text-[13px] text-mutedink">{t('intel.allowance.noEntries')}</li>}
         </ul>
       </div>
 
       {attendance.bySemester.length > 1 && (
         <div>
-          <p className="text-[12.5px] font-semibold uppercase tracking-[0.08em] text-mutedink">By semester</p>
+          <p className="text-[12.5px] font-semibold uppercase tracking-[0.08em] text-mutedink">{t('intel.allowance.bySemester')}</p>
           <ul className="mt-2 space-y-1">
             {attendance.bySemester.map((semester) => (
               <li key={semester.semester} className="flex items-center justify-between gap-2 text-[13px]">
