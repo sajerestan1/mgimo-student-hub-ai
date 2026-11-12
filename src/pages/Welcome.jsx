@@ -20,9 +20,12 @@ export default function Welcome() {
   const destination = (key) => (user ? `/workspace/${key}` : `/login?workspace=${key}`);
 
   return (
-    <main className="flex min-h-dvh flex-col items-center bg-welcome-canvas px-4 py-10 sm:px-6 sm:py-16">
-      <div className="w-full max-w-[760px]">
-        <div className="mb-4 flex justify-end">
+    <main className="flex min-h-dvh flex-col bg-welcome-canvas px-4 py-5 sm:px-6 sm:py-7">
+      {/* The column is centred in whatever height is left, so a desktop
+          viewport shows the whole selection without scrolling, while a short
+          or narrow screen still scrolls naturally. */}
+      <div className="mx-auto flex w-full max-w-[1040px] flex-1 flex-col justify-center">
+        <div className="mb-2.5 flex justify-end">
           <div className="rounded-lg border border-[#E3E8EF] bg-white px-1">
             <LanguageMenu />
           </div>
@@ -30,14 +33,14 @@ export default function Welcome() {
 
         <BrandPanel />
 
-        <div className="mt-10 text-center sm:mt-12">
-          <h2 className="text-[28px] font-bold leading-tight tracking-[-0.02em] text-welcome-navy sm:text-[34px]">
+        <div className="mt-5 text-center sm:mt-6">
+          <h2 className="text-[23px] font-bold leading-tight tracking-[-0.02em] text-welcome-navy sm:text-[26px]">
             {t('welcome.title')}
           </h2>
-          <p className="mt-2 text-[15px] text-welcome-slate">{t('welcome.selectWorkspace')}</p>
+          <p className="mt-1.5 text-[15px] text-welcome-slate">{t('welcome.selectWorkspace')}</p>
         </div>
 
-        <div className="mt-7 grid grid-cols-2 gap-4 sm:mt-9 sm:gap-5">
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-4 md:grid-cols-3">
           <RoleCard
             label={t(WORKSPACES[0].label)}
             icon={WORKSPACES[0].icon}
@@ -55,11 +58,13 @@ export default function Welcome() {
             icon={WORKSPACES[2].icon}
             tone={WORKSPACES[2].tone}
             to={destination(WORKSPACES[2].key)}
-            className="col-span-2"
+            className="col-span-2 md:col-span-1"
           />
         </div>
 
-        <p className="mt-10 text-center text-[13px] text-welcome-slate">{t('welcome.secureAccess')}</p>
+        <p className="mt-5 text-center text-[13px] text-welcome-slate sm:mt-6">
+          {t('welcome.secureAccess')}
+        </p>
       </div>
     </main>
   );
