@@ -2,6 +2,8 @@ import { student } from './student';
 import { assessment } from './assessment';
 import { studyGroups } from './studyGroups';
 import { integrity } from './integrity';
+import { intel } from './intel';
+import { office } from './office';
 
 /**
  * Interface namespaces, one object per module, each carrying every language.
@@ -16,7 +18,7 @@ const registered = [student, assessment, studyGroups];
  * (integrity.*) instead of living inside the student workspace, because the
  * academic integrity workspace is opened by students and professors alike.
  */
-const shared = [integrity];
+const shared = [integrity, intel, office];
 
 const LANGUAGES = ['en', 'ru', 'fr', 'zh-CN', 'ar'];
 

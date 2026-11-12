@@ -2,15 +2,17 @@ import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import MarkdownMessage from '@/components/assistant/MarkdownMessage';
 import { askAcademicAdvisor } from '@/lib/academicIntelligence';
+import { useI18n } from '@/i18n/I18nProvider';
 
 const SUGGESTIONS = [
-  { mode: 'explain', label: 'Explain my performance' },
-  { mode: 'improve', label: 'Where am I declining?' },
-  { mode: 'priorities', label: 'What should I study first?' },
-  { mode: 'prepare', label: 'Prepare me for exams' },
+  { mode: 'explain', key: 'explain' },
+  { mode: 'improve', key: 'declining' },
+  { mode: 'priorities', key: 'priorities' },
+  { mode: 'prepare', key: 'prepare' },
 ];
 
 export default function PerformanceAdvisor() {
+  const { t } = useI18n();
   const [answer, setAnswer] = useState('');
   const [question, setQuestion] = useState('');
   const [busy, setBusy] = useState(false);
@@ -24,7 +26,7 @@ export default function PerformanceAdvisor() {
       const data = await askAcademicAdvisor(payload);
       setAnswer(data.answer || '');
     } catch (caught) {
-      setError(caught.message || 'The advisor is unavailable right now.');
+      setError(caught.message || t('intel.advisor.unavailable'));
     } finally {
       setBusy(false);
     }
@@ -41,7 +43,7 @@ export default function PerformanceAdvisor() {
             onClick={() => ask({ mode: item.mode })}
             className="btn-quiet btn-sm disabled:opacity-60"
           >
-            {item.label}
+            {t(`intel.advisor.${item.key}`)}
           </button>
         ))}
       </div>
@@ -56,18 +58,18 @@ export default function PerformanceAdvisor() {
         <input
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
-          placeholder="Ask about your own results, a course or an assessment"
+          placeholder={t('intel.advisor.placeholder')}
           className="min-w-0 flex-1 rounded-lg border border-line bg-white px-3 py-2 text-[14px] outline-none focus:border-brand"
         />
         <button type="submit" disabled={busy || !question.trim()} className="btn-primary disabled:opacity-60">
-          <Sparkles className="h-4 w-4" /> Ask
+          <Sparkles className="h-4 w-4" /> {t('intel.advisor.ask')}
         </button>
       </form>
 
       {busy && (
         <p className="mt-3 flex items-center gap-2 text-[13px] text-mutedink">
           <span className="h-3 w-3 animate-spin rounded-full border-2 border-line border-t-brand" />
-          Reading your recorded results…
+          {t('intel.advisor.reading')}
         </p>
       )}
 
@@ -80,9 +82,7 @@ export default function PerformanceAdvisor() {
       )}
 
       <p className="mt-3 text-[12.5px] leading-relaxed text-mutedink">
-        The advisor reads only your own recorded results, attendance and published assessments. It cannot see other
-        students, and it does not predict or guarantee a future grade — anything it says about an outcome is a
-        recommendation, not a result.
+        {t('intel.advisor.note')}
       </p>
     </div>
   );

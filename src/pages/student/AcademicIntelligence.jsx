@@ -8,16 +8,18 @@ import PerformanceAdvisor from '@/components/intelligence/PerformanceAdvisor';
 import AlertPreferences from '@/components/intelligence/AlertPreferences';
 import UpcomingWork from '@/components/intelligence/UpcomingWork';
 import { loadAcademicIntelligence } from '@/lib/academicIntelligence';
+import { useI18n } from '@/i18n/I18nProvider';
 
 export default function AcademicIntelligence() {
+  const { t } = useI18n();
   const [intel, setIntel] = useState(null);
   const [error, setError] = useState('');
 
   const load = useCallback((fresh = false) => {
     loadAcademicIntelligence({ fresh })
       .then(setIntel)
-      .catch((caught) => setError(caught.message || 'Your academic intelligence could not be loaded.'));
-  }, []);
+      .catch((caught) => setError(caught.message || t('intel.page.error')));
+  }, [t]);
 
   useEffect(() => {
     load();
@@ -41,9 +43,9 @@ export default function AcademicIntelligence() {
   if (!intel.linked) {
     return (
       <div>
-        <PageTitle eyebrow="Student workspace" title="Academic intelligence" />
+        <PageTitle eyebrow={t('student.common.studentWorkspace')} title={t('intel.page.title')} />
         <p className="card-surface px-5 py-8 text-[15px] leading-relaxed text-mutedink">
-          {intel.scopeNote || 'Your account is not linked to a student record yet, so there are no results to analyse.'}
+          {intel.scopeNote || t('intel.page.notLinked')}
         </p>
       </div>
     );
@@ -54,22 +56,22 @@ export default function AcademicIntelligence() {
   return (
     <div>
       <PageTitle
-        eyebrow="Student workspace"
-        title="Academic intelligence"
-        description="Your recorded results, calculated averages and attendance allowance, explained from your own academic record."
+        eyebrow={t('student.common.studentWorkspace')}
+        title={t('intel.page.title')}
+        description={t('intel.page.description')}
         meta={[
           performance.semesterLabel,
-          `${performance.courses.length} enrolled courses`,
-          `${policy.institution} · ${policy.absenceLimit} permitted absences`,
+          t('intel.page.metaCourses', { count: performance.courses.length }),
+          t('intel.page.metaPolicy', { institution: policy.institution, limit: policy.absenceLimit }),
         ]}
       />
 
-      <Surface title="Overall performance" subtitle="Recorded results and calculated averages, kept separate">
+      <Surface title={t('intel.page.overallTitle')} subtitle={t('intel.page.overallSubtitle')}>
         <PerformanceOverview performance={performance} attendance={attendance} />
       </Surface>
 
       {intel.indicators.length > 0 && (
-        <Surface className="mt-4" title="Academic risk indicators" subtitle="Each one follows from a recorded value below">
+        <Surface className="mt-4" title={t('intel.page.riskTitle')} subtitle={t('intel.page.riskSubtitle')}>
           <ul className="divide-y divide-line">
             {intel.indicators.slice(0, 6).map((indicator) => (
               <li key={`${indicator.level}-${indicator.label}`} className="flex items-start gap-2 py-2">
@@ -88,31 +90,31 @@ export default function AcademicIntelligence() {
         </Surface>
       )}
 
-      <Surface className="mt-4" title="Course performance" subtitle="Averages are calculated from graded items in each course">
+      <Surface className="mt-4" title={t('intel.page.courseTitle')} subtitle={t('intel.page.courseSubtitle')}>
         <div className="grid gap-3 md:grid-cols-2">
           {performance.courses.map((course) => (
             <CoursePerformanceCard key={course.id} course={course} />
           ))}
         </div>
         {!performance.courses.length && (
-          <p className="text-[14px] text-mutedink">You are not enrolled in a published course yet.</p>
+          <p className="text-[14px] text-mutedink">{t('intel.page.noCourses')}</p>
         )}
       </Surface>
 
-      <Surface className="mt-4" title="Attendance and absence allowance" subtitle="Counted from the official class register">
+      <Surface className="mt-4" title={t('intel.page.attendanceTitle')} subtitle={t('intel.page.attendanceSubtitle')}>
         <AttendanceAllowance attendance={attendance} policy={policy} />
       </Surface>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Surface title="Upcoming and overdue" subtitle="Published assessments only">
+        <Surface title={t('intel.page.workTitle')} subtitle={t('intel.page.workSubtitle')}>
           <UpcomingWork work={work} />
         </Surface>
-        <Surface title="AI academic advisor" subtitle="Grounded in your own recorded results">
+        <Surface title={t('intel.page.advisorTitle')} subtitle={t('intel.page.advisorSubtitle')}>
           <PerformanceAdvisor />
         </Surface>
       </div>
 
-      <Surface className="mt-4" title="Alerts and preferences" subtitle="Which academic alerts you receive, and where">
+      <Surface className="mt-4" title={t('intel.page.alertsTitle')} subtitle={t('intel.page.alertsSubtitle')}>
         <AlertPreferences preferences={intel.preferences} institution={intel.institution} onSaved={() => load(true)} />
       </Surface>
     </div>

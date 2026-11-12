@@ -16,7 +16,7 @@ export default function StudentProfilePage() {
   useEffect(() => {
     loadStudentPortal()
       .then(setContext)
-      .catch(() => setError('Your profile could not be loaded. Please refresh the page.'));
+      .catch(() => setError(t('office.profile.loadError')));
   }, []);
 
   if (error) return <p className="card-surface px-5 py-6 text-[15px] text-critical">{error}</p>;
@@ -48,30 +48,30 @@ export default function StudentProfilePage() {
     .toUpperCase();
 
   const rows = [
-    ['Student ID', profile.student_id || '—'],
-    ['Programme', profile.program || '—'],
-    ['Faculty', profile.faculty || '—'],
-    ['Department', profile.department || '—'],
-    ['Year', profile.year ? `Year ${profile.year}` : '—'],
-    ['Group', profile.group_name || '—'],
-    ['Enrolment', (profile.enrollment_status || 'active').replace(/_/g, ' ')],
+    [t('office.profile.studentId'), profile.student_id || '—'],
+    [t('office.profile.program'), profile.program || '—'],
+    [t('office.profile.faculty'), profile.faculty || '—'],
+    [t('office.profile.department'), profile.department || '—'],
+    [t('office.profile.year'), profile.year ? t('office.profile.yearValue', { year: profile.year }) : '—'],
+    [t('office.profile.group'), profile.group_name || '—'],
+    [t('office.profile.enrolment'), (profile.enrollment_status || 'active').replace(/_/g, ' ')],
   ];
 
   return (
     <div>
       <PageTitle
-        eyebrow="Student workspace"
-        title="Profile"
-        description="Your academic identity as the register holds it. Academic fields are maintained by the student office."
+        eyebrow={t('student.common.studentWorkspace')}
+        title={t('office.profile.title')}
+        description={t('office.profile.description')}
         actions={
           <Link to="/settings" className="btn-quiet">
-            Account settings
+            {t('office.profile.accountSettings')}
           </Link>
         }
       />
 
       <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
-        <Surface title="Academic record">
+        <Surface title={t('office.profile.academicRecord')}>
           <div className="flex items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-royal/10 text-[15px] font-semibold text-royal">
               {initials || '—'}
@@ -96,11 +96,10 @@ export default function StudentProfilePage() {
         </Surface>
 
         <div className="space-y-4">
-          <Surface title="Academic standing">
+          <Surface title={t('office.profile.academicStanding')}>
             {context.summary.average === null ? (
               <p className="text-[14px] leading-relaxed text-mutedink">
-                No result has been recorded yet, so no standing is shown. Your average appears once graded work is
-                published in your courses.
+                {t('office.profile.noStanding')}
               </p>
             ) : (
               <>
@@ -109,25 +108,25 @@ export default function StudentProfilePage() {
                   <span className="ml-2 text-[15px] font-medium text-mutedink">{context.summary.averageLetter}</span>
                 </p>
                 <p className="mt-2 text-[14px] leading-relaxed text-mutedink">
-                  Credit-weighted across your enrolled courses. Work awaiting a grade is not counted.
+                  {t('office.profile.weightedNote')}
                 </p>
                 <Link to={P.student.grades} className="link-quiet mt-3 inline-flex text-[14px]">
-                  Open grades &amp; transcript
+                  {t('office.profile.openGrades')}
                 </Link>
               </>
             )}
           </Surface>
 
-          <Surface title="Course load">
+          <Surface title={t('office.profile.courseLoad')}>
             <dl className="space-y-2 text-[14px]">
               {[
-                ['Active courses', String(context.summary.courseCount)],
-                ['Credits', String(context.summary.credits)],
+                [t('office.profile.activeCourses'), String(context.summary.courseCount)],
+                [t('office.profile.credits'), String(context.summary.credits)],
                 [
-                  'Modules completed',
+                  t('office.profile.modulesCompleted'),
                   `${context.summary.modulesCompleted} of ${context.summary.modulesTotal}`,
                 ],
-                ['Attendance', context.summary.attendanceRate === null ? 'Not recorded' : `${context.summary.attendanceRate}%`],
+                [t('office.profile.attendance'), context.summary.attendanceRate === null ? t('office.profile.notRecorded') : `${context.summary.attendanceRate}%`],
               ].map(([label, value]) => (
                 <div key={label} className="flex items-center justify-between border-b border-line pb-2 last:border-0 last:pb-0">
                   <dt className="text-mutedink">{label}</dt>
