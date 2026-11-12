@@ -17,14 +17,14 @@ export default function RoleCard({ label, icon: Icon, tone = 'blue', to, classNa
     <Link
       to={to}
       className={cn(
-        'flex min-h-[150px] flex-col items-center justify-center gap-4 rounded-[20px] px-4 py-7 text-center transition-colors duration-150',
+        'flex min-h-[112px] flex-col items-center justify-center gap-2.5 rounded-[18px] px-4 py-5 text-center transition-colors duration-150',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-welcome-navy/50 focus-visible:ring-offset-2 focus-visible:ring-offset-welcome-canvas',
-        'sm:min-h-[190px]',
+        'sm:min-h-[148px] sm:gap-3 sm:py-6',
         TONES[tone],
         className,
       )}
     >
-      <Icon className="h-9 w-9 text-white sm:h-10 sm:w-10" strokeWidth={1.6} aria-hidden="true" />
+      <Icon className="h-8 w-8 text-white sm:h-9 sm:w-9" strokeWidth={1.6} aria-hidden="true" />
       <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white sm:text-[13px]">
         {label}
       </span>
