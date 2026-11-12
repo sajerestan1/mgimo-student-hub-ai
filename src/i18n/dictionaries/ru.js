@@ -34,6 +34,7 @@ const ru = {
       grades: 'Оценки и ведомость',
       attendance: 'Посещаемость',
       intelligence: 'Академическая аналитика',
+      academicIntegrity: 'Академическая добросовестность',
       applications: 'Заявления и справки',
       library: 'Библиотека',
       studyGroups: 'Учебные группы',

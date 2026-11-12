@@ -34,6 +34,7 @@ const ar = {
       grades: 'الدرجات وكشف الدرجات',
       attendance: 'الحضور',
       intelligence: 'التحليل الأكاديمي',
+      academicIntegrity: 'النزاهة الأكاديمية',
       applications: 'الطلبات والشهادات',
       library: 'المكتبة',
       studyGroups: 'مجموعات الدراسة',

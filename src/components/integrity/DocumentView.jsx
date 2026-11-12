@@ -1,8 +1,11 @@
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n/I18nProvider';
 
 export default function DocumentView({ passages }) {
+  const { t } = useI18n();
+
   if (!passages || !passages.length) {
-    return <p className="text-[14px] text-mutedink">The analysed text is not available.</p>;
+    return <p className="text-[14px] text-mutedink">{t('integrity.document.unavailable')}</p>;
   }
 
   const flagged = passages.filter((passage) => passage.flagged).length;
@@ -12,15 +15,13 @@ export default function DocumentView({ passages }) {
       <div className="mb-3 flex flex-wrap items-center gap-3 text-[12.5px] text-mutedink">
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-sm bg-[#FCF3E4] ring-1 ring-[#EBD9B4]" />
-          Matching passage
+          {t('integrity.document.legendMatch')}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-sm bg-white ring-1 ring-line" />
-          Not matched
+          {t('integrity.document.legendOther')}
         </span>
-        <span>
-          {flagged} of {passages.length} passages flagged for review
-        </span>
+        <span>{t('integrity.document.flagged', { flagged, total: passages.length })}</span>
       </div>
       <div className="max-h-[520px] space-y-2 overflow-y-auto pe-1 scroll-thin">
         {passages.map((passage) => (
@@ -35,10 +36,7 @@ export default function DocumentView({ passages }) {
           </p>
         ))}
       </div>
-      <p className="mt-3 text-[12.5px] text-mutedink">
-        The text is shown exactly as it was submitted. Highlighting follows paragraph boundaries; a highlighted
-        paragraph contains at least one matching passage, not necessarily every word of it.
-      </p>
+      <p className="mt-3 text-[12.5px] text-mutedink">{t('integrity.document.note')}</p>
     </div>
   );
 }

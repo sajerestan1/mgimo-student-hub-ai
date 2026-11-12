@@ -16,6 +16,7 @@ import ar from '../src/i18n/dictionaries/ar.js';
 import { student } from '../src/i18n/dictionaries/modules/student.js';
 import { assessment } from '../src/i18n/dictionaries/modules/assessment.js';
 import { studyGroups } from '../src/i18n/dictionaries/modules/studyGroups.js';
+import { integrity } from '../src/i18n/dictionaries/modules/integrity.js';
 
 const base = { en, ru, fr, 'zh-CN': zhCN, ar };
 const packs = [student, assessment, studyGroups];
@@ -26,15 +27,16 @@ const flat = (node, prefix = '') =>
   );
 
 const merged = Object.fromEntries(
-  Object.keys(base).map((language) => [
-    language,
+  Object.keys(base).map((language) => {
     // Workspace packs are nested under `student` exactly as the runtime does it,
     // so the reported key paths are the ones the application actually resolves.
-    packs.reduce(
+    const withPacks = packs.reduce(
       (acc, pack) => ({ ...acc, student: { ...(acc.student || {}), ...(pack[language] || pack.en) } }),
       base[language]
-    ),
-  ])
+    );
+    // Shared packs keep their own root namespace, exactly as modules/index.js does.
+    return [language, { ...withPacks, integrity: (integrity[language] || integrity.en).integrity }];
+  })
 );
 
 const keys = Object.fromEntries(
@@ -90,7 +92,8 @@ console.log(`interpolation: ${interpolationIssues ? `${interpolationIssues} mism
 
 // Coverage per surface, so each workspace can be reported on its own.
 const groups = [
-  ['shared shell / auth / account', (key) => !key.startsWith('student.')],
+  ['shared shell / auth / account', (key) => !key.startsWith('student.') && !key.startsWith('integrity.')],
+  ['academic integrity workspace', (key) => key.startsWith('integrity.')],
   ['student dashboard & courses', (key) => key.startsWith('student.') && !/^student\.(quizzes|grades|attendance)\./.test(key)],
   ['student quizzes', (key) => key.startsWith('student.quizzes.')],
   ['student grades & transcript', (key) => key.startsWith('student.grades.')],
