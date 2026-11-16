@@ -7,6 +7,8 @@ import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
  * server from the signed-in account. Nothing here sends a student id.
  */
 let cache = null;
+const demoSubmissions = [];
+export function addDemoSubmission(record) { demoSubmissions.push(record); }
 const CACHE_MS = 15000;
 
 /**
@@ -37,8 +39,9 @@ export function loadStudentPortal({ fresh = false } = {}) {
       { id: 'as-2', title: 'Global trade indicators report', courseCode: 'IE-201', dueDate: '2026-11-12', state: 'overdue' },
       { id: 'as-3', title: 'Case brief: treaty interpretation', courseCode: 'LW-201', dueDate: '2026-11-25', state: 'pending' },
     ];
+    const visibleAssignments = assignments.map((a) => demoSubmissions.some((s) => s.assignment_id === a.id && s.student_id === profile.id) ? { ...a, state: 'submitted' } : a);
     return Promise.resolve({
-      linked: true, profile, courses, assignments,
+      linked: true, profile, courses, assignments: visibleAssignments,
       quizzes: [{ id: 'quiz-1', title: 'IR Theory — Module 4', courseCode: 'IR-201', state: 'pending', availableUntil: '2026-11-22', attempts: 1, attemptLimit: 3 }],
       materials: [{ id: 'mat-1', title: 'Lecture 8: International institutions', courseCode: 'IR-201', courseId: 'course-ir201', type: 'lecture', publishedDate: '2026-11-14' }],
       announcements: [{ id: 'ann-1', title: 'Fall semester examination schedule', body: 'The examination timetable is available in the student portal.', author: 'Academic Affairs', date: '2026-11-14' }],
