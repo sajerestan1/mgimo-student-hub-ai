@@ -103,13 +103,6 @@ export const DEMO_STUDENT = {
   student_id: 'DEMO-STU-001',
 };
 
-const slug = (value) =>
-  value
-    .toLowerCase()
-    .replace(/[^a-z\\s-]/g, '')
-    .trim()
-    .replace(/\\s+/g, '.');
-
 export function buildStudents() {
   return STUDENT_NAMES.map((fullName, index) => {
     const group = index === 0 ? GROUPS[0] : GROUPS[2];
