@@ -3,7 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import StatusChip from '@/components/shell/StatusChip';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { ASSIGNMENT_STATE, dueLabel, shortDate } from '@/lib/studentPortal';
+import { ASSIGNMENT_STATE, dueLabel, shortDate, addDemoSubmission } from '@/lib/studentPortal';
 import { useI18n } from '@/i18n/I18nProvider';
 
 const field =
@@ -28,11 +28,11 @@ export default function AssignmentList({ rows, profile, onChanged }) {
     setError('');
     try {
       let stored = {};
-      if (file) {
+      if (file && import.meta.env.VITE_DEMO_MODE !== 'true') {
         const uploaded = await base44.integrations.Core.UploadPrivateFile({ file });
         stored = { file_url: uploaded.file_uri };
       }
-      await base44.entities.Submission.create({
+      const submission = {
         assignment_id: row.id,
         course_id: row.courseId,
         course_code: row.courseCode,
@@ -44,7 +44,9 @@ export default function AssignmentList({ rows, profile, onChanged }) {
         content: form.trim(),
         status: 'submitted',
         ...stored,
-      });
+      };
+      if (import.meta.env.VITE_DEMO_MODE === 'true') addDemoSubmission(submission);
+      else await base44.entities.Submission.create(submission);
       setOpenId(null);
       setForm('');
       setFile(null);
