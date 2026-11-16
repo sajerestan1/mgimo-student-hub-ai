@@ -32,6 +32,17 @@ export default function CoursesPage() {
       try {
         const context = await loadStudentCourses(user?.id);
         const courses = (context.courses || []).filter((course) => course.status === 'published');
+        if (import.meta.env.VITE_DEMO_MODE === 'true') {
+          const portal = await (await import('@/lib/studentPortal')).loadStudentPortal();
+          if (active) setData({
+            student: context.student, courses,
+            modules: [{ id: 'mod-1', course_id: courses[0]?.id, title: 'Foundations & key concepts' }, { id: 'mod-2', course_id: courses[1]?.id, title: 'Applied analysis' }],
+            resources: [{ id: 'res-1', course_id: courses[0]?.id, title: portal.materials?.[0]?.title || 'Lecture notes', visible_to_students: true }],
+            assignments: (portal.assignments || []).map((a) => ({ id: a.id, course_id: courses.find(c => c.code === a.courseCode)?.id, title: a.title, due_date: a.dueDate, status: 'published' })),
+            professors: [{ id: 'prof-demo', full_name: 'Dr. Elena Petrova' }], reason: 'ok',
+          });
+          return;
+        }
         const ids = courses.map((course) => course.id);
 
         if (!ids.length) {
