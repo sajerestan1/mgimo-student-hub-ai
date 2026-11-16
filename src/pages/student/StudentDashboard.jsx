@@ -96,38 +96,24 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="min-w-0 space-y-4">
+    <div className="min-w-0 space-y-5">
       <WelcomeHeader profile={context.profile} context={context} />
-
       <SnapshotStrip summary={context.summary} />
-
       <AcademicBriefing context={context} />
 
-      {/* Analytics sit side by side only once each panel keeps a readable chart width.
-          Each grid cell is min-w-0 so a long course code or message can never widen
-          the track past the viewport. */}
-      <div className="grid gap-4 xl:grid-cols-2">
-        <div className="min-w-0">
-          <AcademicPerformance context={context} />
+      {/* Three-column academic workspace inspired by the selected MGIMO design. */}
+      <div className="grid min-w-0 gap-4 xl:grid-cols-12">
+        <div className="flex min-w-0 flex-col gap-4 xl:col-span-4">
+          <PriorityTasks context={context} />
+          <RecentActivity context={context} />
         </div>
-        <div className="min-w-0">
+        <div className="flex min-w-0 flex-col gap-4 xl:col-span-5">
+          <AcademicPerformance context={context} />
           <AttendancePanel context={context} />
         </div>
-      </div>
-
-      {/* Balanced two-column lower dashboard; equal heights come from h-full panels. */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="min-w-0">
-          <CommunicationsPanel />
-        </div>
-        <div className="min-w-0">
-          <PriorityTasks context={context} />
-        </div>
-        <div className="min-w-0">
+        <div className="flex min-w-0 flex-col gap-4 xl:col-span-3">
           <TodaysClasses sessions={context.sessions} />
-        </div>
-        <div className="min-w-0">
-          <RecentActivity context={context} />
+          <CommunicationsPanel />
         </div>
       </div>
     </div>
