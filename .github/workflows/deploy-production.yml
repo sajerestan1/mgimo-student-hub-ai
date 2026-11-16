@@ -1,6 +1,8 @@
 name: Deploy MGIMO Student Hub
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       dry_run:
@@ -41,7 +43,9 @@ jobs:
           protocol: ftps
           local-dir: dist/
           server-dir: ./
-          dry-run: ${{ inputs.dry_run }}
+          # Every push is a safe connection/test run. A real upload is only
+          # permitted when manually dispatched with dry_run=false.
+          dry-run: ${{ github.event_name == 'push' || inputs.dry_run }}
           dangerous-clean-slate: false
           security: loose
           log-level: standard
