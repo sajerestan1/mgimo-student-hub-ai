@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Test the FTP connection and planned file changes without uploading"
+        description: "Test the FTP connection without uploading"
         required: true
         type: boolean
         default: true
@@ -32,6 +32,8 @@ jobs:
 
       - name: Build production site
         run: npm run build
+        env:
+          VITE_BASE44_APP_ID: ${{ secrets.VITE_BASE44_APP_ID }}
 
       - name: Deploy over explicit FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
@@ -43,9 +45,8 @@ jobs:
           protocol: ftps
           local-dir: dist/
           server-dir: ./
-          # Every push is a safe connection/test run. A real upload is only
-          # permitted when manually dispatched with dry_run=false.
-          dry-run: ${{ github.event_name == 'push' || inputs.dry_run }}
+          # Pushes deploy the built site. Manual runs default to a safe dry-run.
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
           dangerous-clean-slate: false
           security: loose
           log-level: standard
