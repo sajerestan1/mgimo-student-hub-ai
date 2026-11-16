@@ -1,3 +1,4 @@
+import path from "node:path";
 import base44 from "@base44/vite-plugin";
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
@@ -7,6 +8,11 @@ export default defineConfig(({ mode }) => {
   const demoMode = env.VITE_DEMO_MODE === "true";
 
   return {
+    resolve: {
+      alias: {
+        "@": path.resolve(process.cwd(), "src"),
+      },
+    },
     plugins: [
       // Standalone builds must not inject Base44 editor/analytics integrations.
       ...(demoMode ? [] : [base44({
