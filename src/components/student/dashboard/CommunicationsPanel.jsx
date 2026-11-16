@@ -42,7 +42,7 @@ export default function CommunicationsPanel() {
           body: 'The Fall semester examination timetable is available in your student workspace.',
           created_date: new Date().toISOString(),
           is_read: false,
-          link: '/student/announcements',
+          link: '/announcements',
         }],
       });
       return () => { alive = false; };
