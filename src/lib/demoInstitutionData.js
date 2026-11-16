@@ -13,10 +13,13 @@ const professors = [
   { id: 'prof-2', full_name: 'Dr. Andrei Volkov', email: 'a.volkov@mgimo.example', faculty_id: 'fac-ier', department_id: 'dep-1', title: 'Professor' },
   { id: 'prof-3', full_name: 'Dr. Marina Kravtsova', email: 'm.kravtsova@mgimo.example', faculty_id: 'fac-law', department_id: 'dep-2', title: 'Professor' },
 ];
-const students = [
-  { id: 'demo-student-a', student_number: 'DEMO-STU-001', full_name: 'Stanley', email: 'stanley.demo@mgimo.example', faculty_id: 'fac-ir', department_id: 'dep-0', program: 'International Relations', year: 1, status: 'active', gpa: 4.1, attendance_rate: 88, intervention_status: 'none' },
-  { id: 'demo-student-b', student_number: 'DEMO-STU-002', full_name: 'Patience', email: 'patience.demo@mgimo.example', faculty_id: 'fac-ier', department_id: 'dep-1', program: 'International Economic Relations', year: 1, status: 'active', gpa: 4.3, attendance_rate: 93, intervention_status: 'none' },
-];
+const students = Array.from({ length: 24 }, (_, i) => {
+  if (i === 0) return { id: 'demo-student-a', student_number: 'DEMO-STU-001', full_name: 'Stanley', email: 'stanley.demo@mgimo.example', faculty_id: 'fac-ir', department_id: 'dep-0', program: 'International Relations', year: 1, status: 'active', gpa: 4.1, attendance_rate: 88, intervention_status: 'none' };
+  if (i === 1) return { id: 'demo-student-b', student_number: 'DEMO-STU-002', full_name: 'Patience', email: 'patience.demo@mgimo.example', faculty_id: 'fac-ier', department_id: 'dep-1', program: 'International Economic Relations', year: 1, status: 'active', gpa: 4.3, attendance_rate: 93, intervention_status: 'none' };
+  const names = ['Aleksandra Volkova','Dmitry Sokolov','Maria Kuznetsova','Ivan Morozov','Ekaterina Lebedeva','Nikita Novikov','Sofia Semenova','Artem Petrov','Anastasia Fedorova','Pavel Ivanov','Vera Orlova','Timur Kozlov','Polina Zaitseva','Mikhail Baranov','Daria Grigorieva','Kirill Belov','Alina Mironova','Roman Karpov','Yulia Solovyova','Egor Tikhomirov','Ksenia Yakovleva','Vladimir Gusev'];
+  const index = i - 2;
+  return { id: 'student-' + (i + 1), student_number: 'AI26-' + String(i + 1).padStart(4, '0'), full_name: names[index], email: 'student' + (i + 1) + '@mgimo.example', faculty_id: faculties[i % faculties.length].id, department_id: departments[i % departments.length].id, program: faculties[i % faculties.length].name, year: 1 + (i % 4), status: 'active', gpa: +(2.7 + (i % 13) * 0.1).toFixed(1), attendance_rate: 78 + (i % 22), intervention_status: i % 9 === 0 ? 'monitor' : 'none' };
+});
 const courses = [
   { id: 'course-ir201', code: 'IR-201', title: 'Theory of International Relations', name: 'Theory of International Relations', faculty_id: 'fac-ir', professor_id: 'prof-demo', credits: 6, semester: 'Fall 2026', status: 'active', enrolled_count: 42 },
   { id: 'course-ie201', code: 'IE-201', title: 'World Economy', name: 'World Economy', faculty_id: 'fac-ier', professor_id: 'prof-2', credits: 6, semester: 'Fall 2026', status: 'active', enrolled_count: 38 },
