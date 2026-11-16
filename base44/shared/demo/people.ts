@@ -31,9 +31,9 @@ export const DEPARTMENTS = [
 ];
 
 export const GROUPS = [
-  { name: 'IR-21A', faculty: 'IR', programme: 'International Relations', year: 2 },
-  { name: 'IR-21B', faculty: 'IR', programme: 'Regional Studies', year: 2 },
-  { name: 'IE-22A', faculty: 'IER', programme: 'World Economy', year: 2 },
+  { name: 'IR-1A', faculty: 'IR', programme: 'International Relations', year: 1 },
+  { name: 'IR-1B', faculty: 'IR', programme: 'Regional Studies', year: 1 },
+  { name: 'IER-1A', faculty: 'IER', programme: 'International Economic Relations', year: 1 },
 ];
 
 export const PROFESSORS = [
@@ -93,34 +93,36 @@ export const PROFESSORS = [
   },
 ];
 
-const STUDENT_NAMES = ['Stanley', 'Patience'];
+const STUDENT_NAMES = [
+  'Stanley','Patience','Aleksandra Volkova','Dmitry Sokolov','Maria Kuznetsova','Ivan Morozov','Ekaterina Lebedeva','Nikita Novikov','Sofia Semenova','Artem Petrov','Anastasia Fedorova','Pavel Ivanov','Vera Orlova','Timur Kozlov','Polina Zaitseva','Mikhail Baranov','Daria Grigorieva','Kirill Belov','Alina Mironova','Roman Karpov','Yulia Solovyova','Egor Tikhomirov','Ksenia Yakovleva','Vladimir Gusev','Nina Vinogradova','Maxim Komarov','Lidia Rodionova','Anton Safonov','Galina Medvedeva','Ruslan Ershov',
+];
 
-// The two student test accounts used in the competition walkthrough.
 export const DEMO_STUDENT = {
   index: 0,
-  full_name: 'Sajere Stanley',
+  full_name: 'Stanley',
   email: 'stanley.demo@mgimo.example',
   student_id: 'DEMO-STU-001',
 };
 
+const AT_RISK_INDEXES = [4, 13, 21, 26];
+const ACTIVE_INTERVENTION_INDEXES = [13, 26];
+
+const slug = (value) => value.toLowerCase().replace(/[^a-z\\s-]/g, '').trim().replace(/\\s+/g, '.');
+
 export function buildStudents() {
   return STUDENT_NAMES.map((fullName, index) => {
-    const group = index === 0 ? GROUPS[0] : GROUPS[2];
-    const programme = index === 0 ? 'International Relations' : 'World Economy';
-    const department = index === 0 ? 'IRFP' : 'WE';
+    const group = index === 0 ? GROUPS[0] : index === 1 ? GROUPS[2] : index < 10 ? GROUPS[0] : index < 18 ? GROUPS[1] : GROUPS[2];
+    const programme = index === 0 ? 'International Relations' : index === 1 ? 'International Economic Relations' : group.programme;
+    const department = programme === 'International Relations' ? 'IRFP' : programme === 'Regional Studies' ? 'RS' : programme === 'World Economy' ? 'WE' : 'IF';
+    const demoAccount = index < 2;
     return {
       full_name: fullName,
-      student_id: index === 0 ? 'DEMO-STU-001' : 'DEMO-STU-002',
-      email: index === 0 ? 'stanley.demo@mgimo.example' : 'patience.demo@mgimo.example',
-      programme,
-      group: group.name,
-      faculty: group.faculty,
-      department,
-      year: 1,
-      at_risk: false,
-      intervention_status: 'none',
+      student_id: demoAccount ? `DEMO-STU-00${index + 1}` : `MG-2024-${1043 + index}`,
+      email: demoAccount ? (index === 0 ? 'stanley.demo@mgimo.example' : 'patience.demo@mgimo.example') : `${slug(fullName)}@student.${DEMO_DOMAIN}`,
+      programme, group: group.name, faculty: group.faculty, department, year: 1,
+      at_risk: !demoAccount && AT_RISK_INDEXES.includes(index),
+      intervention_status: !demoAccount && AT_RISK_INDEXES.includes(index) ? (ACTIVE_INTERVENTION_INDEXES.includes(index) ? 'active' : 'monitoring') : 'none',
       demo: true,
     };
   });
 }
-
