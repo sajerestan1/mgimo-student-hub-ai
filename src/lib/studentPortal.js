@@ -46,11 +46,32 @@ export function loadStudentPortal({ fresh = false } = {}) {
       materials: [{ id: 'mat-1', title: 'Lecture 8: International institutions', courseCode: 'IR-201', courseId: 'course-ir201', type: 'lecture', publishedDate: '2026-11-14' }],
       announcements: [{ id: 'ann-1', title: 'Fall semester examination schedule', body: 'The examination timetable is available in the student portal.', author: 'Academic Affairs', date: '2026-11-14' }],
       recentGrades: [{ courseCode: 'LW-201', title: 'Midterm examination', score: second ? 91 : 82, max: 100, feedback: 'Good analysis. Strengthen your use of primary sources.', gradedAt: '2026-11-13' }],
+      // Attendance totals and breakdown are generated from the same register rows.
+      attendance: {
+        overall: second ? 93 : 88,
+        held: 16,
+        byCourse: [
+          { code: 'IR-201', present: second ? 6 : 5, late: 1, excused: 0, absent: second ? 0 : 2, total: 7, rate: second ? 100 : 71 },
+          { code: 'IE-201', present: 5, late: 1, excused: 0, absent: 1, total: 7, rate: 86 },
+          { code: 'LW-201', present: 2, late: 1, excused: 1, absent: 0, total: 4, rate: 100 },
+        ],
+      },
       sessions: [
-        { id: 's1', date: '2026-11-16', start: '10:00', end: '11:30', courseCode: 'IR-201', courseTitle: 'Theory of International Relations', room: 'Room 304' },
-        { id: 's2', date: '2026-11-16', start: '14:00', end: '15:30', courseCode: 'IE-201', courseTitle: 'World Economy', room: 'Room 218' },
+        { id: 's1', date: todayISO(), start: '10:00', end: '11:30', courseCode: 'IR-201', courseTitle: 'Theory of International Relations', room: 'Room 304', kind: 'lecture' },
+        { id: 's2', date: todayISO(), start: '14:00', end: '15:30', courseCode: 'IE-201', courseTitle: 'World Economy', room: 'Room 218', kind: 'seminar' },
+        { id: 's3', date: '2026-11-17', start: '11:00', end: '12:30', courseCode: 'LW-201', courseTitle: 'Public International Law', room: 'Room 212', kind: 'lecture' },
       ],
-      summary: { average: second ? 84.3 : 82.1, gpa: second ? 4.3 : 4.1, attendance: second ? 93 : 88, pendingAssignments: 2, upcomingClasses: 2, credits: 18 },
+      summary: {
+        average: second ? 84.3 : 80.0,
+        averageLetter: second ? 'B+' : 'B',
+        courseCount: courses.length,
+        credits: courses.reduce((sum, course) => sum + 6, 0),
+        pending: visibleAssignments.filter((row) => row.state === 'pending').length,
+        overdue: visibleAssignments.filter((row) => row.state === 'overdue').length,
+        awaiting: 0,
+        graded: 1,
+        attendanceRate: second ? 93 : 88,
+      },
       scopeNote: 'Synthetic records for competition demonstration.'
     });
   }
