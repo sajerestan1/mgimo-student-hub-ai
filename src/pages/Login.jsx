@@ -11,7 +11,7 @@ import { LogIn, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import { safeReturnTo } from "@/lib/authReturnTo";
-import { useI18n } from "@/i18n/I18nProvider";
+import { useI18n } from "@/i18n/I18nProvider";\nimport { DEMO_USERS, signInDemo } from "@/lib/demoAuth";
 
 const WORKSPACE_KEYS = {
   student: "welcome.student",
@@ -22,7 +22,7 @@ const WORKSPACE_KEYS = {
 const ATTEMPT_LIMIT = 5;
 const LOCK_MS = 60 * 1000;
 
-export default function Login() {
+export default function Login() {\n  if (import.meta.env.VITE_DEMO_MODE === "true") return <DemoLogin />;
   const { t, dir } = useI18n();
   const rtl = dir === "rtl";
   const [email, setEmail] = useState("");
@@ -174,6 +174,31 @@ export default function Login() {
           )}
         </Button>
       </form>
+    </AuthLayout>
+  );
+}\n\nfunction DemoLogin() {
+  const [error, setError] = useState("");
+  const chooseAccount = (id) => {
+    try {
+      signInDemo(id);
+      window.location.assign("/dashboard");
+    } catch (err) {
+      setError(err.message || "Could not enter demo account");
+    }
+  };
+  return (
+    <AuthLayout icon={LogIn} title="Academic Intelligence Demo" subtitle="Choose a synthetic demo identity" footer={<span>Demo accounts only · No real credentials</span>}>
+      {error && <div className="mb-3 rounded bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+      <div className="space-y-3">
+        {DEMO_USERS.map((account) => (
+          <Button key={account.id} variant="outline" className="h-auto w-full justify-start whitespace-normal p-4 text-left" onClick={() => chooseAccount(account.id)}>
+            <span className="flex flex-col items-start gap-1">
+              <span className="font-semibold">{account.full_name}</span>
+              <span className="text-xs text-muted-foreground">{account.role} · {account.email}</span>
+            </span>
+          </Button>
+        ))}
+      </div>
     </AuthLayout>
   );
 }
