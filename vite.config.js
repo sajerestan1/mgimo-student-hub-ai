@@ -1,20 +1,22 @@
 import base44 from "@base44/vite-plugin";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 
-const demoMode = process.env.VITE_DEMO_MODE === "true";
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  const demoMode = env.VITE_DEMO_MODE === "true";
 
-export default defineConfig({
-  plugins: [
-    // In standalone demo builds, do not inject Base44's editor,
-    // navigation, HMR or analytics integrations.
-    ...(demoMode ? [] : [base44({
-      legacySDKImports: process.env.BASE44_LEGACY_SDK_IMPORTS === "true",
-      hmrNotifier: true,
-      navigationNotifier: true,
-      analyticsTracker: true,
-      visualEditAgent: true,
-    })]),
-    react(),
-  ],
+  return {
+    plugins: [
+      // Standalone builds must not inject Base44 editor/analytics integrations.
+      ...(demoMode ? [] : [base44({
+        legacySDKImports: env.BASE44_LEGACY_SDK_IMPORTS === "true",
+        hmrNotifier: true,
+        navigationNotifier: true,
+        analyticsTracker: true,
+        visualEditAgent: true,
+      })]),
+      react(),
+    ],
+  };
 });
