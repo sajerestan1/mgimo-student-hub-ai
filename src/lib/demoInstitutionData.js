@@ -29,8 +29,16 @@ const courses = [
   { id: 'course-jrn210', code: 'JR-210', title: 'Global Media & Diplomacy', name: 'Global Media & Diplomacy', faculty_id: 'fac-jrn', professor_id: 'prof-demo', credits: 4, semester: 'Fall 2026', status: 'active', enrolled_count: 24 },
   { id: 'course-gp220', code: 'GP-220', title: 'Policy Analysis', name: 'Policy Analysis', faculty_id: 'fac-gp', professor_id: 'prof-2', credits: 4, semester: 'Fall 2026', status: 'active', enrolled_count: 26 },
 ];
-const academicRecords = students.slice(0, 12).map((s, i) => ({ id: 'grade-' + i, student_id: s.id, student_name: s.full_name, course_id: courses[i % courses.length].id, course_code: courses[i % courses.length].code, grade: 70 + (i * 3 % 25), letter_grade: ['B','A','C+','A-'][i % 4], recorded_date: '2026-10-' + String(10 + i).padStart(2, '0') }));
-const attendanceRecords = students.slice(0, 10).map((s, i) => ({ id: 'att-' + i, student_id: s.id, student_name: s.full_name, course_id: courses[i % courses.length].id, course_code: courses[i % courses.length].code, session_date: '2026-11-' + String(1 + i).padStart(2, '0'), status: i % 5 === 0 ? 'absent' : 'present' }));
+const academicRecords = students.flatMap((s, i) => Array.from({ length: 4 }, (_, j) => {
+  const course = courses[(i + j) % courses.length];
+  const grade = 52 + ((i * 7 + j * 11) % 46);
+  return { id: `grade-${i}-${j}`, student_id: s.id, student_name: s.full_name, course_id: course.id, course_code: course.code, grade, letter_grade: grade >= 90 ? 'A' : grade >= 80 ? 'B+' : grade >= 70 ? 'B' : grade >= 60 ? 'C' : 'F', recorded_date: `2026-10-${String(10 + j).padStart(2, '0')}` };
+}));
+const attendanceRecords = students.flatMap((s, i) => Array.from({ length: 4 }, (_, j) => {
+  const course = courses[(i + j) % courses.length];
+  const status = (i * 3 + j * 2) % 13 === 0 ? 'absent' : (i + j) % 17 === 0 ? 'late' : (i + j) % 19 === 0 ? 'excused' : 'present';
+  return { id: `att-${i}-${j}`, student_id: s.id, student_name: s.full_name, course_id: course.id, course_code: course.code, session_date: `2026-11-${String(1 + j).padStart(2, '0')}`, status };
+}));
 const requests = [
   { id: 'req-1', student_id: students[0].id, student_name: students[0].full_name, subject: 'Transcript request', category: 'documents', status: 'submitted', submitted_date: '2026-11-12', assigned_to: 'Dean’s Office', description: 'Request for an official academic transcript.' },
   { id: 'req-2', student_id: students[1].id, student_name: students[1].full_name, subject: 'Course registration correction', category: 'academic', status: 'in_review', submitted_date: '2026-11-10', assigned_to: 'Academic Affairs', description: 'Correction to the current semester registration.' },
