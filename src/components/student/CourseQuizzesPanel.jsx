@@ -4,6 +4,7 @@ import StatusChip from '@/components/shell/StatusChip';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { loadStudentCourses, shortDate } from '@/lib/studentCourses';
+import { DEMO_INSTITUTION } from '@/lib/demoInstitutionData';
 import { useI18n } from '@/i18n/I18nProvider';
 
 export default function CourseQuizzesPanel() {
@@ -23,6 +24,11 @@ export default function CourseQuizzesPanel() {
     if (!context.courseIds.length) {
       setQuizzes([]);
       return;
+    }
+    if (import.meta.env.VITE_DEMO_MODE === 'true') {
+      const demoQuizzes = [{ id: 'demo-quiz-ir', course_id: context.courseIds[0], course_code: context.courses[0]?.code, professor_id: 'prof-demo', title: 'IR Theory — Module 4', duration_minutes: 15, available_until: '2026-11-22', status: 'published' }];
+      const demoQuestions = [{ id: 'dq1', quiz_id: 'demo-quiz-ir', order: 1, prompt: 'Which concept emphasizes state sovereignty?', options: ['Realism','Liberalism','Constructivism','Marxism'], correct_index: 0, points: 1 }, { id: 'dq2', quiz_id: 'demo-quiz-ir', order: 2, prompt: 'Who is a central actor in classical realism?', options: ['NGOs','The state','Individuals only','International courts'], correct_index: 1, points: 1 }];
+      setQuizzes(demoQuizzes); setQuestions(demoQuestions); setAttempts([]); return;
     }
     const [quizPage, attemptPage] = await Promise.all([
       base44.entities.Quiz.filter({ course_id: { $in: context.courseIds }, status: 'published' }, { limit: 30 }),
@@ -48,7 +54,7 @@ export default function CourseQuizzesPanel() {
     try {
       const maxScore = quizQuestions.reduce((sum, q) => sum + (q.points || 1), 0);
       const score = quizQuestions.reduce((sum, q, index) => (Number(answers[index]) === q.correct_index ? sum + (q.points || 1) : sum), 0);
-      await base44.entities.QuizAttempt.create({
+      const attemptRecord = {
         quiz_id: quiz.id,
         course_id: quiz.course_id,
         professor_id: quiz.professor_id,
@@ -59,10 +65,12 @@ export default function CourseQuizzesPanel() {
         score: Math.round((score / Math.max(1, maxScore)) * 100),
         max_score: 100,
         submitted_at: new Date().toISOString().slice(0, 10),
-      });
+      };
+      if (import.meta.env.VITE_DEMO_MODE === 'true') setAttempts((prev) => [...prev, { ...attemptRecord, id: 'demo-attempt-' + Date.now() }]);
+      else await base44.entities.QuizAttempt.create(attemptRecord);
       setActiveId(null);
       setAnswers({});
-      await load();
+      if (import.meta.env.VITE_DEMO_MODE !== 'true') await load();
     } finally {
       setBusy(false);
     }
