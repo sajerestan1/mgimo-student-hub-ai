@@ -63,6 +63,8 @@ export default function ProfessorAssignmentsPage() {
     await base44.entities.Assignment.delete(assignment.id); await load();
   };
 
+  const saveDemo = (assignment) => { setAssignments((items) => items.some((a) => a.id === assignment.id) ? items.map((a) => a.id === assignment.id ? assignment : a) : [assignment, ...items]); setCreating(false); setEditing(null); };
+
   const saved = async () => {
     setCreating(false);
     setEditing(null);
@@ -92,6 +94,7 @@ export default function ProfessorAssignmentsPage() {
             professor={professor}
             initial={editing}
             onSaved={saved}
+            onDemoSave={saveDemo}
             onCancel={() => { setCreating(false); setEditing(null); }}
           />
         </div>
