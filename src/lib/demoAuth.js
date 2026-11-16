@@ -1,8 +1,8 @@
-// Competition demo identities only. Never use these accounts for real student records.
+// Competition demo identities. These are the four accounts used to test the prototype.
 export const DEMO_USERS = [
-  { id: 'demo-student-a', email: 'student.demo@mgimo.example', full_name: 'Alex Morgan', role: 'student', faculty: 'International Relations' },
-  { id: 'demo-student-b', email: 'student.demo2@mgimo.example', full_name: 'Sofia Ivanova', role: 'student', faculty: 'International Economics' },
-  { id: 'demo-professor', email: 'professor.demo@mgimo.example', full_name: 'Dr. Elena Petrova', role: 'professor' },
+  { id: 'demo-student-a', email: 'stanley.demo@mgimo.example', full_name: 'Sajere Stanley', role: 'student', faculty: 'International Relations' },
+  { id: 'demo-student-b', email: 'patience.demo@mgimo.example', full_name: 'Patience', role: 'student', faculty: 'International Economic Relations' },
+  { id: 'demo-professor', email: 'professor.demo@mgimo.example', full_name: 'Demo Professor', role: 'professor' },
   { id: 'demo-admin', email: 'admin.demo@mgimo.example', full_name: 'Demo Administrator', role: 'admin' },
 ];
 
