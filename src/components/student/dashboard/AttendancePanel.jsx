@@ -89,6 +89,16 @@ export default function AttendancePanel({ context }) {
             </ul>
           )}
         </>
+      ) : rate !== null ? (
+        <div className="flex min-h-40 flex-col items-center justify-center gap-2 text-center">
+          <p className="text-3xl font-semibold tabular-nums text-ink">{rate}%</p>
+          <p className="max-w-xs text-[length:var(--type-secondary)] leading-relaxed text-mutedink">
+            {t('student.dashboard.hints.ofSessions')}
+          </p>
+          <p className="text-[length:var(--type-meta)] text-mutedink">
+            {t('student.dashboard.attendanceBreakdown.recorded', { count: 0 })}
+          </p>
+        </div>
       ) : (
         <p className="py-8 text-center text-[length:var(--type-secondary)] leading-relaxed text-mutedink">
           {t('student.dashboard.hints.notRecorded')}
