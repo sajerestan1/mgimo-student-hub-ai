@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { DEMO_USERS } from '@/lib/demoAuth';
+import { DEMO_INSTITUTION } from '@/lib/demoInstitutionData';
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 import { Loader2, Plus, RefreshCw, Search, ShieldCheck, UserPlus } from 'lucide-react';
 import PageTitle from '@/components/shell/PageTitle';
 import Surface from '@/components/shell/Surface';
@@ -31,6 +34,17 @@ export default function UserManagement() {
       setLoading(true);
       setError('');
       try {
+        if (DEMO_MODE) {
+          const facultyById = Object.fromEntries(DEMO_INSTITUTION.faculties.map((f) => [f.id, f.name]));
+          const users = [
+            ...DEMO_USERS.map((u) => ({ ...u, account_status: 'active', faculty_id: DEMO_INSTITUTION.faculties.find((f) => f.name.includes(u.faculty || ''))?.id || '', group_name: u.role === 'student' ? 'IR-26-A' : '', created_date: '2026-09-01', profile_complete: true, missing: [], provisioned: true })),
+            ...DEMO_INSTITUTION.students.map((s) => ({ id: s.id, full_name: s.full_name, email: s.email, role: 'student', account_status: s.status, faculty_id: s.faculty_id, faculty: facultyById[s.faculty_id], department_id: s.department_id, group_name: `IR-${26 + s.year}-A`, year: s.year, student_id: s.student_number, programme: s.program, created_date: '2026-09-01', profile_complete: true, missing: [], provisioned: true })),
+            ...DEMO_INSTITUTION.professors.map((p) => ({ id: p.id, full_name: p.full_name, email: p.email, role: 'professor', account_status: 'active', faculty_id: p.faculty_id, department_id: p.department_id, created_date: '2026-09-01', profile_complete: true, missing: [], provisioned: true })),
+          ];
+          const filtered = users.filter((u) => (!filters.search || [u.full_name,u.email,u.student_id,u.professor_id].some((v) => String(v || '').toLowerCase().includes(filters.search.toLowerCase()))) && (filters.role === 'all' || u.role === filters.role) && (filters.faculty_id === 'all' || u.faculty_id === filters.faculty_id) && (filters.group_name === 'all' || u.group_name === filters.group_name) && (filters.status === 'all' || u.account_status === filters.status));
+          if (alive) setData({ users: filtered, faculties: DEMO_INSTITUTION.faculties, departments: DEMO_INSTITUTION.departments, canManageAdmins: false });
+          return;
+        }
         const response = await base44.functions.invoke('adminUsers', { action: 'list', ...filters });
         const payload = response?.data || {};
         if (payload.error) throw new Error(payload.error);
@@ -76,20 +90,20 @@ export default function UserManagement() {
       <PageTitle
         eyebrow="Administration"
         title="User management"
-        description="Create institutional accounts, assign roles and academic placements, manage account status and password recovery. Every change is authorised on the server and written to the audit log."
+        description={DEMO_MODE ? 'Synthetic demo accounts and institutional profiles. Account creation and security actions are disabled in standalone demo mode.' : 'Create institutional accounts, assign roles and academic placements, manage account status and password recovery. Every change is authorised on the server and written to the audit log.'}
         actions={
           <>
             <button type="button" className="btn-quiet" onClick={refresh}>
               <RefreshCw className="h-3.5 w-3.5" /> Refresh
             </button>
-            <button type="button" className="btn-quiet" onClick={reconcile} disabled={repairing}>
+            <button type="button" className="btn-quiet" onClick={reconcile} disabled={repairing || DEMO_MODE}>
               {repairing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
               Reconcile identities
             </button>
-            <button type="button" className="btn-quiet" onClick={() => setCreating(true)}>
+            <button type="button" className="btn-quiet" onClick={() => setCreating(true)} disabled={DEMO_MODE}>
               <Plus className="h-3.5 w-3.5" /> New account
             </button>
-            <button type="button" className="btn-primary" onClick={() => setProvisioning(true)}>
+            <button type="button" className="btn-primary" onClick={() => setProvisioning(true)} disabled={DEMO_MODE}>
               <UserPlus className="h-3.5 w-3.5" /> Create student account
             </button>
           </>
