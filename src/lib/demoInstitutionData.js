@@ -9,7 +9,7 @@ const faculties = [
 ];
 const departments = faculties.map((f, i) => ({ id: 'dep-' + i, faculty_id: f.id, name: ['International Relations & Foreign Policy','World Economy & Finance','International Public Law','Media & Communications','International Business','Political Science'][i] }));
 const professors = [
-  { id: 'prof-demo', full_name: 'Dr. Elena Petrova', email: 'professor.demo@mgimo.example', faculty_id: 'fac-ir', department_id: 'dep-0', title: 'Associate Professor' },
+  { id: 'prof-demo', full_name: 'Demo Professor', email: 'professor.demo@mgimo.example', faculty_id: 'fac-ir', department_id: 'dep-0', title: 'Professor' },
   { id: 'prof-2', full_name: 'Dr. Andrei Volkov', email: 'a.volkov@mgimo.example', faculty_id: 'fac-ier', department_id: 'dep-1', title: 'Professor' },
   { id: 'prof-3', full_name: 'Dr. Marina Kravtsova', email: 'm.kravtsova@mgimo.example', faculty_id: 'fac-law', department_id: 'dep-2', title: 'Professor' },
 ];
