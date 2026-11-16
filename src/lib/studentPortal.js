@@ -52,7 +52,7 @@ export function loadStudentPortal({ fresh = false } = {}) {
       quizzes: [{ id: 'quiz-1', title: 'IR Theory — Module 4', courseCode: 'IR-201', state: 'pending', availableUntil: '2026-11-22', attempts: 1, attemptLimit: 3 }],
       materials: [{ id: 'mat-1', title: 'Lecture 8: International institutions', courseCode: 'IR-201', courseId: 'course-ir201', type: 'lecture', publishedDate: '2026-11-14' }],
       announcements: [{ id: 'ann-1', title: 'Fall semester examination schedule', body: 'The examination timetable is available in the student portal.', author: 'Academic Affairs', date: '2026-11-14' }],
-      recentGrades: [{ courseCode: 'LW-201', title: 'Midterm examination', score: second ? 91 : 82, max: 100, feedback: 'Good analysis. Strengthen your use of primary sources.', gradedAt: '2026-11-13' }],
+      recentGrades: courses.map((course) => ({ courseCode: course.code, title: 'Midterm examination', score: course.weighted, max: 100, feedback: 'Good analysis. Strengthen your use of primary sources.', gradedAt: '2026-11-13' })),
       // Attendance totals and breakdown are generated from the same register rows.
       attendance: {
         overall: second ? 93 : 88,
@@ -76,7 +76,7 @@ export function loadStudentPortal({ fresh = false } = {}) {
         pending: visibleAssignments.filter((row) => row.state === 'pending').length,
         overdue: visibleAssignments.filter((row) => row.state === 'overdue').length,
         awaiting: 0,
-        graded: 1,
+        graded: courses.length,
         attendanceRate: second ? 93 : 88,
       },
       scopeNote: 'Synthetic records for competition demonstration.'
