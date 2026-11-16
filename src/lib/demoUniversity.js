@@ -172,7 +172,7 @@ export const RISK_SUMMARY = [
 ];
 
 export const DEMO_STUDENT = {
-  name: 'Sajere Stanley',
+  name: 'Stanley',
   preferredName: 'Stanley',
   studentId: 'DEMO-STU-001',
   programme: 'BSc International Relations',
