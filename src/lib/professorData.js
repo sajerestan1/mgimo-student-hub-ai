@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
+import { DEMO_INSTITUTION } from '@/lib/demoInstitutionData';
 
 // The professor workspace resolves to a real Professor record: the one linked
 // to the signed-in account by user_id, then one matching their email. Courses
@@ -35,6 +36,18 @@ export function useProfessorContext() {
     let alive = true;
     (async () => {
       try {
+        if (import.meta.env.VITE_DEMO_MODE === 'true') {
+          const demoProfessor = DEMO_INSTITUTION.professors[0];
+          const demoCourses = DEMO_INSTITUTION.courses.filter((course) => course.professor_id === demoProfessor.id);
+          if (!alive) return;
+          setState({
+            loading: false, professor: demoProfessor, courses: demoCourses,
+            facultyName: 'School of International Relations',
+            departmentName: 'International Relations & Foreign Policy',
+            reason: 'ok', error: null,
+          });
+          return;
+        }
         const [faculties, departments] = await Promise.all([
           base44.entities.Faculty.list('-created_date', 20),
           base44.entities.Department.list('-created_date', 40),
@@ -99,6 +112,16 @@ const items = (page) => page?.items || [];
 
 export async function loadTeaching(professorId, courses) {
   const ids = courses.map((c) => c.id);
+  if (import.meta.env.VITE_DEMO_MODE === 'true') {
+    const roster = DEMO_INSTITUTION.students.slice(0, 12).map((s, i) => ({ id: 'enr-' + i, student_id: s.id, student_name: s.full_name, course_id: courses[i % Math.max(1, courses.length)]?.id }));
+    const assignments = courses.map((course, i) => ({ id: 'assignment-' + i, course_id: course.id, course_code: course.code, title: ['Policy brief','Midterm analysis','Research essay'][i % 3], due_date: '2026-11-' + String(20 + i).padStart(2, '0'), status: 'published', max_score: 100 }));
+    return {
+      assignments,
+      submissions: roster.slice(0, 8).map((e, i) => ({ id: 'sub-' + i, assignment_id: assignments[i % assignments.length]?.id, course_id: e.course_id, student_id: e.student_id, student_name: e.student_name, status: i % 3 ? 'graded' : 'submitted', score: i % 3 ? 72 + i * 3 : null, submitted_at: '2026-11-1' + (i + 1) })),
+      sessions: courses.map((course, i) => ({ id: 'session-' + i, course_id: course.id, course_code: course.code, session_date: todayIso(), start_time: '10:00', room: 'Room ' + (201 + i), group_name: 'IR-21', attendance_taken: false })),
+      enrollments: roster, attempts: [], quizzes: [], threads: [], attendance: [], modules: [], progress: [],
+    };
+  }
   if (!ids.length) {
     return { assignments: [], submissions: [], sessions: [], enrollments: [], attempts: [], quizzes: [], threads: [], attendance: [], modules: [], progress: [] };
   }
