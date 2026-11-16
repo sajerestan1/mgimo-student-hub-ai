@@ -4,6 +4,8 @@ import { seedAdminData } from '@/lib/adminSeed';
 import { buildAnalytics, iso } from '@/lib/adminMetrics';
 import { STAFF_ROLES } from '@/lib/roles';
 import { withRetry } from '@/lib/apiRetry';
+import { DEMO_INSTITUTION } from '@/lib/demoInstitutionData';
+import { getDemoUser } from '@/lib/demoAuth';
 
 const AdminDataContext = createContext(null);
 
@@ -120,10 +122,17 @@ export function AdminDataProvider({ children }) {
     setLoading(true);
     setError(null);
     try {
-      const user = await withRetry(() => base44.auth.me());
-      setMe(user);
-      const snapshot = await loadSnapshot(user, force);
-      setData(snapshot);
+      if (import.meta.env.VITE_DEMO_MODE === 'true') {
+        const user = getDemoUser();
+        if (!user) throw new Error('Select a demo account to continue.');
+        setMe(user);
+        setData(DEMO_INSTITUTION);
+      } else {
+        const user = await withRetry(() => base44.auth.me());
+        setMe(user);
+        const snapshot = await loadSnapshot(user, force);
+        setData(snapshot);
+      }
     } catch (err) {
       setError(err?.message || 'Institutional records could not be loaded.');
     } finally {
