@@ -24,10 +24,10 @@ export function loadStudentPortal({ fresh = false } = {}) {
     const second = user.id === 'demo-student-b';
     const profile = {
       id: user.id, full_name: user.full_name, email: user.email,
-      student_number: second ? 'AI26-0002' : 'AI26-0001',
+      student_number: second ? 'DEMO-STU-002' : 'DEMO-STU-001',
       faculty: second ? 'School of International Economic Relations' : 'School of International Relations',
       program: second ? 'International Economics' : 'International Relations',
-      year: 2, group: second ? 'IE-22' : 'IR-21'
+      year: 1, group: second ? 'IER-1A' : 'IR-1A'
     };
     const courses = [
       { id: 'course-ir201', code: 'IR-201', title: 'Theory of International Relations', weighted: second ? 84 : 76, progress: 72, professor: 'Dr. Elena Petrova' },
