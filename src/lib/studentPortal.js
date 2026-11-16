@@ -51,9 +51,9 @@ export function loadStudentPortal({ fresh = false } = {}) {
         overall: second ? 93 : 88,
         held: 16,
         byCourse: [
-          { code: 'IR-201', present: second ? 6 : 5, late: 1, excused: 0, absent: second ? 0 : 2, total: 7, rate: second ? 100 : 71 },
-          { code: 'IE-201', present: 5, late: 1, excused: 0, absent: 1, total: 7, rate: 86 },
-          { code: 'LW-201', present: 2, late: 1, excused: 1, absent: 0, total: 4, rate: 100 },
+          { code: 'IR-201', present: second ? 9 : 8, late: 1, excused: 0, absent: second ? 0 : 1, total: second ? 10 : 10, rate: second ? 100 : 90 },
+          { code: 'IE-201', present: second ? 9 : 8, late: 1, excused: 0, absent: second ? 0 : 1, total: second ? 10 : 10, rate: second ? 100 : 90 },
+          { code: 'LW-201', present: second ? 4 : 4, late: 0, excused: 0, absent: second ? 1 : 1, total: second ? 5 : 5, rate: second ? 80 : 80 },
         ],
       },
       sessions: [
@@ -62,7 +62,7 @@ export function loadStudentPortal({ fresh = false } = {}) {
         { id: 's3', date: '2026-11-17', start: '11:00', end: '12:30', courseCode: 'LW-201', courseTitle: 'Public International Law', room: 'Room 212', kind: 'lecture' },
       ],
       summary: {
-        average: second ? 84.3 : 80.0,
+        average: second ? 84.3 : 82.3,
         averageLetter: second ? 'B+' : 'B',
         courseCount: courses.length,
         credits: courses.reduce((sum, course) => sum + 6, 0),
