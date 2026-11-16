@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client';
+import { getDemoUser } from '@/lib/demoAuth';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 
 /**
@@ -14,6 +15,42 @@ const CACHE_MS = 15000;
  */
 export function loadStudentPortal({ fresh = false } = {}) {
   if (!fresh && cache && Date.now() - cache.at < CACHE_MS) return cache.promise;
+
+  if (import.meta.env.VITE_DEMO_MODE === 'true') {
+    const user = getDemoUser();
+    if (!user || user.role !== 'student') return Promise.resolve({ linked: false, profile: null, courses: [], sessions: [], assignments: [], quizzes: [], materials: [], announcements: [], recentGrades: [], summary: {} });
+    const second = user.id === 'demo-student-b';
+    const profile = {
+      id: user.id, full_name: user.full_name, email: user.email,
+      student_number: second ? 'AI26-0002' : 'AI26-0001',
+      faculty: second ? 'School of International Economic Relations' : 'School of International Relations',
+      program: second ? 'International Economics' : 'International Relations',
+      year: 2, group: second ? 'IE-22' : 'IR-21'
+    };
+    const courses = [
+      { id: 'course-ir201', code: 'IR-201', title: 'Theory of International Relations', weighted: second ? 84 : 76, progress: 72, professor: 'Dr. Elena Petrova' },
+      { id: 'course-ie201', code: 'IE-201', title: 'World Economy', weighted: second ? 78 : 89, progress: 64, professor: 'Dr. Andrei Volkov' },
+      { id: 'course-law201', code: 'LW-201', title: 'Public International Law', weighted: second ? 91 : 82, progress: 81, professor: 'Dr. Marina Kravtsova' },
+    ];
+    const assignments = [
+      { id: 'as-1', title: 'Comparative foreign policy analysis', courseCode: 'IR-201', dueDate: '2026-11-20', state: 'pending' },
+      { id: 'as-2', title: 'Global trade indicators report', courseCode: 'IE-201', dueDate: '2026-11-12', state: 'overdue' },
+      { id: 'as-3', title: 'Case brief: treaty interpretation', courseCode: 'LW-201', dueDate: '2026-11-25', state: 'pending' },
+    ];
+    return Promise.resolve({
+      linked: true, profile, courses, assignments,
+      quizzes: [{ id: 'quiz-1', title: 'IR Theory — Module 4', courseCode: 'IR-201', state: 'pending', availableUntil: '2026-11-22', attempts: 1, attemptLimit: 3 }],
+      materials: [{ id: 'mat-1', title: 'Lecture 8: International institutions', courseCode: 'IR-201', courseId: 'course-ir201', type: 'lecture', publishedDate: '2026-11-14' }],
+      announcements: [{ id: 'ann-1', title: 'Fall semester examination schedule', body: 'The examination timetable is available in the student portal.', author: 'Academic Affairs', date: '2026-11-14' }],
+      recentGrades: [{ courseCode: 'LW-201', title: 'Midterm examination', score: second ? 91 : 82, max: 100, feedback: 'Good analysis. Strengthen your use of primary sources.', gradedAt: '2026-11-13' }],
+      sessions: [
+        { id: 's1', date: '2026-11-16', start: '10:00', end: '11:30', courseCode: 'IR-201', courseTitle: 'Theory of International Relations', room: 'Room 304' },
+        { id: 's2', date: '2026-11-16', start: '14:00', end: '15:30', courseCode: 'IE-201', courseTitle: 'World Economy', room: 'Room 218' },
+      ],
+      summary: { average: second ? 84.3 : 82.1, gpa: second ? 4.3 : 4.1, attendance: second ? 93 : 88, pendingAssignments: 2, upcomingClasses: 2, credits: 18 },
+      scopeNote: 'Synthetic records for competition demonstration.'
+    });
+  }
 
   const promise = base44.functions
     .invoke('studentContext', {})
