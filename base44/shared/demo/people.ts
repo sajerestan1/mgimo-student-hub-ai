@@ -107,7 +107,7 @@ export const DEMO_STUDENT = {
 const AT_RISK_INDEXES = [4, 13, 21, 26];
 const ACTIVE_INTERVENTION_INDEXES = [13, 26];
 
-const slug = (value) => value.toLowerCase().replace(/[^a-z\\s-]/g, '').trim().replace(/\\s+/g, '.');
+const slug = (value) => value.toLowerCase().replace(/[^a-z\s-]/g, '').trim().replace(/\s+/g, '.');
 
 export function buildStudents() {
   return STUDENT_NAMES.map((fullName, index) => {
