@@ -93,97 +93,41 @@ export const PROFESSORS = [
   },
 ];
 
-const STUDENT_NAMES = [
-  'Aleksandra Volkova',
-  'Dmitry Sokolov',
-  'Maria Kuznetsova',
-  'Ivan Morozov',
-  'Ekaterina Lebedeva',
-  'Nikita Novikov',
-  'Sofia Semenova',
-  'Artem Petrov',
-  'Anastasia Fedorova',
-  'Pavel Ivanov',
-  'Vera Orlova',
-  'Timur Kozlov',
-  'Polina Zaitseva',
-  'Mikhail Baranov',
-  'Daria Grigorieva',
-  'Kirill Belov',
-  'Alina Mironova',
-  'Roman Karpov',
-  'Yulia Solovyova',
-  'Egor Tikhomirov',
-  'Ksenia Yakovleva',
-  'Vladimir Gusev',
-  'Nina Vinogradova',
-  'Maxim Komarov',
-  'Lidia Rodionova',
-  'Anton Safonov',
-  'Galina Medvedeva',
-  'Ruslan Ershov',
-  'Tatiana Danilova',
-  'Fedor Krylov',
-];
+const STUDENT_NAMES = ['Sajere Stanley', 'Patience'];
 
-// The one account the student office designates for demonstrations. Its record
-// carries the e-mail below; the provisioning row created with the same address
-// links the account to this record on first sign-in.
+// The two student test accounts used in the competition walkthrough.
 export const DEMO_STUDENT = {
   index: 0,
-  full_name: 'Aleksandra Volkova',
-  email: `demo.student@student.${DEMO_DOMAIN}`,
-  student_id: 'MG-2024-1042',
+  full_name: 'Sajere Stanley',
+  email: 'stanley.demo@mgimo.example',
+  student_id: 'DEMO-STU-001',
 };
-
-const AT_RISK_INDEXES = [4, 13, 21, 26];
-const ACTIVE_INTERVENTION_INDEXES = [13, 26];
 
 const slug = (value) =>
   value
     .toLowerCase()
-    .replace(/[^a-z\s-]/g, '')
+    .replace(/[^a-z\\s-]/g, '')
     .trim()
-    .replace(/\s+/g, '.');
+    .replace(/\\s+/g, '.');
 
 export function buildStudents() {
   return STUDENT_NAMES.map((fullName, index) => {
-    const group = index < 10 ? GROUPS[0] : index < 18 ? GROUPS[1] : GROUPS[2];
-    const programme =
-      group.name === 'IR-21A'
-        ? index < 6
-          ? 'International Relations'
-          : 'Regional Studies'
-        : group.name === 'IR-21B'
-          ? 'Regional Studies'
-          : index < 25
-            ? 'World Economy'
-            : 'International Finance';
-    const department =
-      programme === 'International Relations'
-        ? 'IRFP'
-        : programme === 'Regional Studies'
-          ? 'RS'
-          : programme === 'World Economy'
-            ? 'WE'
-            : 'IF';
-    const demo = index === DEMO_STUDENT.index;
+    const group = index === 0 ? GROUPS[0] : GROUPS[2];
+    const programme = index === 0 ? 'International Relations' : 'World Economy';
+    const department = index === 0 ? 'IRFP' : 'WE';
     return {
-      full_name: demo ? DEMO_STUDENT.full_name : fullName,
-      student_id: demo ? DEMO_STUDENT.student_id : `MG-2024-${1043 + index}`,
-      email: demo ? DEMO_STUDENT.email : `${slug(fullName)}@student.${DEMO_DOMAIN}`,
+      full_name: fullName,
+      student_id: index === 0 ? 'DEMO-STU-001' : 'DEMO-STU-002',
+      email: index === 0 ? 'stanley.demo@mgimo.example' : 'patience.demo@mgimo.example',
       programme,
       group: group.name,
       faculty: group.faculty,
       department,
-      year: group.year,
-      at_risk: AT_RISK_INDEXES.includes(index),
-      intervention_status: AT_RISK_INDEXES.includes(index)
-        ? ACTIVE_INTERVENTION_INDEXES.includes(index)
-          ? 'active'
-          : 'monitoring'
-        : 'none',
-      demo,
+      year: 1,
+      at_risk: false,
+      intervention_status: 'none',
+      demo: true,
     };
   });
 }
+
