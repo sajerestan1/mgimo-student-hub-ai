@@ -20,6 +20,23 @@ export default function ProfessorCoursesPage() {
     if (!selectedId) return;
     let alive = true;
     (async () => {
+      if (import.meta.env.VITE_DEMO_MODE === 'true') {
+        const students = [
+          { id: 'demo-student-1', full_name: 'Alexandra Smirnova', student_id: 'AI26-0001', group_name: 'IR-21' },
+          { id: 'demo-student-2', full_name: 'Mikhail Ivanov', student_id: 'AI26-0002', group_name: 'IR-21' },
+          { id: 'demo-student-3', full_name: 'Fatima Ahmed', student_id: 'AI26-0003', group_name: 'IR-21' },
+        ];
+        if (!alive) return;
+        setDetail({
+          students,
+          assignments: [{ id: 'demo-a1', title: 'Policy analysis', max_score: 100 }],
+          submissions: students.map((s, i) => ({ id: 'demo-sub-'+i, student_id: s.id, assignment_id: 'demo-a1', score: [86, 74, 92][i], status: 'graded' })),
+          sessions: [{ id: 'demo-session', session_date: '2026-11-18', start_time: '10:00', end_time: '11:30', room: 'Room 304', topic: 'International institutions' }],
+          attendance: students.map((s, i) => ({ student_id: s.id, status: i === 1 ? 'late' : 'present' })),
+          materials: 4,
+        });
+        return;
+      }
       const [enr, assignments, subs, sessions, att, materials] = await Promise.all([
         base44.entities.CourseEnrollment.filter({ course_id: selectedId }, { limit: 200 }),
         base44.entities.Assignment.filter({ course_id: selectedId }, { limit: 40 }),
