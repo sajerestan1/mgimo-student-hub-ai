@@ -29,11 +29,18 @@ export function loadStudentPortal({ fresh = false } = {}) {
       program: second ? 'International Economics' : 'International Relations',
       year: 1, group: second ? 'IER-1A' : 'IR-1A'
     };
-    const courses = [
+    const courseSeeds = [
       { id: 'course-ir201', code: 'IR-201', title: 'Theory of International Relations', weighted: second ? 84 : 76, progress: 72, professor: 'Dr. Elena Petrova' },
       { id: 'course-ie201', code: 'IE-201', title: 'World Economy', weighted: second ? 78 : 89, progress: 64, professor: 'Dr. Andrei Volkov' },
       { id: 'course-law201', code: 'LW-201', title: 'Public International Law', weighted: second ? 91 : 82, progress: 81, professor: 'Dr. Marina Kravtsova' },
     ];
+    const courses = courseSeeds.map((course) => ({
+      ...course, credits: 6, graded: 1, missing: 0, awaiting: 0, weightScored: 100,
+      letter: course.weighted >= 90 ? 'A' : course.weighted >= 80 ? 'B' : course.weighted >= 70 ? 'C' : 'D',
+      moduleProgress: { completed: Math.floor(course.progress / 25), total: 4, percent: course.progress },
+      completion: 'in_progress',
+      rows: [{ id: `demo-grade-${course.id}-1`, kind: 'exam', title: 'Midterm examination', categoryLabel: 'Exam', status: 'graded', score: course.weighted, max: 100, percent: course.weighted, feedback: 'Good analysis. Continue building your evidence.', gradedAt: '2026-11-13', late: false }],
+    }));
     const assignments = [
       { id: 'as-1', title: 'Comparative foreign policy analysis', courseCode: 'IR-201', dueDate: '2026-11-20', state: 'pending' },
       { id: 'as-2', title: 'Global trade indicators report', courseCode: 'IE-201', dueDate: '2026-11-12', state: 'overdue' },
