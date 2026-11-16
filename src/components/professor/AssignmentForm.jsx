@@ -18,7 +18,7 @@ const empty = (courseId) => ({
 
 const field = 'w-full rounded-lg border border-line bg-white px-3 py-2 text-[12px] text-ink focus:border-royal/40 focus:outline-none focus:ring-2 focus:ring-royal/10';
 
-export default function AssignmentForm({ courses, professor, initial, onSaved, onCancel }) {
+export default function AssignmentForm({ courses, professor, initial, onSaved, onDemoSave, onCancel }) {
   const [form, setForm] = useState(initial ? { ...initial } : empty(courses[0]?.id));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -50,9 +50,13 @@ export default function AssignmentForm({ courses, professor, initial, onSaved, o
       published_date: form.published_date || todayIso(),
     };
     try {
-      if (initial?.id) await base44.entities.Assignment.update(initial.id, payload);
-      else await base44.entities.Assignment.create(payload);
-      await onSaved();
+      if (import.meta.env.VITE_DEMO_MODE === 'true') {
+        onDemoSave?.({ ...payload, id: initial?.id || 'demo-assignment-' + Date.now() });
+      } else {
+        if (initial?.id) await base44.entities.Assignment.update(initial.id, payload);
+        else await base44.entities.Assignment.create(payload);
+        await onSaved();
+      }
     } catch {
       setError('The assignment could not be saved. Please try again.');
     } finally {
