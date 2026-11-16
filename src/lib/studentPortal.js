@@ -34,6 +34,8 @@ export function loadStudentPortal({ fresh = false } = {}) {
       { id: 'course-ie201', code: 'IE-201', title: 'World Economy', weighted: second ? 78 : 89, progress: 64, professor: 'Dr. Andrei Volkov' },
       { id: 'course-law201', code: 'LW-201', title: 'Public International Law', weighted: second ? 91 : 82, progress: 81, professor: 'Dr. Marina Kravtsova' },
     ];
+    // Demo KPIs are calculated from the same records rendered by each page.
+    const average = courses.reduce((sum, course) => sum + course.weighted, 0) / courses.length;
     const assignments = [
       { id: 'as-1', title: 'Comparative foreign policy analysis', courseCode: 'IR-201', dueDate: '2026-11-20', state: 'pending' },
       { id: 'as-2', title: 'Global trade indicators report', courseCode: 'IE-201', dueDate: '2026-11-12', state: 'overdue' },
@@ -50,7 +52,14 @@ export function loadStudentPortal({ fresh = false } = {}) {
         { id: 's1', date: '2026-11-16', start: '10:00', end: '11:30', courseCode: 'IR-201', courseTitle: 'Theory of International Relations', room: 'Room 304' },
         { id: 's2', date: '2026-11-16', start: '14:00', end: '15:30', courseCode: 'IE-201', courseTitle: 'World Economy', room: 'Room 218' },
       ],
-      summary: { average: second ? 84.3 : 82.1, gpa: second ? 4.3 : 4.1, attendance: second ? 93 : 88, pendingAssignments: 2, upcomingClasses: 2, credits: 18 },
+      summary: {
+        average: Number(average.toFixed(1)),
+        gpa: second ? 4.3 : 4.1,
+        attendance: second ? 93 : 88,
+        pendingAssignments: visibleAssignments.filter((assignment) => !['submitted', 'graded'].includes(assignment.state)).length,
+        upcomingClasses: 2,
+        credits: 18,
+      },
       scopeNote: 'Synthetic records for competition demonstration.'
     });
   }
