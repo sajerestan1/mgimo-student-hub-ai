@@ -16,6 +16,9 @@ const initialsOf = (name) =>
 
 export default function WelcomeHeader({ profile, context }) {
   const { t, language } = useI18n();
+  // Prefer the authorised student context for dashboard identity. The shell
+  // profile can be stale or belong to a different linked user record.
+  const studentProfile = context?.profile || profile;
   const today = new Date().toLocaleDateString(language, {
     weekday: 'long',
     day: 'numeric',
@@ -30,11 +33,11 @@ export default function WelcomeHeader({ profile, context }) {
       <div className="mt-1.5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
           <h1 className="truncate text-[length:var(--type-title)] font-bold leading-[1.12] tracking-[-0.03em] text-ink">
-            {greeting(t)}, {firstName(profile, t)}
+            {greeting(t)}, {firstName(studentProfile, t)}
           </h1>
           <p className="mt-1.5 truncate text-[length:var(--type-secondary)] leading-[1.5] text-[#64748B]">
-            {profile?.program || t('student.dashboard.workspace')}
-            {profile?.group_name ? ` · ${profile.group_name}` : ''}
+            {studentProfile?.program || t('student.dashboard.workspace')}
+            {studentProfile?.group_name ? ` · ${studentProfile.group_name}` : ''}
           </p>
         </div>
 
@@ -58,7 +61,7 @@ export default function WelcomeHeader({ profile, context }) {
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#14213D] text-[length:var(--type-meta)] font-semibold text-white transition-colors hover:bg-[#1B2C4F]"
             aria-label={t('student.dashboard.profile')}
           >
-            {initialsOf(profile?.full_name) || '·'}
+            {initialsOf(studentProfile?.full_name) || '·'}
           </Link>
         </div>
       </div>
