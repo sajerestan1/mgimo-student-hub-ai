@@ -5,6 +5,7 @@ import Surface from '@/components/shell/Surface';
 import StatusChip from '@/components/shell/StatusChip';
 import AssignmentForm from '@/components/professor/AssignmentForm';
 import { base44 } from '@/api/base44Client';
+import { DEMO_INSTITUTION } from '@/lib/demoInstitutionData';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { useProfessorContext, dateLabel, dayDiff } from '@/lib/professorData';
 
@@ -23,6 +24,23 @@ export default function ProfessorAssignmentsPage() {
 
   const load = async () => {
     if (!professor) return;
+    if (import.meta.env.VITE_DEMO_MODE === 'true') {
+      const demoAssignments = courses.slice(0, 3).map((course, i) => ({
+        id: 'demo-assignment-' + i, professor_id: professor.id, course_id: course.id,
+        course_code: course.code, title: ['Policy Brief: Regional Cooperation','Midterm Comparative Analysis','Research Essay: Global Governance'][i],
+        assessment_type: ['written_assignment','midterm','essay'][i], max_score: 100,
+        due_date: ['2026-11-20','2026-11-25','2026-12-02'][i],
+        submission_format: 'file', status: i === 2 ? 'draft' : 'published',
+      }));
+      const demoSubmissions = DEMO_INSTITUTION.students.slice(0, 6).map((student, i) => ({
+        id: 'demo-submission-' + i, professor_id: professor.id,
+        assignment_id: demoAssignments[i % 2].id, student_id: student.id,
+        student_name: student.full_name, status: 'submitted', score: i % 3 === 0 ? 82 + i : null,
+      }));
+      setAssignments(demoAssignments);
+      setSubmissions(demoSubmissions);
+      return;
+    }
     const [list, subs] = await Promise.all([
       base44.entities.Assignment.filter({ professor_id: professor.id }, { sort: '-due_date', limit: 60 }),
       base44.entities.Submission.filter({ professor_id: professor.id }, { limit: 300 }),
@@ -36,13 +54,13 @@ export default function ProfessorAssignmentsPage() {
   }, [professor?.id]);
 
   const setStatus = async (assignment, status) => {
-    await base44.entities.Assignment.update(assignment.id, { status });
-    await load();
+    if (import.meta.env.VITE_DEMO_MODE === 'true') { setAssignments((items) => items.map((a) => a.id === assignment.id ? { ...a, status } : a)); return; }
+    await base44.entities.Assignment.update(assignment.id, { status }); await load();
   };
 
   const remove = async (assignment) => {
-    await base44.entities.Assignment.delete(assignment.id);
-    await load();
+    if (import.meta.env.VITE_DEMO_MODE === 'true') { setAssignments((items) => items.filter((a) => a.id !== assignment.id)); return; }
+    await base44.entities.Assignment.delete(assignment.id); await load();
   };
 
   const saved = async () => {
