@@ -146,6 +146,9 @@ export function AdminDataProvider({ children }) {
 
   const role = me?.role === 'admin' ? 'dean' : me?.role || 'dean';
   const rawRole = me?.role || 'admin';
+  const demo = import.meta.env.VITE_DEMO_MODE === 'true';
+  const localUpdate = (key, id, patch) => setData(prev => ({ ...prev, [key]: prev[key].map(item => item.id === id ? { ...item, ...patch } : item) }));
+  const localCreate = (key, item) => { const created = { id: key.slice(0, 3) + '-' + Date.now(), ...item }; setData(prev => ({ ...prev, [key]: [created, ...prev[key]] })); return created; }
 
   const logAction = useCallback(
     async (action, target, details = '') => {
@@ -158,6 +161,7 @@ export function AdminDataProvider({ children }) {
         logged_at: new Date().toISOString(),
       };
       try {
+        if (demo) { setData(prev => ({ ...prev, auditLogs: [{ id: 'audit-' + Date.now(), ...entry }, ...prev.auditLogs] })); return; }
         const created = await base44.entities.AuditLog.create(entry);
         setData((prev) => ({ ...prev, auditLogs: [created, ...prev.auditLogs] }));
       } catch (err) {
@@ -178,6 +182,7 @@ export function AdminDataProvider({ children }) {
         actor_role: rawRole,
         event_date: iso(new Date()),
       };
+      if (demo) { localUpdate('requests', request.id, { status }); localCreate('requestEvents', entry); await logAction('Request ' + status.replace(/_/g, ' '), request.subject, note || ''); return { ...request, status }; }
       const [updated, event] = await Promise.all([
         base44.entities.AdminRequest.update(request.id, { status }),
         base44.entities.RequestEvent.create(entry),
@@ -204,6 +209,7 @@ export function AdminDataProvider({ children }) {
         actor_role: rawRole,
         event_date: iso(new Date()),
       };
+      if (demo) return localCreate('requestEvents', entry);
       const created = await base44.entities.RequestEvent.create(entry);
       setData((prev) => ({ ...prev, requestEvents: [created, ...prev.requestEvents] }));
       return created;
@@ -213,6 +219,7 @@ export function AdminDataProvider({ children }) {
 
   const assignRequest = useCallback(
     async (request, assignedTo) => {
+      if (demo) { localUpdate('requests', request.id, { assigned_to: assignedTo }); await logAction('Request assigned', request.subject, 'Assigned to ' + assignedTo); return; }
       await base44.entities.AdminRequest.update(request.id, { assigned_to: assignedTo });
       setData((prev) => ({
         ...prev,
@@ -225,6 +232,7 @@ export function AdminDataProvider({ children }) {
 
   const createRequest = useCallback(
     async (values) => {
+      if (demo) { const created = localCreate('requests', { ...values, status: 'submitted', submitted_date: iso(new Date()), is_demo: true }); localCreate('requestEvents', { request_id: created.id, type: 'status_change', status: 'submitted', note: 'Submitted to the Dean’s Office.', actor_name: me?.full_name || 'Dean’s Office', actor_role: rawRole, event_date: iso(new Date()) }); await logAction('Request created', created.subject); return created; }
       const created = await base44.entities.AdminRequest.create({
         ...values,
         status: 'submitted',
@@ -253,6 +261,7 @@ export function AdminDataProvider({ children }) {
 
   const updateAttendance = useCallback(
     async (record, status) => {
+      if (demo) { localUpdate('attendanceRecords', record.id, { status }); await logAction('Attendance corrected', 'Session ' + record.session_date, record.status + ' → ' + status); return; }
       await base44.entities.AttendanceRecord.update(record.id, { status });
       setData((prev) => ({
         ...prev,
@@ -267,6 +276,7 @@ export function AdminDataProvider({ children }) {
 
   const saveFaculty = useCallback(
     async (values, id) => {
+      if (demo) { const saved = id ? { ...values, id } : localCreate('faculties', values); if (id) localUpdate('faculties', id, values); await logAction(id ? 'Faculty updated' : 'Faculty created', values.name); return saved; }
       const saved = id
         ? await base44.entities.Faculty.update(id, values)
         : await base44.entities.Faculty.create({ ...values, is_demo: true });
@@ -284,6 +294,7 @@ export function AdminDataProvider({ children }) {
 
   const saveDepartment = useCallback(
     async (values, id) => {
+      if (demo) { const saved = id ? { ...values, id } : localCreate('departments', values); if (id) localUpdate('departments', id, values); await logAction(id ? 'Department updated' : 'Department created', values.name); return saved; }
       const saved = id
         ? await base44.entities.Department.update(id, values)
         : await base44.entities.Department.create({ ...values, is_demo: true });
@@ -301,6 +312,7 @@ export function AdminDataProvider({ children }) {
 
   const saveEvent = useCallback(
     async (values, id) => {
+      if (demo) { const saved = id ? { ...values, id } : localCreate('events', values); if (id) localUpdate('events', id, values); await logAction(id ? 'Calendar event updated' : 'Calendar event created', values.title); return saved; }
       const saved = id
         ? await base44.entities.AcademicEvent.update(id, values)
         : await base44.entities.AcademicEvent.create({ ...values, is_demo: true });
@@ -318,6 +330,7 @@ export function AdminDataProvider({ children }) {
 
   const deleteEvent = useCallback(
     async (id) => {
+      if (demo) { setData(prev => ({ ...prev, events: prev.events.filter(item => item.id !== id) })); await logAction('Calendar event removed', 'Academic calendar'); return; }
       await base44.entities.AcademicEvent.delete(id);
       setData((prev) => ({ ...prev, events: prev.events.filter((item) => item.id !== id) }));
       await logAction('Calendar event removed', 'Academic calendar');
@@ -327,6 +340,7 @@ export function AdminDataProvider({ children }) {
 
   const saveAnnouncement = useCallback(
     async (values, id) => {
+      if (demo) { const saved = id ? { ...values, id } : localCreate('announcements', values); if (id) localUpdate('announcements', id, values); await logAction(id ? 'Announcement updated' : 'Announcement created', values.title); return saved; }
       const saved = id
         ? await base44.entities.Announcement.update(id, values)
         : await base44.entities.Announcement.create({ ...values, is_demo: true });
@@ -344,6 +358,7 @@ export function AdminDataProvider({ children }) {
 
   const updateSetting = useCallback(
     async (setting, value) => {
+      if (demo) { localUpdate('settings', setting.id, { value }); await logAction('Threshold updated', setting.label || setting.key, setting.value + ' → ' + value); return; }
       await base44.entities.AppSetting.update(setting.id, { value });
       setData((prev) => ({
         ...prev,
@@ -356,6 +371,7 @@ export function AdminDataProvider({ children }) {
 
   const updateTask = useCallback(
     async (task, status) => {
+      if (demo) { localUpdate('tasks', task.id, { status }); await logAction('Task updated', task.title, 'Status ' + status); return; }
       await base44.entities.AdministrativeTask.update(task.id, { status });
       setData((prev) => ({
         ...prev,
@@ -368,6 +384,7 @@ export function AdminDataProvider({ children }) {
 
   const createStudentNote = useCallback(
     async (student, interventionStatus) => {
+      if (demo) { localUpdate('students', student.id, { intervention_status: interventionStatus }); await logAction('Intervention status updated', student.full_name, interventionStatus); return; }
       await base44.entities.Student.update(student.id, { intervention_status: interventionStatus });
       setData((prev) => ({
         ...prev,
