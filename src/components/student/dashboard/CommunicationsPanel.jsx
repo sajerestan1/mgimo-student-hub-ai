@@ -5,6 +5,7 @@ import Surface from '@/components/shell/Surface';
 import PanelTitle from './PanelTitle';
 import { comm, formatStamp } from '@/lib/communication/api';
 import { useI18n } from '@/i18n/I18nProvider';
+import { getDemoUser } from '@/lib/demoAuth';
 
 const initialsOf = (value) =>
   (value || '')
@@ -29,6 +30,23 @@ export default function CommunicationsPanel() {
 
   useEffect(() => {
     let alive = true;
+    if (import.meta.env.VITE_DEMO_MODE === 'true' && getDemoUser()?.role === 'student') {
+      const demoUser = getDemoUser();
+      setState({
+        loading: false,
+        error: '',
+        items: [{
+          id: `demo-notice-${demoUser.id}`,
+          sender_name: 'Academic Affairs',
+          title: 'Examination timetable published',
+          body: 'The Fall semester examination timetable is available in your student workspace.',
+          created_date: new Date().toISOString(),
+          is_read: false,
+          link: '/student/announcements',
+        }],
+      });
+      return () => { alive = false; };
+    }
     comm('notifications')
       .then((data) => {
         if (!alive) return;
