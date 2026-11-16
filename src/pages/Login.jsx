@@ -11,7 +11,8 @@ import { LogIn, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import { safeReturnTo } from "@/lib/authReturnTo";
-import { useI18n } from "@/i18n/I18nProvider";\nimport { DEMO_USERS, signInDemo } from "@/lib/demoAuth";
+import { useI18n } from "@/i18n/I18nProvider";
+import { DEMO_USERS, signInDemo } from "@/lib/demoAuth";
 
 const WORKSPACE_KEYS = {
   student: "welcome.student",
@@ -22,7 +23,8 @@ const WORKSPACE_KEYS = {
 const ATTEMPT_LIMIT = 5;
 const LOCK_MS = 60 * 1000;
 
-export default function Login() {\n  if (import.meta.env.VITE_DEMO_MODE === "true") return <DemoLogin />;
+export default function Login() {
+  if (import.meta.env.VITE_DEMO_MODE === "true") return <DemoLogin />;
   const { t, dir } = useI18n();
   const rtl = dir === "rtl";
   const [email, setEmail] = useState("");
@@ -176,7 +178,9 @@ export default function Login() {\n  if (import.meta.env.VITE_DEMO_MODE === "tru
       </form>
     </AuthLayout>
   );
-}\n\nfunction DemoLogin() {
+}
+
+function DemoLogin() {
   const [error, setError] = useState("");
   const chooseAccount = (id) => {
     try {
