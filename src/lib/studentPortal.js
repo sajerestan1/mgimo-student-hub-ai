@@ -52,8 +52,8 @@ export function loadStudentPortal({ fresh = false } = {}) {
         held: 16,
         byCourse: [
           { code: 'IR-201', present: second ? 9 : 8, late: 1, excused: 0, absent: second ? 0 : 1, total: second ? 10 : 10, rate: second ? 100 : 90 },
-          { code: 'IE-201', present: second ? 9 : 8, late: 1, excused: 0, absent: second ? 0 : 1, total: second ? 10 : 10, rate: second ? 100 : 90 },
-          { code: 'LW-201', present: second ? 4 : 4, late: 0, excused: 0, absent: second ? 1 : 1, total: second ? 5 : 5, rate: second ? 80 : 80 },
+          { code: 'IE-201', present: second ? 8 : 8, late: 1, excused: 0, absent: 1, total: 10, rate: 90 },
+          { code: 'LW-201', present: second ? 7 : 4, late: second ? 1 : 0, excused: 0, absent: 1, total: second ? 9 : 5, rate: second ? 89 : 80 },
         ],
       },
       sessions: [
