@@ -14,7 +14,7 @@ const professors = [
   { id: 'prof-3', full_name: 'Dr. Marina Kravtsova', email: 'm.kravtsova@mgimo.example', faculty_id: 'fac-law', department_id: 'dep-2', title: 'Professor' },
 ];
 const students = [
-  { id: 'demo-student-a', student_number: 'DEMO-STU-001', full_name: 'Sajere Stanley', email: 'stanley.demo@mgimo.example', faculty_id: 'fac-ir', department_id: 'dep-0', program: 'International Relations', year: 1, status: 'active', gpa: 4.1, attendance_rate: 88, intervention_status: 'none' },
+  { id: 'demo-student-a', student_number: 'DEMO-STU-001', full_name: 'Stanley', email: 'stanley.demo@mgimo.example', faculty_id: 'fac-ir', department_id: 'dep-0', program: 'International Relations', year: 1, status: 'active', gpa: 4.1, attendance_rate: 88, intervention_status: 'none' },
   { id: 'demo-student-b', student_number: 'DEMO-STU-002', full_name: 'Patience', email: 'patience.demo@mgimo.example', faculty_id: 'fac-ier', department_id: 'dep-1', program: 'International Economic Relations', year: 1, status: 'active', gpa: 4.3, attendance_rate: 93, intervention_status: 'none' },
 ];
 const courses = [
