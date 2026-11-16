@@ -66,7 +66,7 @@ export function loadStudentPortal({ fresh = false } = {}) {
       sessions: [
         { id: 's1', date: todayISO(), start: '10:00', end: '11:30', courseCode: 'IR-201', courseTitle: 'Theory of International Relations', room: 'Room 304', kind: 'lecture' },
         { id: 's2', date: todayISO(), start: '14:00', end: '15:30', courseCode: 'IE-201', courseTitle: 'World Economy', room: 'Room 218', kind: 'seminar' },
-        { id: 's3', date: '2026-11-17', start: '11:00', end: '12:30', courseCode: 'LW-201', courseTitle: 'Public International Law', room: 'Room 212', kind: 'lecture' },
+        { id: 's3', date: tomorrowISO(), start: '11:00', end: '12:30', courseCode: 'LW-201', courseTitle: 'Public International Law', room: 'Room 212', kind: 'lecture' },
       ],
       summary: {
         average: second ? 84.3 : 82.3,
@@ -98,6 +98,8 @@ export function loadStudentPortal({ fresh = false } = {}) {
   cache = { at: Date.now(), promise };
   return promise;
 }
+
+export const tomorrowISO = () => { const date = new Date(); date.setDate(date.getDate() + 1); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
 
 export const todayISO = () => {
   const now = new Date();
