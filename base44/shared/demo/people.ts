@@ -93,7 +93,7 @@ export const PROFESSORS = [
   },
 ];
 
-const STUDENT_NAMES = ['Sajere Stanley', 'Patience'];
+const STUDENT_NAMES = ['Stanley', 'Patience'];
 
 // The two student test accounts used in the competition walkthrough.
 export const DEMO_STUDENT = {
