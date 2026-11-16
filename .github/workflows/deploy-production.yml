@@ -1,4 +1,5 @@
 name: Deploy MGIMO Student Hub
+# Trigger production deployment after FTP credentials were refreshed.
 
 on:
   push:
