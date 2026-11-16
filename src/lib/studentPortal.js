@@ -25,7 +25,7 @@ export function loadStudentPortal({ fresh = false } = {}) {
     const profile = {
       id: user.id, full_name: user.full_name, email: user.email,
       student_number: second ? 'AI26-0002' : 'AI26-0001',
-      faculty: second ? 'School of International Economic Relations' : 'School of International Relations',
+      faculty: user.faculty,
       program: second ? 'International Economics' : 'International Relations',
       year: 2, group: second ? 'IE-22' : 'IR-21'
     };
