@@ -5,7 +5,7 @@ $cf=__DIR__.'/config.php';
 if(!is_file($cf)){header('Location: install.php');exit;}
 $c=require $cf;
 try{$db=new PDO("mysql:host={$c['db_host']};dbname={$c['db_name']};charset=utf8mb4",$c['db_user'],$c['db_pass'],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);}
-catch(Throwable $e){http_response_code(503);exit('Database connection failed. Check your cPanel database settings.');}
+catch(Throwable $e){error_log('StudentLife database connection failed: '.$e->getMessage());http_response_code(503);exit('Database connection failed. Check your cPanel database settings.');}
 // Safe schema upgrades: add account roles, account status and an audit trail without changing academic records.
 try {
  $cols=$db->query("SHOW COLUMNS FROM users LIKE 'role'")->fetch();
