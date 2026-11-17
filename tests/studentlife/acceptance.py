@@ -115,6 +115,34 @@ def main():
                             name="Forbidden Department", code="NOPE")
     check(status == 403, "student is blocked from administrator academic actions")
 
+
+    post_action(token, "schedule_session", offering_id="1", session_date="2026-11-20",
+                repeat_until="2026-12-04", starts_at="10:00", ends_at="11:30",
+                room="Room 101", topic="CI scheduled class")
+    check(db_count("SELECT COUNT(*) AS n FROM class_sessions WHERE offering_id=1") == 3,
+          "weekly recurring class scheduling creates expected sessions")
+
+    request("/?logout=1")
+    lecturer_token = login("lecturer@studentlife.test", "lecturer")
+    status, html = request("/?page=timetable")
+    check(status == 200 and "CI scheduled class" in html,
+          "assigned lecturer can view scheduled classes and attendance roster")
+    post_action(lecturer_token, "mark_attendance", session_id="1", student_id="3", status="present")
+    check(db_count("SELECT COUNT(*) AS n FROM attendance_records WHERE session_id=1 AND student_id=3 AND status='present'") == 1,
+          "lecturer can record enrolled student's attendance")
+
+    request("/?logout=1")
+    student_token = login("student1@studentlife.test", "student")
+    status, html = request("/?page=timetable")
+    check(status == 200 and "CI scheduled class" in html,
+          "enrolled student can view institutional timetable")
+    status, html = request("/?page=reports")
+    check(status == 200 and "Attendance Reports" in html and "Present" in html,
+          "student can view own attendance report")
+    status, _ = post_action(student_token, "mark_attendance", session_id="1",
+                            student_id="3", status="absent")
+    check(status == 403, "student cannot mark attendance")
+
     print(f"\n{passed} automated acceptance checks passed.")
     return 0
 
