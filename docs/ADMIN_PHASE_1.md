@@ -67,3 +67,17 @@ Legacy per-user `courses`, `tasks`, `grades`, and `events` tables are retained a
 - The shared foundation is implemented, but class-session scheduling, attendance, institutional assessments/grade entry, programme structures, bulk imports, edit/archive controls and student/lecturer workspace integration remain future work.
 - Enrolment capacity is checked on submission; the database unique key prevents duplicate student enrolment in the same section.
 - This milestone requires PHP syntax/workflow validation and live cPanel smoke tests before being treated as production-verified.
+
+
+## Automated academic acceptance tests
+
+A GitHub Actions integration-test job now provisions a disposable MariaDB database, seeds dedicated administrator/lecturer/student test accounts, runs the PHP app locally, and executes black-box acceptance tests against its sign-in and Academic Management flows.
+
+Coverage includes department, term, course and offering creation; lecturer-role validation; course-credit validation; student enrolment; duplicate enrolment protection; section capacity; and administrator-only academic actions. The staging publish job depends on this test job, so a failing test blocks the Academic staging upload.
+
+Test code:
+- `tests/studentlife/seed.php`
+- `tests/studentlife/acceptance.py`
+- `.github/workflows/deploy-academic-staging.yml`
+
+These checks run only against the temporary CI database. They do not create, modify or delete records in the live StudentLife database. A successful CI run is not a substitute for the first live cPanel smoke test.
