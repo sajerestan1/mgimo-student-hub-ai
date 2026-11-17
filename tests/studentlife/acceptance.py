@@ -69,9 +69,10 @@ def main():
                                  database="studentlife_test")
     try:
         with connection.cursor() as cursor:
+            cursor.execute("SELECT password_hash FROM users WHERE email=%s", ("admin@studentlife.test",))
+            password_hash = cursor.fetchone()[0]
             cursor.execute("INSERT INTO users(name,email,password_hash,role,account_status,email_verified) VALUES(%s,%s,%s,%s,%s,0)",
-                           ("Pending User", "pending@studentlife.test",
-                            __import__("crypt").crypt("TestPassword-2026!", "$6$studentlife$"),
+                           ("Pending User", "pending@studentlife.test", password_hash,
                             "student", "pending"))
         connection.commit()
     finally:
