@@ -112,6 +112,47 @@ function sl_ai_markdown_html(string $markdown): string
  $flushParagraph();$flushList();$flushTable();
  return implode("\n",$html);
 }
+function sl_ai_document_text(string $path,string $extension): array
+{
+ if($extension==='txt'){
+  $text=file_get_contents($path);
+  if(!is_string($text)||!mb_check_encoding($text,'UTF-8'))return ['ok'=>false,'error'=>'The text file must use UTF-8 encoding.'];
+  $text=str_replace(["\r\n","\r"],"\n",$text);
+ }elseif($extension==='pdf'){
+  $binary=null;
+  foreach(['/usr/bin/pdftotext','/usr/local/bin/pdftotext','/bin/pdftotext'] as $candidate){if(is_executable($candidate)){$binary=$candidate;break;}}
+  if(!$binary||!function_exists('proc_open'))return ['ok'=>false,'error'=>'PDF text extraction is not available on this hosting plan. Upload a UTF-8 text file or DOCX instead.'];
+  $process=proc_open([$binary,'-layout','-nopgbrk','-enc','UTF-8',$path,'-'],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes);
+  if(!is_resource($process))return ['ok'=>false,'error'=>'The PDF could not be opened for text extraction.'];
+  fclose($pipes[0]);$text=stream_get_contents($pipes[1],60001);fclose($pipes[1]);stream_get_contents($pipes[2],2000);fclose($pipes[2]);$status=proc_close($process);
+  if($status!==0||!is_string($text))return ['ok'=>false,'error'=>'The PDF could not be read. It may be scanned or password protected.'];
+  if(trim($text)==='')return ['ok'=>false,'error'=>'No selectable text was found in the PDF. Scanned-image OCR is not available.'];
+ }elseif(in_array($extension,['docx','pptx'],true)){
+  if(!class_exists('ZipArchive')||!class_exists('DOMDocument'))return ['ok'=>false,'error'=>'Office document extraction is not available on this hosting plan.'];
+  $zip=new ZipArchive();if($zip->open($path)!==true)return ['ok'=>false,'error'=>'The Office document is invalid or damaged.'];
+  if($zip->numFiles>1000){$zip->close();return ['ok'=>false,'error'=>'The Office document contains too many parts.'];}
+  $parts=[];$total=0;
+  for($i=0;$i<$zip->numFiles;$i++){
+   $stat=$zip->statIndex($i);$name=(string)($stat['name']??'');$size=(int)($stat['size']??0);
+   if($size>20000000){$zip->close();return ['ok'=>false,'error'=>'The Office document expands beyond the allowed processing size.'];}
+   $total+=$size;if($total>20000000){$zip->close();return ['ok'=>false,'error'=>'The Office document expands beyond the allowed processing size.'];}
+   $isTextPart=$extension==='docx'?$name==='word/document.xml':(bool)preg_match('#^ppt/slides/slide[0-9]+\.xml$#',$name);
+   if($isTextPart)$parts[$name]=$zip->getFromIndex($i);
+  }
+  $zip->close();if(!$parts)return ['ok'=>false,'error'=>'No readable document text was found.'];
+  uksort($parts,'strnatcasecmp');$paragraphs=[];
+  foreach($parts as $xml){
+   if(!is_string($xml))continue;
+   $dom=new DOMDocument();$loaded=$dom->loadXML($xml,LIBXML_NONET|LIBXML_NOERROR|LIBXML_NOWARNING);
+   if(!$loaded)continue;
+   $xpath=new DOMXPath($dom);foreach($xpath->query('//*[local-name()="p"]') as $paragraph){$line=trim((string)$paragraph->textContent);if($line!=='')$paragraphs[]=$line;}
+  }
+  $text=implode("\n",$paragraphs);
+ }else{return ['ok'=>false,'error'=>'Choose a supported TXT, PDF, DOCX or PPTX file.'];}
+ $text=trim((string)$text);
+ if($text==='')return ['ok'=>false,'error'=>'No readable text was found in this document.'];
+ return ['ok'=>true,'text'=>mb_substr($text,0,50000)];
+}
 function token(){return $_SESSION['csrf']??=bin2hex(random_bytes(32));}
 function verify(){if(!hash_equals($_SESSION['csrf']??'',$_POST['csrf']??'')){http_response_code(419);exit('Session expired. Refresh and try again.');}}
 function jump($p='dashboard'){header('Location: ?page='.$p);exit;}
