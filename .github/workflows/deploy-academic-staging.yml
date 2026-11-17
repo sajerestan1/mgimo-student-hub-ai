@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "public/index.php"
+      - "public/install.php"
+      - "tests/studentlife/**"
       - ".github/workflows/deploy-academic-staging.yml"
   workflow_dispatch:
 
@@ -12,7 +14,74 @@ permissions:
   contents: read
 
 jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: studentlife_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: pdo_mysql
+          coverage: none
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate PHP syntax
+        run: |
+          php -l public/index.php
+          php -l public/install.php
+          php -l tests/studentlife/seed.php
+
+      - name: Seed isolated test database
+        env:
+          TEST_DB_HOST: 127.0.0.1
+          TEST_DB_NAME: studentlife_test
+          TEST_DB_USER: root
+          TEST_DB_PASS: root
+        run: php tests/studentlife/seed.php
+
+      - name: Start PHP test server
+        run: |
+          php -S 127.0.0.1:8080 -t public > /tmp/studentlife-php.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail http://127.0.0.1:8080/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/studentlife-php.log
+          exit 1
+
+      - name: Run academic acceptance tests
+        env:
+          STUDENTLIFE_TEST_URL: http://127.0.0.1:8080
+        run: python tests/studentlife/acceptance.py
+
+      - name: Show PHP server log on failure
+        if: failure()
+        run: cat /tmp/studentlife-php.log
+
   publish-php-staging:
+    needs: integration-tests
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
