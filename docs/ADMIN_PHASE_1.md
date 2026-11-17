@@ -48,3 +48,22 @@ A successful workflow run confirms the checks/build/deployment steps reported by
 ## Next phase
 
 Build the shared institutional academic data model and administrator CRUD for academic structure, course offerings, enrolments, class sessions/timetable and academic records. Then connect announcements, shared documents and reports to those shared records.
+
+
+## Phase 2A/2B — Shared academic foundation (implementation milestone)
+
+The standalone PHP/MySQL application now includes additive migrations for:
+- Departments
+- Academic terms
+- Shared academic course catalogue
+- Course offerings/sections with optional lecturer assignment and capacity
+- Student enrolments in shared course offerings
+
+The Administrator > Academic Management page now supports creating departments, terms, catalogue courses, course sections, assigning active lecturer accounts, and enrolling active student accounts. It displays catalogue, section, and enrolment summaries.
+
+Legacy per-user `courses`, `tasks`, `grades`, and `events` tables are retained and are not automatically merged into the new institutional catalogue. This avoids silently reclassifying personal records as official institutional data.
+
+### Current Phase 2 scope boundary
+- The shared foundation is implemented, but class-session scheduling, attendance, institutional assessments/grade entry, programme structures, bulk imports, edit/archive controls and student/lecturer workspace integration remain future work.
+- Enrolment capacity is checked on submission; the database unique key prevents duplicate student enrolment in the same section.
+- This milestone requires PHP syntax/workflow validation and live cPanel smoke tests before being treated as production-verified.
