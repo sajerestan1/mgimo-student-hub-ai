@@ -56,7 +56,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){verify();$a=$_POST['action']??'';
   $requestedRole=$_POST['role']??'student';
   if(!in_array($requestedRole,['student','lecturer','administrator'],true))$requestedRole='student';
   $email=strtolower(trim($_POST['email']??''));
-  $rateKey=hash('sha256',($c['db_user']??'')."\\0".($c['db_name']??'')."\\0".($c['db_pass']??''));
+  $rateKey=hash('sha256',serialize([$c['db_user']??'',$c['db_name']??'',$c['db_pass']??'']));
   $emailKey=hash_hmac('sha256',$email,$rateKey);
   $ipKey=hash_hmac('sha256',(string)($_SERVER['REMOTE_ADDR']??'unknown'),$rateKey);
   $db->exec('DELETE FROM login_attempts WHERE attempted_at < DATE_SUB(NOW(), INTERVAL 1 DAY)');
