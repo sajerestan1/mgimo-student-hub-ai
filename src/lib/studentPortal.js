@@ -1,6 +1,7 @@
 import { base44 } from '@/api/base44Client';
 import { getDemoUser } from '@/lib/demoAuth';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
+import { addDays, isoOf, mondayOf, parseISO } from '@/lib/timetable/week';
 
 /**
  * The student portal reads one authorised academic context, resolved on the
@@ -20,7 +21,7 @@ export function loadStudentPortal({ fresh = false } = {}) {
 
   if (import.meta.env.VITE_DEMO_MODE === 'true') {
     const user = getDemoUser();
-    if (!user || user.role !== 'student') return Promise.resolve({ linked: false, profile: null, courses: [], sessions: [], assignments: [], quizzes: [], materials: [], announcements: [], recentGrades: [], summary: {} });
+    if (!user || user.role !== 'student') return Promise.resolve({ linked: false, profile: null, courses: [], sessions: [], assignments: [], quizzes: [], materials: [], announcements: [], recentGrades: [], attendance: { overall: null, held: 0, byCourse: [] }, summary: {} });
     const second = user.id === 'demo-student-b';
     const profile = {
       id: user.id, full_name: user.full_name, email: user.email,
@@ -42,22 +43,62 @@ export function loadStudentPortal({ fresh = false } = {}) {
       { id: 'as-3', title: 'Case brief: treaty interpretation', courseCode: 'LW-201', dueDate: '2026-11-25', state: 'pending' },
     ];
     const visibleAssignments = assignments.map((a) => demoSubmissions.some((s) => s.assignment_id === a.id && s.student_id === profile.id) ? { ...a, state: 'submitted' } : a);
+    const weekStart = mondayOf();
+    const sessions = [
+      { id: 's1', dayOffset: 0, start: '10:00', end: '11:30', courseCode: 'IR-201', courseTitle: 'Theory of International Relations', room: 'Room 304', kind: 'lecture' },
+      { id: 's2', dayOffset: 0, start: '14:00', end: '15:30', courseCode: 'IE-201', courseTitle: 'World Economy', room: 'Room 218', kind: 'seminar' },
+      { id: 's3', dayOffset: 1, start: '10:00', end: '11:30', courseCode: 'LW-201', courseTitle: 'Public International Law', room: 'Room 112', kind: 'lecture' },
+      { id: 's4', dayOffset: 1, start: '14:00', end: '15:30', courseCode: 'IR-201', courseTitle: 'Theory of International Relations', room: 'Room 304', kind: 'seminar' },
+      { id: 's5', dayOffset: 2, start: '10:00', end: '11:30', courseCode: 'IE-201', courseTitle: 'World Economy', room: 'Room 218', kind: 'lecture' },
+    ].map(({ dayOffset, ...session }) => ({
+      ...session,
+      date: isoOf(addDays(parseISO(weekStart), dayOffset)),
+    }));
+    const attendanceCounts = second
+      ? [
+          { present: 9, late: 1, excused: 0, absent: 0 },
+          { present: 8, late: 1, excused: 0, absent: 1 },
+          { present: 8, late: 1, excused: 0, absent: 1 },
+        ]
+      : [
+          { present: 9, late: 1, excused: 0, absent: 1 },
+          { present: 8, late: 1, excused: 0, absent: 1 },
+          { present: 8, late: 1, excused: 0, absent: 2 },
+        ];
+    const byCourse = courses.map((course, index) => {
+      const counts = attendanceCounts[index];
+      const total = counts.present + counts.late + counts.excused + counts.absent;
+      return {
+        id: course.id,
+        code: course.code,
+        title: course.title,
+        ...counts,
+        total,
+        rate: total ? Math.round(((counts.present + counts.late) / total) * 100) : null,
+      };
+    });
+    const held = byCourse.reduce((sum, course) => sum + course.total, 0);
+    const attended = byCourse.reduce((sum, course) => sum + course.present + course.late, 0);
+    const attendance = {
+      overall: held ? Math.round((attended / held) * 100) : 0,
+      held,
+      byCourse,
+    };
+    const upcomingClasses = sessions.filter((session) => session.date >= todayISO()).length;
     return Promise.resolve({
       linked: true, profile, courses, assignments: visibleAssignments,
       quizzes: [{ id: 'quiz-1', title: 'IR Theory — Module 4', courseCode: 'IR-201', state: 'pending', availableUntil: '2026-11-22', attempts: 1, attemptLimit: 3 }],
       materials: [{ id: 'mat-1', title: 'Lecture 8: International institutions', courseCode: 'IR-201', courseId: 'course-ir201', type: 'lecture', publishedDate: '2026-11-14' }],
       announcements: [{ id: 'ann-1', title: 'Fall semester examination schedule', body: 'The examination timetable is available in the student portal.', author: 'Academic Affairs', date: '2026-11-14' }],
       recentGrades: [{ courseCode: 'LW-201', title: 'Midterm examination', score: second ? 91 : 82, max: 100, feedback: 'Good analysis. Strengthen your use of primary sources.', gradedAt: '2026-11-13' }],
-      sessions: [
-        { id: 's1', date: '2026-11-16', start: '10:00', end: '11:30', courseCode: 'IR-201', courseTitle: 'Theory of International Relations', room: 'Room 304' },
-        { id: 's2', date: '2026-11-16', start: '14:00', end: '15:30', courseCode: 'IE-201', courseTitle: 'World Economy', room: 'Room 218' },
-      ],
+      sessions,
+      attendance,
       summary: {
         average: Number(average.toFixed(1)),
         gpa: second ? 4.3 : 4.1,
-        attendance: second ? 93 : 88,
+        attendance: attendance.overall,
         pendingAssignments: visibleAssignments.filter((assignment) => !['submitted', 'graded'].includes(assignment.state)).length,
-        upcomingClasses: 2,
+        upcomingClasses,
         credits: 18,
       },
       scopeNote: 'Synthetic records for competition demonstration.'
