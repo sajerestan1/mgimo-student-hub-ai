@@ -64,7 +64,25 @@ def db_count(query, args=()):
         connection.close()
 
 def main():
-    token = login("admin@studentlife.test", "administrator")
+    # Pending email verification must block an otherwise valid password login.
+    connection = pymysql.connect(host="127.0.0.1", user="root", password="root",
+                                 database="studentlife_test")
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("INSERT INTO users(name,email,password_hash,role,account_status,email_verified) VALUES(%s,%s,%s,%s,%s,0)",
+                           ("Pending User", "pending@studentlife.test",
+                            __import__("crypt").crypt("TestPassword-2026!", "$6$studentlife$"),
+                            "student", "pending"))
+        connection.commit()
+    finally:
+        connection.close()
+    pending_token = csrf_token()
+    status, html = request("/", {"csrf": pending_token, "action": "login",
+                                 "email": "pending@studentlife.test",
+                                 "password": PASSWORD, "role": "student"})
+    check(status == 200 and "verify your email" in html.lower(),
+          "unverified account is blocked from signing in")
+\n    token = login("admin@studentlife.test", "administrator")
     status, html = request("/?page=academic")
     check(status == 200 and "Academic Management" in html,
           "administrator can open Academic Management")
