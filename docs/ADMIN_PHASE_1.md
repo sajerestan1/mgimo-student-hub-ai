@@ -14,7 +14,8 @@ Phase 1 establishes the administrator control plane for the standalone PHP 8 + M
 - Administrator password reset by setting a new temporary password; the password is stored only as a PHP password hash.
 - Protection against changing the current administrator's own role/status.
 - Protection against demoting or suspending the last active administrator.
-- Account status is checked on every request, so a suspended/deactivated user cannot continue using an existing session.
+- Account status, email verification and role are refreshed from the database on every request, so account changes take effect in existing sessions.
+- Repeated failed sign-ins are limited by email and IP over a 15-minute window; only keyed hashes are stored.
 - CSRF validation on POST actions, prepared SQL statements, escaped output and session ID regeneration at login.
 - Administrator audit trail for account creation and account updates.
 - Automatic, additive database migration for the role/status columns and audit table. Existing academic records are not rewritten.
@@ -23,7 +24,7 @@ Phase 1 establishes the administrator control plane for the standalone PHP 8 + M
 
 - Academic Management currently provides aggregate counts and a roadmap; it does not yet provide cross-account course allocation, class rosters, timetable editing or grade management.
 - Announcements, Documents & Resources, Reports & Analytics and System Settings are roadmap placeholders in the PHP MVP.
-- The PHP MVP does not yet provide invitation emails, self-service password recovery, MFA, email notifications or fine-grained faculty/department permissions.
+- Administrator invitations attempt delivery through PHP `mail()`; successful delivery depends on the host's mail transport. Self-service password recovery, MFA, general email notifications and fine-grained faculty/department permissions are not available.
 - Student and lecturer academic records are still personal-account records in this MVP; a shared institutional academic data model is a later phase.
 - The React/Base44 code under `src/` is a separate application layer with its own features and deployment lifecycle. Do not assume a feature in that layer is active in the PHP cPanel MVP.
 
@@ -103,9 +104,9 @@ The CI acceptance suite now covers recurring weekly session creation, lecturer t
 
 ## Account verification and demo data update
 
-New administrator-created accounts are created in a pending state with email verification disabled. A single-use, 24-hour verification token is stored as a SHA-256 hash; the raw token is emailed as a verification link. The account is activated only after the link is opened. Sign-in requires valid credentials, the selected role, an active account and a verified email. Existing accounts are preserved as verified during the additive migration so current administrators and existing users are not locked out.
+New administrator-created accounts are created in a pending state with email verification disabled. A single-use, 24-hour verification token is stored as a SHA-256 hash; the raw token is emailed as a verification link. An administrator can also mark an account verified from User & Role Management when mail delivery is unavailable. Sign-in requires valid credentials, the selected role, an active account and a verified email. Existing accounts are preserved as verified during the additive migration so current administrators and existing users are not locked out.
 
-Email delivery uses PHP `mail()` and the hosting server's configured mail transport. If the host cannot deliver mail, the account remains pending; configure the server mail transport and the optional `mail_from` value in the private `config.php`. Do not paste mail or database passwords into GitHub or chat.
+Email delivery uses PHP `mail()` and the hosting server's configured mail transport. If the host cannot deliver mail, an administrator can verify the account from User & Role Management. Configure the server mail transport and optional `mail_from` value in the private `config.php` to enable emailed links. Do not paste mail or database passwords into GitHub or chat.
 
 The Academic Management page includes an administrator-only, repeatable demo-data seeder. It creates sample departments, terms, catalogue courses, sections, enrolments and class sessions using the first active lecturer and first active student account. It does not delete existing data and avoids duplicate records. Demo records are ordinary shared academic records and should be removed manually only after a database backup and administrator review.
 
