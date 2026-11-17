@@ -7,6 +7,8 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
+from pathlib import Path
 import pymysql
 
 BASE = os.environ.get("STUDENTLIFE_TEST_URL", "http://127.0.0.1:8080")
@@ -30,6 +32,28 @@ def request(path="/", data=None):
         return response.status, response.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as error:
         return error.code, error.read().decode("utf-8", "replace")
+
+def upload_document(token, filename, contents):
+    boundary = "StudentLifeBoundary" + uuid.uuid4().hex
+    body = bytearray()
+    for name, value in (("csrf", token), ("action", "upload_ai_document")):
+        body.extend(f"--{boundary}\r\n".encode())
+        body.extend(f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode())
+        body.extend(value.encode())
+        body.extend(b"\r\n")
+    body.extend(f"--{boundary}\r\n".encode())
+    body.extend(f'Content-Disposition: form-data; name="document"; filename="{filename}"\r\n'.encode())
+    body.extend(b"Content-Type: text/plain; charset=utf-8\r\n\r\n")
+    body.extend(contents)
+    body.extend(f"\r\n--{boundary}--\r\n".encode())
+    req = urllib.request.Request(BASE + "/", data=bytes(body),
+                                 headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+    try:
+        response = OPENER.open(req)
+        return response.status, response.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as error:
+        return error.code, error.read().decode("utf-8", "replace")
+
 
 def csrf_token():
     status, html = request("/?page=login")
@@ -205,6 +229,14 @@ def main():
           "student AI context excludes a grade linked to another student's personal course")
     check("Learn a subject" in html and "Exam preparation" in html and "University guide" in html,
           "student AI page exposes unified academic support modes")
+    upload_document(student_token, "CI lecture.txt",
+                    "A sample lecture note about international relations.\nThe core claim is that institutions shape cooperation.".encode())
+    document_id = db_count("SELECT MAX(id) AS id FROM student_documents WHERE owner_id=3")
+    stored_name = db_count("SELECT stored_name FROM student_documents WHERE id=%s", (document_id,))
+    private_file = Path(__file__).resolve().parents[2] / "studentlife-private-documents" / stored_name
+    check(document_id and stored_name.endswith(".txt") and private_file.is_file() and
+          "CI lecture.txt" in request("/?page=ai_study")[1],
+          "student text upload is extracted and stored outside the public directory")
     status, own_html = request(f"/?page=ai_study&conversation_id={own_conversation}")
     check(status == 200 and 'option value="planner" selected' in own_html,
           "student conversation remembers its selected support mode")
@@ -275,9 +307,19 @@ def main():
           "second student can read their own AI conversation")
     status, second_student_html = request("/?page=ai_study")
     check(status == 200 and "Own quiz" not in second_student_html and
-          "Review CI course notes" not in second_student_html,
-          "second student cannot see the first student's grade or saved task")
+          "Review CI course notes" not in second_student_html and "CI lecture.txt" not in second_student_html,
+          "second student cannot see the first student's grade, task or private document")
+    status, _ = post_action(second_student_token, "delete_ai_document", document_id=str(document_id))
+    check(status == 403 and db_count("SELECT COUNT(*) AS n FROM student_documents WHERE id=%s AND owner_id=3",
+                                     (document_id,)) == 1,
+          "second student cannot delete another student's private document")
 
+    request("/?logout=1")
+    student_token = login("student1@studentlife.test", "student")
+    post_action(student_token, "delete_ai_document", document_id=str(document_id))
+    check(db_count("SELECT COUNT(*) AS n FROM student_documents WHERE id=%s", (document_id,)) == 0 and
+          not private_file.exists(),
+          "owner can delete private document and stored file")
     request("/?logout=1")
     admin_token = login("admin@studentlife.test", "administrator")
     status, html = request("/?page=risk_radar")
