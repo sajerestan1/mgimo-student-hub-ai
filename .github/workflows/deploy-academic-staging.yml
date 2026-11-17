@@ -134,7 +134,7 @@ jobs:
           log-level: standard
 
   publish-php-preview:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/codex/studentlife-preview'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/codex/studentlife-preview' && vars.STUDENTLIFE_PREVIEW_DEPLOY == 'true'
     needs: integration-tests
     runs-on: ubuntu-latest
     environment:
@@ -155,12 +155,12 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          username: ${{ secrets.STUDENTLIFE_PREVIEW_FTP_USERNAME }}
+          password: ${{ secrets.STUDENTLIFE_PREVIEW_FTP_PASSWORD }}
           port: 21
           protocol: ftps
           local-dir: studentlife-preview/
-          server-dir: ../preview.studentlife.buildforge.com.ng/
+          server-dir: ./
           dangerous-clean-slate: false
           exclude: |
             **/.git*
