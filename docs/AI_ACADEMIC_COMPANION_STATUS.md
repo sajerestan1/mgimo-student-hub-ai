@@ -22,6 +22,7 @@ Feature branch: `codex/ai-academic-companion`
 - Mode instructions tell the assistant to use the supplied records, state missing information, avoid invented dates and citations, and label practice work as unofficial.
 - The planner mode uses recorded class sessions and tasks. It must ask for the student's availability before allocating time blocks.
 - Students can add a personal task from the AI page only after reviewing it and checking an explicit confirmation. This writes to the existing `tasks` table and verifies any selected course against the student's enrolments.
+- Students can upload TXT, selectable-text PDF, DOCX, and PPTX files (10 MB per file, 25 MB per account). MIME and file signatures are checked; extracted text is stored in the database, and original files are stored with private permissions outside the public directory. Documents can be selected as context for a conversation, and owners can delete them. The assistant is told to treat document text as untrusted data.
 - Conversations remember their selected support mode. Owners can rename or delete their own conversations; backend handlers check owner and role.
 - AI questions are limited to eight requests per minute per authenticated account. Provider failures offer a retry for the last question.
 - AI messages render safe Markdown for paragraphs, headings, lists, code and tables; response text is HTML-escaped before formatting. A copy button is available for assistant replies.
@@ -31,7 +32,7 @@ Feature branch: `codex/ai-academic-companion`
 
 ## Known boundaries
 
-- There is no private student document upload or PDF/DOCX/PPTX text extraction in the PHP app. The resource page stores shared links and descriptions only. The AI is explicitly told not to claim it read an unavailable file.
+- PDF text extraction requires the host's `pdftotext` binary and Office extraction requires PHP ZipArchive and DOM. If those are unavailable, the app refuses the upload with a clear error. Scanned-image OCR and reliable page-number citations are unavailable. The existing Documents & Resources page still stores shared links and descriptions only.
 - The Applications & Certificates page sends an internal request to an administrator. It does not maintain application status, issue certificates, or expose policy documents to the AI. The assistant can guide users to that page but must not claim to submit, approve, or check a request.
 - Exam dates and institution grading rules are not present in the AI context. The assistant must not invent them or calculate an official GPA.
 - Existing quiz scaffolds generate local reflection prompts. AI-generated mock exams and saved practice results are not implemented. Practice marks must not be written as official grades.
@@ -40,9 +41,9 @@ Feature branch: `codex/ai-academic-companion`
 
 ## Automated verification
 
-The existing MariaDB integration suite is extended to cover AI mode persistence, conversation rename/delete ownership, confirmed task creation, rejection of a task for an un-enrolled course, and separation between the two CI student accounts.
+The existing MariaDB integration suite covers AI mode persistence, conversation rename/delete ownership, confirmed task creation, rejection of a task for an un-enrolled course, private text upload outside the web root, document deletion ownership, and separation between the two CI student accounts.
 
-Status: pending GitHub Actions run for this feature branch. Do not treat these checks as passed until the workflow reports success. The tests use the disposable CI database and fictional `studentlife.test` accounts.
+Status: GitHub Actions run 87 completed successfully on 2026-11-17. PHP syntax, Python test syntax, disposable MariaDB setup, and the academic acceptance suite passed. The tests use fictional `studentlife.test` accounts and do not contact the configured external AI provider.
 
 ## Deployment and remaining work
 
