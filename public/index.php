@@ -199,6 +199,57 @@ if($_SERVER['REQUEST_METHOD']==='POST'){verify();$a=$_POST['action']??'';
   $db->prepare('UPDATE academic_interventions SET status=? WHERE id=?')->execute([$status,$id]);$audit=$db->prepare('INSERT INTO admin_audit(actor_id,action,target_user_id,details) VALUES(?,?,?,?)');$audit->execute([$uid,'academic_intervention_updated',(int)$intervention['student_id'],'Intervention '.$id.' status: '.$status]);$_SESSION['notice']='Intervention status updated.';
   jump($role==='lecturer'?'ai_teaching':'risk_radar');
  }
+ if($a==='upload_ai_document'){
+  if(($_SESSION['user']['role']??'')!=='student'){http_response_code(403);exit('Student access required.');}
+  $file=$_FILES['document']??null;
+  if(!is_array($file)||($file['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK||!is_uploaded_file((string)($file['tmp_name']??''))){$_SESSION['err']='Choose a document that PHP can receive. The file may exceed the hosting upload limit.';jump('ai_study');}
+  $extension=strtolower(pathinfo((string)$file['name'],PATHINFO_EXTENSION));$allowed=['txt','pdf','docx','pptx'];
+  $size=(int)($file['size']??0);$tmp=(string)$file['tmp_name'];
+  if(!in_array($extension,$allowed,true)||$size<1||$size>10485760||!is_file($tmp)){$_SESSION['err']='Upload a TXT, PDF, DOCX or PPTX file up to 10 MB.';jump('ai_study');}
+  $quota=$db->prepare('SELECT COALESCE(SUM(file_size),0) FROM student_documents WHERE owner_id=?');$quota->execute([$uid]);
+  if((int)$quota->fetchColumn()+$size>26214400){$_SESSION['err']='Your private document storage limit is 25 MB. Delete an older document before uploading another.';jump('ai_study');}
+  if(!function_exists('finfo_open')){$_SESSION['err']='This server cannot verify uploaded file types.';jump('ai_study');}
+  $finfo=finfo_open(FILEINFO_MIME_TYPE);$mime=$finfo?((string)finfo_file($finfo,$tmp)):'';if($finfo)finfo_close($finfo);
+  $mimeAllowed=[
+   'txt'=>['text/plain','application/octet-stream'],
+   'pdf'=>['application/pdf'],
+   'docx'=>['application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/zip','application/x-zip','application/octet-stream'],
+   'pptx'=>['application/vnd.openxmlformats-officedocument.presentationml.presentation','application/zip','application/x-zip','application/octet-stream']
+  ];
+  if(!in_array($mime,$mimeAllowed[$extension],true)){$_SESSION['err']='The file contents do not match the selected document type.';jump('ai_study');}
+  if($extension==='pdf'&&file_get_contents($tmp,false,null,0,5)!=='%PDF-'){$_SESSION['err']='The PDF signature is invalid.';jump('ai_study');}
+  if($extension==='txt'&&strpos((string)file_get_contents($tmp),"\0")!==false){$_SESSION['err']='The text file contains binary data.';jump('ai_study');}
+  $extracted=sl_ai_document_text($tmp,$extension);
+  if(!$extracted['ok']){$_SESSION['err']=$extracted['error'];jump('ai_study');}
+  $storageDir=dirname(__DIR__).'/studentlife-private-documents';
+  if(!is_dir($storageDir)&&!@mkdir($storageDir,0700,true)){$_SESSION['err']='Private document storage could not be created. Contact the site administrator.';jump('ai_study');}
+  @chmod($storageDir,0700);
+  $storedName=bin2hex(random_bytes(24)).'.'.$extension;$target=$storageDir.'/'.$storedName;
+  $originalName=basename((string)$file['name']);$originalName=preg_replace('/[\x00-\x1F\x7F]/u','',$originalName)??'Study document';$originalName=mb_substr(trim($originalName),0,220);
+  if($originalName==='')$originalName='Study document';
+  if(!move_uploaded_file($tmp,$target)){$_SESSION['err']='The document could not be saved in private storage.';jump('ai_study');}
+  @chmod($target,0600);
+  try{
+   $save=$db->prepare('INSERT INTO student_documents(owner_id,original_name,stored_name,extension,mime_type,file_size,extracted_text) VALUES(?,?,?,?,?,?,?)');
+   $save->execute([$uid,$originalName,$storedName,$extension,$mime,$size,$extracted['text']]);
+   $_SESSION['notice']='Private document uploaded. Select it as the conversation context before asking questions.';
+  }catch(Throwable $e){@unlink($target);$_SESSION['err']='The document could not be added to your account.';}
+  jump('ai_study');
+ }
+ if($a==='delete_ai_document'){
+  if(($_SESSION['user']['role']??'')!=='student'){http_response_code(403);exit('Student access required.');}
+  $documentId=(int)($_POST['document_id']??0);
+  $find=$db->prepare('SELECT id,stored_name FROM student_documents WHERE id=? AND owner_id=?');$find->execute([$documentId,$uid]);$document=$find->fetch();
+  if(!$document){http_response_code(403);exit('Document access denied.');}
+  $db->beginTransaction();
+  try{
+   $db->prepare('UPDATE ai_conversations SET document_id=NULL WHERE document_id=? AND owner_id=?')->execute([$documentId,$uid]);
+   $db->prepare('DELETE FROM student_documents WHERE id=? AND owner_id=?')->execute([$documentId,$uid]);$db->commit();
+   if(preg_match('/^[a-f0-9]{48}\.(txt|pdf|docx|pptx)$/',(string)$document['stored_name']))@unlink(dirname(__DIR__).'/studentlife-private-documents/'.$document['stored_name']);
+   $_SESSION['notice']='Private document deleted. Conversation history is kept without the document context.';
+  }catch(Throwable $e){if($db->inTransaction())$db->rollBack();$_SESSION['err']='The document could not be deleted.';}
+  jump('ai_study');
+ }
  if($a==='ai_save_task'){
   if(($_SESSION['user']['role']??'')!=='student'){http_response_code(403);exit('Student access required.');}
   $title=trim((string)($_POST['title']??''));$courseCode=strtoupper(trim((string)($_POST['course_code']??'')));
