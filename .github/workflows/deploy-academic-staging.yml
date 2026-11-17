@@ -126,7 +126,6 @@ jobs:
         run: |
           mkdir -p academic-staging
           cp public/index.php public/academic-intelligence.php public/studentlife-sw.js academic-staging/
-          mv academic-staging/public/index.php academic-staging/index.php
           test -s academic-staging/index.php
           test -s academic-staging/academic-intelligence.php
           test -s academic-staging/studentlife-sw.js
