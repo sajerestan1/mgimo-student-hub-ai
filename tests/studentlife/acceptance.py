@@ -251,6 +251,33 @@ def main():
                             name="Forbidden Department", code="NOPE")
     check(status == 403, "student is blocked from administrator academic actions")
 
+    task_count = db_count("SELECT COUNT(*) AS n FROM tasks WHERE user_id=3")
+    post_action(student_token, "ai_save_task", title="Review CI course notes",
+                course_code="CIT101", due_date="2026-11-25", priority="high")
+    check(db_count("SELECT COUNT(*) AS n FROM tasks WHERE user_id=3") == task_count,
+          "AI-assisted task save requires explicit confirmation")
+    post_action(student_token, "ai_save_task", title="Review CI course notes",
+                course_code="CIT101", due_date="2026-11-25", priority="high",
+                confirm_save="1")
+    check(db_count("SELECT COUNT(*) AS n FROM tasks WHERE user_id=3 AND title=%s AND course=%s AND priority='high'",
+                   ("Review CI course notes", "CIT101")) == 1,
+          "student can save a confirmed AI-assisted task to the existing task list")
+    status, _ = post_action(student_token, "ai_save_task", title="Foreign course task",
+                            course_code="PRIV101", confirm_save="1")
+    check(status == 403 and db_count("SELECT COUNT(*) AS n FROM tasks WHERE user_id=3 AND title=%s",
+                                     ("Foreign course task",)) == 0,
+          "student task action rejects a course outside their enrolments")
+
+    request("/?logout=1")
+    second_student_token = login("student2@studentlife.test", "student")
+    status, private_owner_html = request(f"/?page=ai_study&conversation_id={private_conversation}")
+    check(status == 200 and "PRIVATE_CONTEXT_SENTINEL" in private_owner_html,
+          "second student can read their own AI conversation")
+    status, second_student_html = request("/?page=ai_study")
+    check(status == 200 and "Own quiz" not in second_student_html and
+          "Review CI course notes" not in second_student_html,
+          "second student cannot see the first student's grade or saved task")
+
     request("/?logout=1")
     admin_token = login("admin@studentlife.test", "administrator")
     status, html = request("/?page=risk_radar")
