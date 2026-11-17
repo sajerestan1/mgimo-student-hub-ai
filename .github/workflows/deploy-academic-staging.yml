@@ -2,6 +2,14 @@ name: Publish StudentLife PHP to Academic staging
 
 on:
   push:
+    branches: [main, develop]
+    paths:
+      - "public/index.php"
+      - "public/install.php"
+      - "tests/studentlife/**"
+      - "docs/ADMIN_PHASE_1.md"
+      - ".github/workflows/deploy-academic-staging.yml"
+  pull_request:
     branches: [main]
     paths:
       - "public/index.php"
@@ -89,6 +97,7 @@ jobs:
           if [ -f /tmp/studentlife-php.log ]; then cat /tmp/studentlife-php.log; else echo 'PHP server log was not created; inspect the earlier failing step.'; fi
 
   publish-php-staging:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: integration-tests
     runs-on: ubuntu-latest
     steps:
