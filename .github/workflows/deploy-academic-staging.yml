@@ -85,7 +85,8 @@ jobs:
 
       - name: Show PHP server log on failure
         if: failure()
-        run: cat /tmp/studentlife-php.log
+        run: |
+          if [ -f /tmp/studentlife-php.log ]; then cat /tmp/studentlife-php.log; else echo 'PHP server log was not created; inspect the earlier failing step.'; fi
 
   publish-php-staging:
     needs: integration-tests
