@@ -55,6 +55,61 @@ $db->exec("CREATE TABLE IF NOT EXISTS academic_interventions (id BIGINT UNSIGNED
 define('STUDENTLIFE_BOOTSTRAPPED', true);
 require_once __DIR__.'/academic-intelligence.php';
 function h($s){return htmlspecialchars((string)$s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');}
+function sl_ai_markdown_inline(string $text): string
+{
+ $safe=h($text);
+ $safe=preg_replace('/\x60([^\x60]+)\x60/','<code>$1</code>',$safe)??$safe;
+ $safe=preg_replace('/\*\*(.+?)\*\*/s','<strong>$1</strong>',$safe)??$safe;
+ return preg_replace('/(?<!\*)\*([^*]+)\*(?!\*)/','<em>$1</em>',$safe)??$safe;
+}
+function sl_ai_markdown_cells(string $line): array
+{
+ $line=trim($line);
+ if(str_starts_with($line,'|'))$line=substr($line,1);
+ if(str_ends_with($line,'|'))$line=substr($line,0,-1);
+ return array_map('trim',explode('|',$line));
+}
+function sl_ai_markdown_html(string $markdown): string
+{
+ $lines=preg_split('/\R/',trim($markdown))?:[];
+ $html=[];$paragraph=[];$listType='';$inTable=false;$tableRows=[];
+ $flushParagraph=static function()use(&$paragraph,&$html){if($paragraph){$html[]='<p>'.implode(' ',array_map('sl_ai_markdown_inline',$paragraph)).'</p>';$paragraph=[];}};
+ $flushList=static function()use(&$listType,&$html){if($listType!==''){$html[]='</'.$listType.'>';$listType='';}};
+ $flushTable=static function()use(&$inTable,&$tableRows,&$html){
+  if(!$inTable)return;
+  $html[]='<div class="ai-table-wrap"><table class="ai-response-table"><tbody>';
+  foreach($tableRows as $index=>$row){
+   $html[]='<tr>';
+   foreach($row as $cell){$tag=$index===0?'th':'td';$html[]='<'.$tag.'>'.sl_ai_markdown_inline($cell).'</'.$tag.'>';}
+   $html[]='</tr>';
+  }
+  $html[]='</tbody></table></div>';$tableRows=[];$inTable=false;
+ };
+ $count=count($lines);
+ for($i=0;$i<$count;$i++){
+  $line=trim($lines[$i]);
+  if($line===''){$flushParagraph();$flushList();$flushTable();continue;}
+  $isTableSeparator=preg_match('/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/',$line)===1;
+  if(str_contains($line,'|')&&($inTable||($i+1<$count&&preg_match('/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/',trim($lines[$i+1]))===1)||$isTableSeparator)){
+   $flushParagraph();$flushList();
+   if($isTableSeparator)continue;
+   $inTable=true;$tableRows[]=sl_ai_markdown_cells($line);continue;
+  }
+  if($inTable){$flushTable();}
+  if(preg_match('/^(#{1,3})\s+(.+)$/',$line,$match)){
+   $flushParagraph();$flushList();$level=strlen($match[1]);$html[]='<h'.$level.'>'.sl_ai_markdown_inline($match[2]).'</h'.$level.'>';continue;
+  }
+  if(preg_match('/^[-*+]\s+(.+)$/',$line,$match)){
+   $flushParagraph();if($listType!=='ul'){$flushList();$html[]='<ul>';$listType='ul';}$html[]='<li>'.sl_ai_markdown_inline($match[1]).'</li>';continue;
+  }
+  if(preg_match('/^\d+[.)]\s+(.+)$/',$line,$match)){
+   $flushParagraph();if($listType!=='ol'){$flushList();$html[]='<ol>';$listType='ol';}$html[]='<li>'.sl_ai_markdown_inline($match[1]).'</li>';continue;
+  }
+  $flushList();$paragraph[]=$line;
+ }
+ $flushParagraph();$flushList();$flushTable();
+ return implode("\n",$html);
+}
 function token(){return $_SESSION['csrf']??=bin2hex(random_bytes(32));}
 function verify(){if(!hash_equals($_SESSION['csrf']??'',$_POST['csrf']??'')){http_response_code(419);exit('Session expired. Refresh and try again.');}}
 function jump($p='dashboard'){header('Location: ?page='.$p);exit;}
@@ -676,6 +731,16 @@ body:has(.login-shell){overflow:hidden}
 .side{height:100vh;position:sticky;top:0}.side nav{overflow-y:auto;min-height:0;flex:1}.side nav::-webkit-scrollbar{width:5px}.side nav::-webkit-scrollbar-thumb{background:#405371;border-radius:8px}@media(max-width:620px){.side{height:auto;position:static}.side nav{flex:initial}}
 @media print{.side,.top,.footer,.timetable-tools,.student-toolkit{display:none!important}body{background:#fff}.layout,.main,.content{display:block;width:100%;max-width:none;margin:0;padding:0}.timetable-session{break-inside:avoid;border:1px solid #bbb!important;box-shadow:none!important}.timetable-session .form button{display:none!important}}
 .timetable-tools{margin:18px 0}.timetable-tool-actions{display:flex;flex-wrap:wrap;gap:10px}.offline-status{font-size:13px;color:var(--muted,#667085);margin:12px 0 0}
+.ai-history-link{display:block;padding:10px 12px;margin:8px 0;border:1px solid #e6eaf0;border-radius:10px;background:#fff}
+.ai-history-link b,.ai-history-link small{display:block}.ai-history-link small{color:#71819a;margin-top:3px}
+.ai-bubble>p,.ai-bubble>ul,.ai-bubble>ol,.ai-bubble>h1,.ai-bubble>h2,.ai-bubble>h3{margin:0 0 12px}
+.ai-bubble>p:last-child,.ai-bubble>ul:last-child,.ai-bubble>ol:last-child{margin-bottom:0}
+.ai-bubble ul,.ai-bubble ol{padding-left:24px}.ai-bubble li{margin:4px 0}
+.ai-table-wrap{max-width:100%;overflow-x:auto;margin:12px 0}
+.ai-response-table{border-collapse:collapse;width:100%;min-width:480px;font-size:.94em}
+.ai-response-table th,.ai-response-table td{padding:9px 11px;border:1px solid #dfe5ee;text-align:left;vertical-align:top}
+.ai-response-table th{background:#f3f6fb;font-weight:700}
+.ai-bubble code{padding:2px 5px;background:#f1f3f7;border-radius:4px;font-size:.92em}
 </style></head><body>
 <?php if(!$user):?><div class="login-shell"><section class="login-visual"><div class="visual-brand"><div class="visual-cap">⌂</div><div class="visual-name">StudentLife</div><div class="visual-subtitle">ACADEMIC COMPANION</div><div class="gold-rule"></div><p>Your all-in-one academic space for learning, teaching and academic management.</p></div><div class="visual-footer">Learn · Teach · Achieve</div></section><section class="login-panel"><div class="login-card"><div class="login-heading"><div class="eyebrow">YOUR ACADEMIC SPACE</div><h1>Sign In</h1><p>Sign in to continue to your workspace.</p></div><?php if($err):?><div class="notice"><?=h($err)?></div><?php endif;?><form method="post" class="login-form"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="login"><fieldset class="role-fieldset"><legend>Access as</legend><div class="role-options"><label class="role-option"><input type="radio" name="role" value="student" checked><span class="role-icon">♙</span><b>Student</b></label><label class="role-option"><input type="radio" name="role" value="lecturer"><span class="role-icon">▤</span><b>Lecturer / Professor</b></label><label class="role-option"><input type="radio" name="role" value="administrator"><span class="role-icon">⚙</span><b>Administrator</b></label></div></fieldset><label class="login-label">Email address<div class="login-input"><span>✉</span><input name="email" type="email" placeholder="Enter your email address" required autocomplete="username"></div></label><label class="login-label">Password<div class="login-input"><span>▣</span><input id="login-password" name="password" type="password" placeholder="Enter your password" required autocomplete="current-password"><button class="password-toggle" type="button" aria-label="Show password" onclick="const p=document.getElementById('login-password');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'Show':'Hide'">Show</button></div></label><div class="login-options"><label class="remember-option"><input type="checkbox" name="remember" value="1"> Remember me</label><span class="forgot-note">Forgot password? Contact your administrator.</span></div><button class="login-submit" type="submit">Sign In <span>→</span></button></form><div class="login-security"><span>▣</span> Secure access to your academic workspace</div></div><div class="login-language"><span>Language</span><a href="?lang=en">English</a><span>·</span><a href="?lang=ru">Русский</a></div></section></div>
 <?php else:?><div class="layout"><aside class="side"><div class="brand"><div class="logo">S</div><div><b><?=h($appName)?></b><small>ACADEMIC COMPANION</small></div></div><?php if($isAdmin):?><div class="caption">ADMINISTRATION</div><nav><?=nav('dashboard','Dashboard','⌂',$page)?><?=nav('users','User & Role Management','♙',$page)?><?=nav('profile','My Profile & Password','♙',$page)?><div class="nav-group-label">ACADEMIC MANAGEMENT</div><?=nav('academic','Academic Management','▦',$page)?><?=nav('reports','Attendance Reports','↗',$page)?><?=nav('risk_radar','Academic Risk Radar','◈',$page)?><div class="nav-group-label">COMMUNICATION & RESOURCES</div><?=nav('inbox','Inbox','✉',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('documents','Documents','▣',$page)?><div class="nav-group-label">INSIGHTS & CONTROL</div><?=nav('analytics','Reports & Analytics','↗',$page)?><?=nav('settings','System Settings','⚙',$page)?></nav><?php else:?><div class="caption"><?=($user['role']??'')==='lecturer'?'LECTURER WORKSPACE':'YOUR WORKSPACE'?></div><nav><?=nav('dashboard','Dashboard','⌂',$page)?><?php if(($user['role']??'')==='lecturer'):?><div class="nav-group-label">TEACHING</div><?=nav('profile','My Profile','♙',$page)?><?=nav('teaching_courses','My Courses','▱',$page)?><?=nav('ai_teaching','AI Teaching Assistant','✦',$page)?><?=nav('tasks','Assignments & Tasks','✓',$page)?><?=nav('timetable','Teaching Timetable','▦',$page)?><?=nav('reports','Attendance Reports','↗',$page)?><div class="nav-group-label">RESOURCES & SETTINGS</div><?=nav('inbox','Inbox','✉',$page)?><?=nav('documents','Documents','▣',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('settings','Settings','⚙',$page)?><?php else:?><div class="nav-group-label">LEARNING</div><?=nav('courses','My Courses','▱',$page)?><?=nav('tasks','Assignments','✓',$page)?><?=nav('quizzes','Quizzes & Exams','▤',$page)?><?=nav('grades','Grades & Transcript','▥',$page)?><?=nav('timetable','Timetable','▦',$page)?><?=nav('reports','Attendance','↗',$page)?><?=nav('intelligence','Academic Intelligence','◈',$page)?><?=nav('integrity','Academic Integrity','◇',$page)?><div class="nav-group-label">CAMPUS & SUPPORT</div><?=nav('applications','Applications & Certificates','▧',$page)?><?=nav('library','Library','▣',$page)?><?=nav('study_groups','Study Groups','♧',$page)?><?=nav('notifications','Notifications','●',$page)?><?=nav('ai_study','AI Study Companion','✦',$page)?><?=nav('companion','Study Planner','◷',$page)?><?=nav('recommendations','Study Recommendations','↗',$page)?><div class="nav-group-label">COMMUNICATION</div><?=nav('inbox','Inbox','✉',$page)?><div class="nav-group-label">ACCOUNT</div><?=nav('profile','Profile & Settings','♙',$page)?><?=nav('documents','Documents & Resources','▣',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('settings','Settings','⚙',$page)?><?php endif;?></nav><?php endif;?><div class="foot">Signed in as<br><b><?=h($user['name'])?></b><br><a href="?logout=1">Sign out ↗</a></div></aside><main class="main"><header class="top"><div class="top-title"><small><?=$isAdmin?'ADMINISTRATOR WORKSPACE':(($user['role']??'')==='lecturer'?'LECTURER WORKSPACE':'STUDENT WORKSPACE')?></small><b><?=h(['users'=>'User & Role Management','academic'=>'Academic Management','announcements'=>'Announcements','documents'=>'Documents & Resources','reports'=>'Attendance Reports','analytics'=>'Reports & Analytics','settings'=>'System Settings','tasks'=>'Assignments & Tasks','courses'=>'My Courses','teaching_courses'=>'My Courses','grades'=>'Grades & Transcript','timetable'=>'Timetable','profile'=>'Profile & Settings','progress'=>'Academic Progress','quizzes'=>'Quizzes & Exams','intelligence'=>'Academic Intelligence','integrity'=>'Academic Integrity','applications'=>'Applications & Certificates','library'=>'Library','study_groups'=>'Study Groups','notifications'=>'Notifications','companion'=>'Study Companion','recommendations'=>'Study Recommendations','inbox'=>'Inbox','risk_radar'=>'Academic Risk Radar','ai_study'=>'AI Study Companion','ai_teaching'=>'AI Teaching Assistant'][$page]??ucfirst($page))?></b></div><div class="top-tools"><form class="top-search" method="get" action=""><input type="hidden" name="page" value="search"><input type="search" name="q" value="<?=h($_GET['q']??'')?>" placeholder="Search courses, assignments, tasks..." aria-label="Search StudentLife"><button class="btn search-btn" type="submit">Search</button></form><label class="language-control"><span>Language</span><select aria-label="Choose language" onchange="window.location.href='?page=<?=h($page)?>&lang='+this.value"><option value="en" <?=$language==='en'?'selected':''?>>English</option><option value="ru" <?=$language==='ru'?'selected':''?>>Русский</option></select></label><span class="muted top-user"><?=h($user['name'])?> · <?=date('D, M j')?></span></div></header><div class="content">
@@ -881,7 +946,7 @@ elseif($aiRole==='lecturer'){$interventionQ=$db->prepare("SELECT i.*,s.name AS s
 <section class="card ai-chat"><div class="head"><div><div class="section-kicker"><?=$aiReady?'PROVIDER CONFIGURED':'AI NOT CONNECTED'?></div><h2><?=$aiRole==='administrator'?'Ask Academic Risk Radar':($aiRole==='lecturer'?'Ask the Teaching Assistant':'Ask the Study Companion')?></h2></div><span class="pill <?=$aiReady?'green':''?>"><?=$aiReady?'Ready to use':'Unavailable'?></span></div>
 <?php if(!$aiReady):?><div class="notice"><b>AI service is not configured.</b> No academic data or questions are sent to an external model. To enable chat, an administrator must configure an HTTPS OpenAI-compatible endpoint, model name and API key in the hosting environment or a protected PHP file outside the web root. Do not put API credentials in browser code or the app database.</div><?php endif;?>
 <div class="suggested-questions"><span>Try asking</span><?php $prompts=$aiRole==='administrator'?['Which students have attendance below the high-risk threshold?','Compare recorded attendance by department.','Which course sections have attendance concerns?','Summarize the evidence limits for this risk report.']:($aiRole==='lecturer'?['Summarize attendance in my assigned courses.','Which enrolled students have repeated recorded absences?','Draft a clear announcement for my course.','What course data is unavailable?']:['What assignments are due soon?','Help me plan study time around my timetable.','Explain my recorded grade average.','Summarize announcements for my courses.']);foreach($prompts as $prompt):?><button class="btn soft small" type="button" onclick="document.getElementById('ai-question').value=this.textContent"><?=h($prompt)?></button><?php endforeach;?></div>
-<?php if($historyRows):?><div class="ai-transcript"><?php foreach($historyRows as $hm):?><article class="ai-bubble <?=$hm['message_role']==='assistant'?'assistant':'user'?>"><div class="section-kicker"><?=$hm['message_role']==='assistant'?'STUDENTLIFE AI':'YOU'?> · <?=h($hm['created_at'])?></div><p><?=nl2br(h($hm['content']))?></p></article><?php endforeach;?></div><?php else:?><div class="empty ai-empty">Ask a question about records available to your role. Answers will cite the supplied context and identify missing data.</div><?php endif;?>
+<?php if($historyRows):?><div class="ai-transcript"><?php foreach($historyRows as $hm):?><article class="ai-bubble <?=$hm['message_role']==='assistant'?'assistant':'user'?>"><div class="section-kicker"><?=$hm['message_role']==='assistant'?'STUDENTLIFE AI':'YOU'?> · <?=h($hm['created_at'])?></div><?=sl_ai_markdown_html((string)$hm['content'])?></article><?php endforeach;?></div><?php else:?><div class="empty ai-empty">Ask a question about records available to your role. Answers will cite the supplied context and identify missing data.</div><?php endif;?>
 <form method="post" class="form ai-question-form"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="ai_ask"><input type="hidden" name="conversation_id" value="<?=$aiConversationId?>"><?php if($selectedConversation):?><input type="hidden" name="course_code" value="<?=h($aiCourseCode)?>"><?php else:?><label class="wide">Course context<select name="course_code"><option value="">All records you are authorized to view</option><?php foreach($aiCourseChoices as $cc):?><option value="<?=h($cc['code'])?>"><?=h($cc['code'].' · '.($cc['title']??$cc['name']??''))?></option><?php endforeach;?></select></label><?php endif;?><label class="wide">Your question<textarea id="ai-question" name="question" maxlength="2000" rows="3" <?=$aiReady?'':'disabled'?> placeholder="<?=$aiReady?'Ask a specific academic question…':'Chat will be enabled when an AI provider is configured.'?>"></textarea></label><div style="align-self:end"><button class="btn" <?=$aiReady?'':'disabled'?>>Send question</button></div></form>
 </section></div>
 <?php if($aiRole==='administrator'):?>
