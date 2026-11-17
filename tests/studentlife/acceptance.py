@@ -85,6 +85,10 @@ def main():
           "unverified account is blocked from signing in")
 
     token = login("admin@studentlife.test", "administrator")
+    status, risk_html = request("/?page=risk_radar")
+    check(status == 200 and "Academic Risk Radar" in risk_html and
+          "Course-linked grades" in risk_html and "faculty records" in risk_html.lower(),
+          "administrator risk radar reports attendance evidence and missing data limits")
     status, html = request("/?page=academic")
     check(status == 200 and "Academic Management" in html,
           "administrator can open Academic Management")
@@ -137,6 +141,11 @@ def main():
 
     request("/?logout=1")
     lecturer_token = login("lecturer@studentlife.test", "lecturer")
+    status, html = request("/?page=ai_teaching")
+    check(status == 200 and "AI Teaching Assistant" in html and "AI service is not configured" in html,
+          "lecturer AI workspace is visible and clearly disabled without provider settings")
+    status, _ = request("/?page=risk_radar")
+    check(status == 403, "lecturer cannot open administrator risk radar")
     status, html = request("/?page=timetable")
     check(status == 200 and "CI scheduled class" in html,
           "assigned lecturer can view scheduled classes and attendance roster")
@@ -146,6 +155,17 @@ def main():
 
     request("/?logout=1")
     student_token = login("student1@studentlife.test", "student")
+    status, html = request("/?page=ai_study")
+    check(status == 200 and "AI Study Companion" in html and "AI service is not configured" in html,
+          "student AI workspace is visible and clearly disabled without provider settings")
+    check("1 enrolled course sections" in html,
+          "student AI context reflects only the student's real enrollment")
+    before = db_count("SELECT COUNT(*) AS n FROM ai_conversations")
+    status, _ = post_action(student_token, "ai_ask", question="Show me another student's records")
+    check(status == 200 and db_count("SELECT COUNT(*) AS n FROM ai_conversations") == before,
+          "unconfigured AI stores and sends no student question")
+    status, _ = request("/?page=ai_teaching")
+    check(status == 403, "student cannot open lecturer AI workspace")
     status, html = request("/?page=timetable")
     check(status == 200 and "CI scheduled class" in html,
           "enrolled student can view institutional timetable")
@@ -155,6 +175,10 @@ def main():
     status, _ = post_action(student_token, "mark_attendance", session_id="1",
                             student_id="3", status="absent")
     check(status == 403, "student cannot mark attendance")
+    status, _ = post_action(student_token, "save_intervention", student_id="3",
+                            course_offering_id="1", action_title="Unauthorized",
+                            notes="Should be rejected")
+    check(status == 403, "student cannot create academic interventions")
     status, _ = post_action(student_token, "create_department",
                             name="Forbidden Department", code="NOPE")
     check(status == 403, "student is blocked from administrator academic actions")
