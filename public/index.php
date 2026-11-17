@@ -19,6 +19,7 @@ try {
  if(!$verified)$db->exec("ALTER TABLE users ADD COLUMN email_verified TINYINT(1) NOT NULL DEFAULT 1");
  $db->exec("CREATE TABLE IF NOT EXISTS email_verification_tokens (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, user_id INT UNSIGNED NOT NULL, token_hash CHAR(64) NOT NULL UNIQUE, expires_at DATETIME NOT NULL, used_at DATETIME NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(user_id), FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
  $db->exec("CREATE TABLE IF NOT EXISTS admin_audit (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, actor_id INT UNSIGNED NOT NULL, action VARCHAR(60) NOT NULL, target_user_id INT UNSIGNED NULL, details VARCHAR(500) NOT NULL DEFAULT '', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(actor_id), INDEX(target_user_id), INDEX(created_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+ $db->exec("CREATE TABLE IF NOT EXISTS login_attempts (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, email_key CHAR(64) NOT NULL, ip_key CHAR(64) NOT NULL, attempted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, INDEX(email_key,attempted_at), INDEX(ip_key,attempted_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 } catch(Throwable $e){http_response_code(503);exit('Account security setup failed. Please contact the site administrator.');}
 
 // Phase 2A: shared institutional academic structure. Additive migrations preserve legacy personal records.
@@ -40,14 +41,36 @@ function verify(){if(!hash_equals($_SESSION['csrf']??'',$_POST['csrf']??'')){htt
 function jump($p='dashboard'){header('Location: ?page='.$p);exit;}
 if(isset($_GET['verify'])){$raw=(string)$_GET['verify'];if(!preg_match('/^[a-f0-9]{64}$/',$raw)){http_response_code(400);exit('Invalid verification link.');}$q=$db->prepare('SELECT id,user_id FROM email_verification_tokens WHERE token_hash=? AND used_at IS NULL AND expires_at>NOW()');$q->execute([hash('sha256',$raw)]);$v=$q->fetch();if(!$v){http_response_code(400);exit('This verification link is invalid or expired. Ask your administrator to resend the invitation.');}$db->beginTransaction();$db->prepare('UPDATE users SET email_verified=1,account_status=\'active\' WHERE id=?')->execute([$v['user_id']]);$db->prepare('UPDATE email_verification_tokens SET used_at=NOW() WHERE user_id=? AND used_at IS NULL')->execute([$v['user_id']]);$db->commit();exit('Email verified. Your StudentLife account is now active. You may sign in.');}
 if(isset($_GET['logout'])){$_SESSION=[];session_destroy();header('Location: ./');exit;}
-// Re-check account status on every request so a suspended account cannot keep using an old session.
+// Refresh account permissions and status on every request so changes take effect immediately.
 if(!empty($_SESSION['user']['id'])){
- $statusQuery=$db->prepare('SELECT account_status FROM users WHERE id=?');
- $statusQuery->execute([(int)$_SESSION['user']['id']]);
- if($statusQuery->fetchColumn()!=='active'){$_SESSION=[];session_destroy();header('Location: ./?page=login');exit;}
+ $accountQuery=$db->prepare('SELECT name,email,role,account_status,email_verified FROM users WHERE id=?');
+ $accountQuery->execute([(int)$_SESSION['user']['id']]);
+ $account=$accountQuery->fetch();
+ if(!$account||$account['account_status']!=='active'||(int)$account['email_verified']!==1){$_SESSION=[];session_destroy();header('Location: ./?page=login');exit;}
+ $_SESSION['user']['name']=$account['name'];
+ $_SESSION['user']['email']=$account['email'];
+ $_SESSION['user']['role']=$account['role'];
 }
 if($_SERVER['REQUEST_METHOD']==='POST'){verify();$a=$_POST['action']??'';
- if($a==='login'){$requestedRole=$_POST['role']??'student';if(!in_array($requestedRole,['student','lecturer','administrator'],true)){$requestedRole='student';}$q=$db->prepare('SELECT id,name,email,password_hash,role,account_status,email_verified FROM users WHERE email=?');$q->execute([strtolower(trim($_POST['email']??''))]);$u=$q->fetch();if($u&&$u['account_status']==='active'&&(int)$u['email_verified']===1&&$u['role']===$requestedRole&&password_verify($_POST['password']??'',$u['password_hash'])){session_regenerate_id(true);unset($u['password_hash'],$u['email_verified']);$_SESSION['user']=$u;jump();}$_SESSION['err']=$u&&!(int)$u['email_verified']?'Please verify your email address before signing in.':'The email, password or selected account type is incorrect.';jump('login');}
+ if($a==='login'){
+  $requestedRole=$_POST['role']??'student';
+  if(!in_array($requestedRole,['student','lecturer','administrator'],true))$requestedRole='student';
+  $email=strtolower(trim($_POST['email']??''));
+  $rateKey=hash('sha256',($c['db_user']??'')."\\0".($c['db_name']??'')."\\0".($c['db_pass']??''));
+  $emailKey=hash_hmac('sha256',$email,$rateKey);
+  $ipKey=hash_hmac('sha256',(string)($_SERVER['REMOTE_ADDR']??'unknown'),$rateKey);
+  $db->exec('DELETE FROM login_attempts WHERE attempted_at < DATE_SUB(NOW(), INTERVAL 1 DAY)');
+  $limit=$db->prepare('SELECT (SELECT COUNT(*) FROM login_attempts WHERE email_key=? AND attempted_at>=DATE_SUB(NOW(),INTERVAL 15 MINUTE)) AS email_count,(SELECT COUNT(*) FROM login_attempts WHERE ip_key=? AND attempted_at>=DATE_SUB(NOW(),INTERVAL 15 MINUTE)) AS ip_count');
+  $limit->execute([$emailKey,$ipKey]);$counts=$limit->fetch();
+  if((int)$counts['email_count']>=10||(int)$counts['ip_count']>=10){$_SESSION['err']='Too many sign-in attempts. Wait 15 minutes and try again.';jump('login');}
+  $q=$db->prepare('SELECT id,name,email,password_hash,role,account_status,email_verified FROM users WHERE email=?');$q->execute([$email]);$u=$q->fetch();
+  if($u&&$u['account_status']==='active'&&(int)$u['email_verified']===1&&$u['role']===$requestedRole&&password_verify($_POST['password']??'',$u['password_hash'])){
+   $clear=$db->prepare('DELETE FROM login_attempts WHERE email_key=?');$clear->execute([$emailKey]);
+   session_regenerate_id(true);unset($u['password_hash'],$u['email_verified']);$_SESSION['user']=$u;jump();
+  }
+  $record=$db->prepare('INSERT INTO login_attempts(email_key,ip_key) VALUES(?,?)');$record->execute([$emailKey,$ipKey]);
+  $_SESSION['err']=$u&&!(int)$u['email_verified']?'Please verify your email address before signing in.':'The email, password or selected account type is incorrect.';jump('login');
+ }
  if(empty($_SESSION['user']))jump('login');$uid=(int)$_SESSION['user']['id'];
  if($a==='update_user'){
   if(($_SESSION['user']['role']??'')!=='administrator'){http_response_code(403);exit('Administrator access required.');}
