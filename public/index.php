@@ -25,7 +25,9 @@ try {
   "CREATE TABLE IF NOT EXISTS academic_terms (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100) NOT NULL, starts_on DATE NOT NULL, ends_on DATE NOT NULL, status VARCHAR(16) NOT NULL DEFAULT 'planned', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uq_term_name_dates(name,starts_on,ends_on)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
   "CREATE TABLE IF NOT EXISTS academic_courses (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, department_id INT UNSIGNED NULL, code VARCHAR(30) NOT NULL UNIQUE, title VARCHAR(180) NOT NULL, credits TINYINT UNSIGNED NOT NULL DEFAULT 3, description TEXT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(department_id), FOREIGN KEY(department_id) REFERENCES departments(id) ON DELETE SET NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
   "CREATE TABLE IF NOT EXISTS course_offerings (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, course_id INT UNSIGNED NOT NULL, term_id INT UNSIGNED NOT NULL, lecturer_id INT UNSIGNED NULL, section_code VARCHAR(20) NOT NULL DEFAULT 'A', capacity SMALLINT UNSIGNED NOT NULL DEFAULT 40, status VARCHAR(16) NOT NULL DEFAULT 'open', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uq_course_term_section(course_id,term_id,section_code), INDEX(lecturer_id), FOREIGN KEY(course_id) REFERENCES academic_courses(id) ON DELETE CASCADE, FOREIGN KEY(term_id) REFERENCES academic_terms(id) ON DELETE RESTRICT, FOREIGN KEY(lecturer_id) REFERENCES users(id) ON DELETE SET NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-  "CREATE TABLE IF NOT EXISTS course_enrolments (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, offering_id INT UNSIGNED NOT NULL, student_id INT UNSIGNED NOT NULL, status VARCHAR(16) NOT NULL DEFAULT 'enrolled', enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uq_offering_student(offering_id,student_id), INDEX(student_id), FOREIGN KEY(offering_id) REFERENCES course_offerings(id) ON DELETE CASCADE, FOREIGN KEY(student_id) REFERENCES users(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+  "CREATE TABLE IF NOT EXISTS course_enrolments (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, offering_id INT UNSIGNED NOT NULL, student_id INT UNSIGNED NOT NULL, status VARCHAR(16) NOT NULL DEFAULT 'enrolled', enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uq_offering_student(offering_id,student_id), INDEX(student_id), FOREIGN KEY(offering_id) REFERENCES course_offerings(id) ON DELETE CASCADE, FOREIGN KEY(student_id) REFERENCES users(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+  "CREATE TABLE IF NOT EXISTS class_sessions (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, offering_id INT UNSIGNED NOT NULL, session_date DATE NOT NULL, starts_at TIME NOT NULL, ends_at TIME NOT NULL, room VARCHAR(120) NOT NULL DEFAULT '', topic VARCHAR(180) NOT NULL DEFAULT '', created_by INT UNSIGNED NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(offering_id,session_date), INDEX(session_date), FOREIGN KEY(offering_id) REFERENCES course_offerings(id) ON DELETE CASCADE, FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE RESTRICT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+  "CREATE TABLE IF NOT EXISTS attendance_records (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, session_id BIGINT UNSIGNED NOT NULL, student_id INT UNSIGNED NOT NULL, status VARCHAR(12) NOT NULL DEFAULT 'absent', marked_by INT UNSIGNED NOT NULL, marked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE KEY uq_session_student(session_id,student_id), INDEX(student_id), FOREIGN KEY(session_id) REFERENCES class_sessions(id) ON DELETE CASCADE, FOREIGN KEY(student_id) REFERENCES users(id) ON DELETE CASCADE, FOREIGN KEY(marked_by) REFERENCES users(id) ON DELETE RESTRICT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
  ];
  foreach($academicSchema as $sql)$db->exec($sql);
 } catch(Throwable $e){http_response_code(503);exit('Academic database setup failed. Please contact the site administrator.');}
@@ -104,6 +106,34 @@ if($_SERVER['REQUEST_METHOD']==='POST'){verify();$a=$_POST['action']??'';
   }catch(Throwable $ex){$_SESSION['err']=$ex instanceof RuntimeException?$ex->getMessage():'Could not save this record. Check for duplicate codes or existing enrolments.';}
   jump('academic');
  }
+
+ if(in_array($a,['schedule_session','mark_attendance'],true)){
+  $role=$_SESSION['user']['role']??'';
+  try{
+   if($a==='schedule_session'){
+    if($role!=='administrator'){http_response_code(403);exit('Administrator access required.');}
+    $offering=(int)($_POST['offering_id']??0);$date=$_POST['session_date']??'';$until=$_POST['repeat_until']??$date;
+    $start=$_POST['starts_at']??'';$end=$_POST['ends_at']??'';$room=trim($_POST['room']??'');$topic=trim($_POST['topic']??'');
+    if(!$offering||!preg_match('/^\\d{4}-\\d{2}-\\d{2}$/',$date)||!preg_match('/^\\d{4}-\\d{2}-\\d{2}$/',$until)||$until<$date||$start===''||$end<=$start)throw new RuntimeException('Enter a valid offering, date range and time range.');
+    $q=$db->prepare("SELECT id FROM course_offerings WHERE id=? AND status='open'");$q->execute([$offering]);if(!$q->fetchColumn())throw new RuntimeException('Select an open course section.');
+    $dates=[];$cursor=new DateTimeImmutable($date);$last=new DateTimeImmutable($until);while($cursor<=$last&&count($dates)<60){$dates[]=$cursor->format('Y-m-d');$cursor=$cursor->modify('+7 days');}
+    if($cursor<=$last)throw new RuntimeException('A recurring schedule can create at most 60 sessions at a time.');
+    $db->beginTransaction();$ins=$db->prepare('INSERT INTO class_sessions(offering_id,session_date,starts_at,ends_at,room,topic,created_by) VALUES(?,?,?,?,?,?,?)');
+    foreach($dates as $day)$ins->execute([$offering,$day,$start,$end,$room,$topic,$uid]);$db->commit();
+    $_SESSION['notice']=count($dates).' class session(s) scheduled.';
+   }else{
+    if(!in_array($role,['lecturer','administrator'],true)){http_response_code(403);exit('Lecturer or administrator access required.');}
+    $session=(int)($_POST['session_id']??0);$student=(int)($_POST['student_id']??0);$status=$_POST['status']??'';
+    if(!in_array($status,['present','absent','late'],true))throw new RuntimeException('Choose Present, Absent or Late.');
+    $q=$db->prepare("SELECT s.id,o.lecturer_id FROM class_sessions s JOIN course_offerings o ON o.id=s.offering_id WHERE s.id=?");$q->execute([$session]);$sess=$q->fetch();
+    if(!$sess||($role==='lecturer'&&(int)$sess['lecturer_id']!==$uid))throw new RuntimeException('You are not assigned to this class session.');
+    $q=$db->prepare("SELECT COUNT(*) FROM course_enrolments WHERE offering_id=(SELECT offering_id FROM class_sessions WHERE id=?) AND student_id=? AND status='enrolled'");$q->execute([$session,$student]);if(!(int)$q->fetchColumn())throw new RuntimeException('This student is not enrolled in the class.');
+    $q=$db->prepare('INSERT INTO attendance_records(session_id,student_id,status,marked_by) VALUES(?,?,?,?) ON DUPLICATE KEY UPDATE status=VALUES(status),marked_by=VALUES(marked_by)');$q->execute([$session,$student,$status,$uid]);
+    $_SESSION['notice']='Attendance saved.';
+   }
+  }catch(Throwable $ex){if($db->inTransaction())$db->rollBack();$_SESSION['err']=$ex instanceof RuntimeException?$ex->getMessage():'Could not save the scheduling or attendance change.';}
+  jump($a==='schedule_session'?'academic':'timetable');
+ }
  if($a==='create_user'){if(($_SESSION['user']['role']??'')!=='administrator'){http_response_code(403);exit('Administrator access required.');}$name=trim($_POST['name']??'');$email=strtolower(trim($_POST['email']??''));$role=$_POST['role']??'student';$password=$_POST['new_password']??'';if($name!==''&&filter_var($email,FILTER_VALIDATE_EMAIL)&&in_array($role,['student','lecturer','administrator'],true)&&strlen($password)>=12){try{$q=$db->prepare('INSERT INTO users(name,email,password_hash,role,account_status) VALUES(?,?,?,?,?)');$q->execute([$name,$email,password_hash($password,PASSWORD_DEFAULT),$role,'active']);$audit=$db->prepare('INSERT INTO admin_audit(actor_id,action,target_user_id,details) VALUES(?,?,?,?)');$audit->execute([$uid,'account_created',(int)$db->lastInsertId(),'Created '.$role.' account for '.$email]);$_SESSION['notice']='Account created successfully.';}catch(PDOException $ex){$_SESSION['err']='Could not create account. Check whether the email address is already registered.';}}else{$_SESSION['err']='Enter a name, valid email, supported role and password of at least 12 characters.';}jump('users');}
  if($a==='task'){$title=trim($_POST['title']??'');if($title!==''){$q=$db->prepare('INSERT INTO tasks(user_id,title,course,due_date,priority) VALUES(?,?,?,?,?)');$q->execute([$uid,$title,trim($_POST['course']??''),$_POST['due_date']?:null,($_POST['priority']??'')==='high'?'high':'normal']);}jump('tasks');}
  if($a==='toggle'){$q=$db->prepare("UPDATE tasks SET status=? WHERE id=? AND user_id=?");$q->execute([($_POST['status']??'')==='done'?'done':'todo',(int)$_POST['id'],$uid]);jump('tasks');}
@@ -114,7 +144,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){verify();$a=$_POST['action']??'';
  jump();
 }
 if(isset($_GET['lang'])&&in_array($_GET['lang'],['en','ru'],true)){$_SESSION['lang']=$_GET['lang'];} $language=$_SESSION['lang']??'en';
-$user=$_SESSION['user']??null;$page=$_GET['page']??'dashboard';if(!$user)$page='login';$uid=(int)($user['id']??0);$isAdmin=($user['role']??'')==='administrator';$adminPages=['users','academic','announcements','documents','reports','settings'];if($user&&in_array($page,$adminPages,true)&&!$isAdmin){http_response_code(403);$page='dashboard';}$err=$_SESSION['err']??'';unset($_SESSION['err']);
+$user=$_SESSION['user']??null;$page=$_GET['page']??'dashboard';if(!$user)$page='login';$uid=(int)($user['id']??0);$isAdmin=($user['role']??'')==='administrator';$adminPages=['users','academic','announcements','documents','settings'];if($user&&in_array($page,$adminPages,true)&&!$isAdmin){http_response_code(403);$page='dashboard';}$err=$_SESSION['err']??'';unset($_SESSION['err']);
 function field($name,$label,$type='text',$extra=''){return '<label>'.$label.'<input name="'.$name.'" type="'.$type.'" '.$extra.'></label>';}
 function nav($p,$label,$icon,$current){return '<a class="nav '.($p===$current?'sel':'').'" href="?page='.$p.'">'.$icon.' &nbsp;'.$label.'</a>';}
 $stats=['open'=>0,'tasks'=>0,'courses'=>0,'avg'=>null];if($user){$q=$db->prepare("SELECT COUNT(*) n,SUM(status='todo') o FROM tasks WHERE user_id=?");$q->execute([$uid]);$r=$q->fetch();$stats['tasks']=(int)$r['n'];$stats['open']=(int)$r['o'];$q=$db->prepare('SELECT COUNT(*) FROM courses WHERE user_id=?');$q->execute([$uid]);$stats['courses']=(int)$q->fetchColumn();$q=$db->prepare('SELECT AVG(score) FROM grades WHERE user_id=?');$q->execute([$uid]);$v=$q->fetchColumn();$stats['avg']=$v===null?'—':number_format((float)$v,1).'%';}
