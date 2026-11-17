@@ -65,32 +65,32 @@ def main():
 
     post_action(token, "create_department", name="CI Test Department", code="CIT")
     status, html = request("/?page=academic")
-    check("CI Test Department" in html, "department creation persists and appears")
+    check(db_count("SELECT COUNT(*) AS n FROM departments WHERE code=%s", ("CIT",)) == 1, "department creation persists")
 
     post_action(token, "create_term", name="CI Test Term", starts_on="2026-09-01", ends_on="2026-12-20")
     status, html = request("/?page=academic")
-    check("CI Test Term" in html, "academic term creation persists and appears")
+    check(db_count("SELECT COUNT(*) AS n FROM academic_terms WHERE name=%s", ("CI Test Term",)) == 1, "academic term creation persists")
 
     post_action(token, "create_academic_course", code="CIT101", title="Automated Test Course",
                 credits="3", department_id="1", description="CI acceptance test")
     status, html = request("/?page=academic")
-    check("Automated Test Course" in html, "catalogue course creation persists and appears")
+    check(db_count("SELECT COUNT(*) AS n FROM academic_courses WHERE code=%s", ("CIT101",)) == 1, "catalogue course creation persists")
 
     # A student account cannot be assigned as a lecturer.
     post_action(token, "create_offering", course_id="1", term_id="1", lecturer_id="3",
                 section_code="BAD", capacity="5")
     status, html = request("/?page=academic")
-    check("BAD" not in html, "non-lecturer assignment is rejected")
+    check(db_count("SELECT COUNT(*) AS n FROM course_offerings WHERE section_code=%s", ("BAD",)) == 0, "non-lecturer assignment is rejected")
 
     post_action(token, "create_offering", course_id="1", term_id="1", lecturer_id="2",
                 section_code="A", capacity="1")
     status, html = request("/?page=academic")
-    check("CIT101" in html and "A" in html, "course section creation with active lecturer succeeds")
+    check(db_count("SELECT COUNT(*) AS n FROM course_offerings WHERE section_code=%s AND lecturer_id=2", ("A",)) == 1, "course section creation with active lecturer succeeds")
 
     post_action(token, "create_academic_course", code="CIT999", title="Invalid Credits",
                 credits="99", department_id="1")
     status, html = request("/?page=academic")
-    check("Invalid Credits" not in html, "course credits outside 1–30 are rejected")
+    check(db_count("SELECT COUNT(*) AS n FROM academic_courses WHERE code=%s", ("CIT999",)) == 0, "course credits outside 1–30 are rejected")
 
     post_action(token, "enrol_student", offering_id="1", student_id="3")
     status, html = request("/?page=academic")
@@ -99,11 +99,11 @@ def main():
 
     post_action(token, "enrol_student", offering_id="1", student_id="3")
     status, html = request("/?page=academic")
-    check("1 / 1" in html or "1/1" in html, "duplicate enrolment does not increase enrolment count")
+    check(db_count("SELECT COUNT(*) AS n FROM course_enrolments WHERE offering_id=1", ()) == 1, "duplicate enrolment does not increase enrolment count")
 
     post_action(token, "enrol_student", offering_id="1", student_id="4")
     status, html = request("/?page=academic")
-    check("1 / 1" in html or "1/1" in html, "section capacity prevents a second enrolment")
+    check(db_count("SELECT COUNT(*) AS n FROM course_enrolments WHERE offering_id=1", ()) == 1, "section capacity prevents a second enrolment")
 
     # Log out and prove a student cannot submit administrator academic actions.
     request("/?logout=1")
