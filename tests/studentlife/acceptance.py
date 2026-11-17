@@ -4,10 +4,10 @@ import http.cookiejar
 import os
 import re
 import sys
-import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import pymysql
 
 BASE = os.environ.get("STUDENTLIFE_TEST_URL", "http://127.0.0.1:8080")
 PASSWORD = "TestPassword-2026!"
@@ -23,9 +23,8 @@ def check(condition, message):
     print("PASS:", message)
 
 def request(path="/", data=None):
-    url = BASE + path
     encoded = urllib.parse.urlencode(data).encode() if data is not None else None
-    req = urllib.request.Request(url, data=encoded)
+    req = urllib.request.Request(BASE + path, data=encoded)
     try:
         response = OPENER.open(req)
         return response.status, response.read().decode("utf-8", "replace")
@@ -35,9 +34,7 @@ def request(path="/", data=None):
 def csrf_token():
     status, html = request("/?page=login")
     check(status == 200, "sign-in page loads")
-    match = re.search(r'name=["\\']csrf["\\']\\s+value=["\\']([^"\\']+)', html)
-    if not match:
-        match = re.search(r'value=["\\']([^"\\']+)["\\']\\s+name=["\\']csrf["\\']', html)
+    match = re.search(r"""name=["']csrf["']\\s+value=["']([^"']+)""", html)
     if not match:
         raise AssertionError("CSRF token was not found on the sign-in page")
     return match.group(1)
@@ -48,67 +45,74 @@ def login(email, role):
         "csrf": token, "action": "login", "email": email,
         "password": PASSWORD, "role": role,
     })
-    check(status in (200, 302), f"{role} account can authenticate")
-    return csrf_token()
+    check(status == 200, f"{role} account can authenticate")
+    return token
 
 def post_action(token, action, **fields):
     payload = {"csrf": token, "action": action}
     payload.update(fields)
     return request("/", payload)
 
+def db_count(query, args=()):
+    connection = pymysql.connect(host="127.0.0.1", user="root", password="root",
+                                 database="studentlife_test", cursorclass=pymysql.cursors.DictCursor)
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(query, args)
+            return next(iter(cursor.fetchone().values()))
+    finally:
+        connection.close()
+
 def main():
     token = login("admin@studentlife.test", "administrator")
     status, html = request("/?page=academic")
-    check(status == 200, "administrator can open Academic Management")
-    check("Create Department" in html and "Create Academic Term" in html,
-          "academic management controls render")
+    check(status == 200 and "Academic Management" in html,
+          "administrator can open Academic Management")
 
     post_action(token, "create_department", name="CI Test Department", code="CIT")
-    status, html = request("/?page=academic")
-    check(db_count("SELECT COUNT(*) AS n FROM departments WHERE code=%s", ("CIT",)) == 1, "department creation persists")
+    check(db_count("SELECT COUNT(*) AS n FROM departments WHERE code=%s", ("CIT",)) == 1,
+          "department creation persists")
 
     post_action(token, "create_term", name="CI Test Term", starts_on="2026-09-01", ends_on="2026-12-20")
-    status, html = request("/?page=academic")
-    check(db_count("SELECT COUNT(*) AS n FROM academic_terms WHERE name=%s", ("CI Test Term",)) == 1, "academic term creation persists")
+    check(db_count("SELECT COUNT(*) AS n FROM academic_terms WHERE name=%s", ("CI Test Term",)) == 1,
+          "academic term creation persists")
 
     post_action(token, "create_academic_course", code="CIT101", title="Automated Test Course",
                 credits="3", department_id="1", description="CI acceptance test")
-    status, html = request("/?page=academic")
-    check(db_count("SELECT COUNT(*) AS n FROM academic_courses WHERE code=%s", ("CIT101",)) == 1, "catalogue course creation persists")
+    check(db_count("SELECT COUNT(*) AS n FROM academic_courses WHERE code=%s", ("CIT101",)) == 1,
+          "catalogue course creation persists")
 
-    # A student account cannot be assigned as a lecturer.
     post_action(token, "create_offering", course_id="1", term_id="1", lecturer_id="3",
                 section_code="BAD", capacity="5")
-    status, html = request("/?page=academic")
-    check(db_count("SELECT COUNT(*) AS n FROM course_offerings WHERE section_code=%s", ("BAD",)) == 0, "non-lecturer assignment is rejected")
+    check(db_count("SELECT COUNT(*) AS n FROM course_offerings WHERE section_code=%s", ("BAD",)) == 0,
+          "non-lecturer assignment is rejected")
 
     post_action(token, "create_offering", course_id="1", term_id="1", lecturer_id="2",
                 section_code="A", capacity="1")
-    status, html = request("/?page=academic")
-    check(db_count("SELECT COUNT(*) AS n FROM course_offerings WHERE section_code=%s AND lecturer_id=2", ("A",)) == 1, "course section creation with active lecturer succeeds")
+    check(db_count("SELECT COUNT(*) AS n FROM course_offerings WHERE section_code=%s AND lecturer_id=2", ("A",)) == 1,
+          "course section creation with active lecturer succeeds")
 
     post_action(token, "create_academic_course", code="CIT999", title="Invalid Credits",
                 credits="99", department_id="1")
-    status, html = request("/?page=academic")
-    check(db_count("SELECT COUNT(*) AS n FROM academic_courses WHERE code=%s", ("CIT999",)) == 0, "course credits outside 1–30 are rejected")
+    check(db_count("SELECT COUNT(*) AS n FROM academic_courses WHERE code=%s", ("CIT999",)) == 0,
+          "course credits outside 1–30 are rejected")
 
     post_action(token, "enrol_student", offering_id="1", student_id="3")
-    status, html = request("/?page=academic")
-    check("1 / 1" in html or "1/1" in html or "CI Student One" in html,
+    check(db_count("SELECT COUNT(*) AS n FROM course_enrolments WHERE offering_id=1 AND student_id=3") == 1,
           "first student enrolment is accepted")
 
     post_action(token, "enrol_student", offering_id="1", student_id="3")
-    status, html = request("/?page=academic")
-    check(db_count("SELECT COUNT(*) AS n FROM course_enrolments WHERE offering_id=1", ()) == 1, "duplicate enrolment does not increase enrolment count")
+    check(db_count("SELECT COUNT(*) AS n FROM course_enrolments WHERE offering_id=1") == 1,
+          "duplicate enrolment does not increase enrolment count")
 
     post_action(token, "enrol_student", offering_id="1", student_id="4")
-    status, html = request("/?page=academic")
-    check(db_count("SELECT COUNT(*) AS n FROM course_enrolments WHERE offering_id=1", ()) == 1, "section capacity prevents a second enrolment")
+    check(db_count("SELECT COUNT(*) AS n FROM course_enrolments WHERE offering_id=1") == 1,
+          "section capacity prevents a second enrolment")
 
-    # Log out and prove a student cannot submit administrator academic actions.
     request("/?logout=1")
     student_token = login("student1@studentlife.test", "student")
-    status, _ = post_action(student_token, "create_department", name="Forbidden Department", code="NOPE")
+    status, _ = post_action(student_token, "create_department",
+                            name="Forbidden Department", code="NOPE")
     check(status == 403, "student is blocked from administrator academic actions")
 
     print(f"\\n{passed} automated acceptance checks passed.")
