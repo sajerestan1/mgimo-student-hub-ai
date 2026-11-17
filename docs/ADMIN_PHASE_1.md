@@ -99,3 +99,14 @@ The schema upgrades are additive and create the two new tables if absent. The fe
 
 ### Phase 2C verification scope
 The CI acceptance suite now covers recurring weekly session creation, lecturer timetable access, lecturer attendance marking, student timetable visibility, student-only attendance reports and student restrictions on attendance actions. Live cPanel verification is still required after the gated Academic staging deployment.
+
+
+## Account verification and demo data update
+
+New administrator-created accounts are created in a pending state with email verification disabled. A single-use, 24-hour verification token is stored as a SHA-256 hash; the raw token is emailed as a verification link. The account is activated only after the link is opened. Sign-in requires valid credentials, the selected role, an active account and a verified email. Existing accounts are preserved as verified during the additive migration so current administrators and existing users are not locked out.
+
+Email delivery uses PHP `mail()` and the hosting server's configured mail transport. If the host cannot deliver mail, the account remains pending; configure the server mail transport and the optional `mail_from` value in the private `config.php`. Do not paste mail or database passwords into GitHub or chat.
+
+The Academic Management page includes an administrator-only, repeatable demo-data seeder. It creates sample departments, terms, catalogue courses, sections, enrolments and class sessions using the first active lecturer and first active student account. It does not delete existing data and avoids duplicate records. Demo records are ordinary shared academic records and should be removed manually only after a database backup and administrator review.
+
+Public self-registration is not enabled in this PHP MVP. Account creation remains administrator-controlled; the invited user verifies email and then signs in with the temporary password. A dedicated self-registration and password-reset workflow remains future work.
