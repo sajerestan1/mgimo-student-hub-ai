@@ -232,7 +232,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){verify();$a=$_POST['action']??'';
     ['UN Charter study text','Open reference text for international relations coursework. Demo resource.','https://www.un.org/en/about-us/un-charter/full-text','student'],
     ['World Bank class data','Open economic and development datasets for class discussion. Demo resource.','https://data.worldbank.org/','lecturer']
    ];
-   foreach($demoResources as [$demoTitle,$demoDescription,$demoUrl,$demoAudience]){$q=$db->prepare('SELECT id FROM resource_library WHERE title=? AND is_demo=1');$q->execute([$demoTitle]);if(!$q->fetchColumn()){$q=$db->prepare('INSERT INTO resource_library(title,description,url,audience,status,is_demo,created_by) VALUES(?,?,?,?,"active",1,?)');$q->execute([$demoTitle,$demoDescription,$demoUrl,$demoAudience,$uid]);}}
+   foreach($demoResources as [$demoTitle,$demoDescription,$demoUrl,$demoAudience]){$q=$db->prepare('SELECT id FROM resource_library WHERE title=? AND is_demo=1');$q->execute([$demoTitle]);if(!$q->fetchColumn()){$q=$db->prepare('INSERT INTO resource_library(title,description,url,audience,status,is_demo,created_by) VALUES(?,?,?,?,?,1,?)');$q->execute([$demoTitle,$demoDescription,$demoUrl,$demoAudience,'active',$uid]);}}
    foreach([['institution_name','StudentLife'],['academic_year','2026/27'],['support_email','preview-support@studentlife.example']] as [$settingKey,$settingValue]){$q=$db->prepare('INSERT IGNORE INTO app_settings(setting_key,setting_value) VALUES(?,?)');$q->execute([$settingKey,$settingValue]);}
    $activeWorkspaceUsers=$db->query("SELECT id,role FROM users WHERE account_status='active' AND role IN ('student','lecturer') ORDER BY id")->fetchAll();
    foreach($activeWorkspaceUsers as $workspaceUser){
