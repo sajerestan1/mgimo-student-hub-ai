@@ -83,7 +83,8 @@ def main():
                                  "password": PASSWORD, "role": "student"})
     check(status == 200 and "verify your email" in html.lower(),
           "unverified account is blocked from signing in")
-\n    token = login("admin@studentlife.test", "administrator")
+
+    token = login("admin@studentlife.test", "administrator")
     status, html = request("/?page=academic")
     check(status == 200 and "Academic Management" in html,
           "administrator can open Academic Management")
