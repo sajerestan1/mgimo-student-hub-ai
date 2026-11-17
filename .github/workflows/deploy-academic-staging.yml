@@ -130,7 +130,7 @@ jobs:
           local-dir: academic-staging/
           server-dir: ./
           dangerous-clean-slate: false
-          security: loose
+          security: strict
           log-level: standard
 
   publish-php-preview:
@@ -147,8 +147,12 @@ jobs:
       - name: Prepare preview payload
         run: |
           mkdir -p studentlife-preview
+          mkdir -p .github/deploy
           cp public/index.php public/install.php studentlife-preview/
+          cp public/.htaccess studentlife-preview/.htaccess
+          cat .github/deploy/preview-cpanel-php-config.htaccess >> studentlife-preview/.htaccess
           test -s studentlife-preview/index.php
+          test -s studentlife-preview/.htaccess
           test -s studentlife-preview/install.php
 
       - name: Publish PHP app to the isolated preview document root
@@ -167,11 +171,10 @@ jobs:
             **/.git*/**
             **/node_modules/**
             **/.well-known/**
-            **/.htaccess
             **/.user.ini
             **/php.ini
             **/config.php
             **/.ftpquota
             **/.ftp-deploy-sync-state.json
-          security: loose
+          security: strict
           log-level: standard
