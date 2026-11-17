@@ -2,7 +2,7 @@ name: Publish StudentLife PHP to Academic staging
 
 on:
   push:
-    branches: [main, develop, "codex/studentlife-preview"]
+    branches: [main, develop, "codex/studentlife-preview", "codex/ai-*"]
     paths:
       - "public/index.php"
       - "public/install.php"
