@@ -153,8 +153,93 @@ body{background:var(--canvas);color:var(--ink);font-family:Inter,system-ui,-appl
 @media(max-width:1050px){.admin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.side{width:245px}}
 @media(max-width:720px){.admin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.side nav{align-items:flex-start}.nav-group-label{display:none}.admin-stat{padding-left:52px}}
 @media(max-width:380px){.admin-summary-grid{grid-template-columns:1fr 1fr;gap:8px}.admin-stat{padding:12px;min-height:100px}.admin-stat-icon{position:static;margin-bottom:6px}.admin-stat .metric{font-size:22px}}
+
+/* Sign-in page: single-brand, viewport-fit layout. Authentication markup and behavior remain unchanged. */
+body:has(.login-shell){overflow:hidden}
+.login-shell{min-height:100vh;min-height:100svh;height:100vh;height:100svh;grid-template-columns:minmax(280px,.82fr) minmax(440px,1.18fr);overflow:hidden}
+.login-visual{min-height:0;height:100%;padding:28px 36px}
+.visual-cap{font-size:54px;margin-bottom:10px}
+.visual-name{font-size:clamp(34px,3.6vw,52px)}
+.visual-subtitle{font-size:12px;letter-spacing:2.6px}
+.gold-rule{margin:17px auto;width:78px}
+.visual-brand p,.visual-footer{display:none}
+.login-panel{height:100%;min-height:0;padding:16px 28px;overflow-y:auto}
+.login-card{width:min(540px,100%);padding:24px 34px;border-radius:18px}
+.login-heading{margin:0 0 15px}
+.login-heading h1{font-size:30px;margin:3px 0}
+.login-heading p{font-size:12px}
+.login-form{gap:11px}
+.role-fieldset legend{margin-bottom:7px}
+.role-options{gap:8px}
+.role-option{min-height:78px;padding:7px 5px;gap:5px}
+.role-icon{font-size:22px}
+.login-label{gap:5px}
+.login-input{height:45px}
+.login-submit{height:46px}
+.login-security{margin-top:12px}
+.login-language{margin-top:9px}
+@media(max-width:980px) and (min-width:721px){
+ .login-shell{grid-template-columns:minmax(240px,.7fr) minmax(420px,1.3fr)}
+ .login-panel{padding:14px 18px}
+ .login-card{padding:22px 25px}
+}
+@media(max-width:720px){
+ body:has(.login-shell){overflow:hidden}
+ .login-shell{height:100vh;height:100svh;min-height:0;grid-template-columns:1fr;grid-template-rows:clamp(142px,22svh,190px) minmax(0,1fr)}
+ .login-visual{height:auto;min-height:0;padding:13px 18px}
+ .visual-cap{font-size:34px;line-height:1;margin-bottom:4px}
+ .visual-name{font-size:32px;letter-spacing:-1px}
+ .visual-subtitle{font-size:10px;letter-spacing:2px}
+ .gold-rule{width:58px;margin:9px auto 0;height:3px}
+ .login-panel{height:auto;min-height:0;padding:10px 12px 12px;justify-content:center;overflow-y:auto}
+ .login-card{width:min(540px,100%);padding:15px 18px;border-radius:15px}
+ .login-heading{margin-bottom:10px}
+ .login-heading .eyebrow{font-size:8px}
+ .login-heading h1{font-size:25px;margin:2px 0}
+ .login-heading p{font-size:11px}
+ .login-form{gap:9px}
+ .role-fieldset legend{font-size:11px;margin-bottom:5px}
+ .role-options{gap:6px}
+ .role-option{min-height:70px;padding:6px 3px;gap:4px;border-radius:10px}
+ .role-icon{font-size:20px}
+ .role-option b{font-size:10px}
+ .login-label{font-size:10px;gap:4px}
+ .login-input{height:42px;padding:0 11px;gap:8px}
+ .login-input>span{font-size:16px}
+ .login-input input{font-size:12px}
+ .login-options{font-size:10px}
+ .remember-option{font-size:10px}
+ .forgot-note{font-size:9px}
+ .login-submit{height:43px;font-size:13px}
+ .login-security{font-size:9px;margin-top:8px}
+ .login-language{margin-top:6px;font-size:10px}
+}
+@media(max-width:380px){
+ .login-shell{grid-template-rows:clamp(132px,19svh,160px) minmax(0,1fr)}
+ .login-panel{padding:7px 9px}
+ .login-card{padding:12px 13px}
+ .login-form{gap:7px}
+ .role-option{min-height:64px}
+ .login-input{height:39px}
+ .login-submit{height:40px}
+ .login-security{margin-top:6px}
+ .login-language{margin-top:4px}
+}
+@media(max-height:700px){
+ .login-visual{padding-top:10px;padding-bottom:10px}
+ .visual-cap{font-size:30px;margin-bottom:2px}
+ .visual-name{font-size:30px}
+ .gold-rule{margin-top:7px}
+ .login-card{padding-top:12px;padding-bottom:12px}
+ .login-heading{margin-bottom:7px}
+ .login-form{gap:7px}
+ .role-option{min-height:60px}
+ .login-input{height:38px}
+ .login-submit{height:39px}
+ .login-security{display:none}
+}
 </style></head><body>
-<?php if(!$user):?><div class="login-shell"><section class="login-visual"><div class="visual-brand"><div class="visual-cap">⌂</div><div class="visual-name">StudentLife</div><div class="visual-subtitle">ACADEMIC COMPANION</div><div class="gold-rule"></div><p>Your all-in-one academic space for learning, teaching and academic management.</p></div><div class="visual-footer">Learn · Teach · Achieve</div></section><section class="login-panel"><div class="login-card"><div class="login-brand"><div class="login-mark">S</div><div><b>StudentLife</b><small>Academic Companion</small></div></div><div class="login-heading"><div class="eyebrow">YOUR ACADEMIC SPACE</div><h1>Welcome back</h1><p>Sign in to continue to your workspace.</p></div><?php if($err):?><div class="notice"><?=h($err)?></div><?php endif;?><form method="post" class="login-form"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="login"><fieldset class="role-fieldset"><legend>Access as</legend><div class="role-options"><label class="role-option"><input type="radio" name="role" value="student" checked><span class="role-icon">♙</span><b>Student</b></label><label class="role-option"><input type="radio" name="role" value="lecturer"><span class="role-icon">▤</span><b>Lecturer / Professor</b></label><label class="role-option"><input type="radio" name="role" value="administrator"><span class="role-icon">⚙</span><b>Administrator</b></label></div></fieldset><label class="login-label">Email address<div class="login-input"><span>✉</span><input name="email" type="email" placeholder="Enter your email address" required autocomplete="username"></div></label><label class="login-label">Password<div class="login-input"><span>▣</span><input id="login-password" name="password" type="password" placeholder="Enter your password" required autocomplete="current-password"><button class="password-toggle" type="button" aria-label="Show password" onclick="const p=document.getElementById('login-password');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'Show':'Hide'">Show</button></div></label><div class="login-options"><label class="remember-option"><input type="checkbox" name="remember" value="1"> Remember me</label><span class="forgot-note">Forgot password? Contact your administrator.</span></div><button class="login-submit" type="submit">Sign In <span>→</span></button></form><div class="login-security"><span>▣</span> Secure access to your academic workspace</div></div><div class="login-language"><span>Language</span><a href="?lang=en">English</a><span>·</span><a href="?lang=ru">Русский</a></div></section></div>
+<?php if(!$user):?><div class="login-shell"><section class="login-visual"><div class="visual-brand"><div class="visual-cap">⌂</div><div class="visual-name">StudentLife</div><div class="visual-subtitle">ACADEMIC COMPANION</div><div class="gold-rule"></div><p>Your all-in-one academic space for learning, teaching and academic management.</p></div><div class="visual-footer">Learn · Teach · Achieve</div></section><section class="login-panel"><div class="login-card"><div class="login-heading"><div class="eyebrow">YOUR ACADEMIC SPACE</div><h1>Sign In</h1><p>Sign in to continue to your workspace.</p></div><?php if($err):?><div class="notice"><?=h($err)?></div><?php endif;?><form method="post" class="login-form"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="login"><fieldset class="role-fieldset"><legend>Access as</legend><div class="role-options"><label class="role-option"><input type="radio" name="role" value="student" checked><span class="role-icon">♙</span><b>Student</b></label><label class="role-option"><input type="radio" name="role" value="lecturer"><span class="role-icon">▤</span><b>Lecturer / Professor</b></label><label class="role-option"><input type="radio" name="role" value="administrator"><span class="role-icon">⚙</span><b>Administrator</b></label></div></fieldset><label class="login-label">Email address<div class="login-input"><span>✉</span><input name="email" type="email" placeholder="Enter your email address" required autocomplete="username"></div></label><label class="login-label">Password<div class="login-input"><span>▣</span><input id="login-password" name="password" type="password" placeholder="Enter your password" required autocomplete="current-password"><button class="password-toggle" type="button" aria-label="Show password" onclick="const p=document.getElementById('login-password');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'Show':'Hide'">Show</button></div></label><div class="login-options"><label class="remember-option"><input type="checkbox" name="remember" value="1"> Remember me</label><span class="forgot-note">Forgot password? Contact your administrator.</span></div><button class="login-submit" type="submit">Sign In <span>→</span></button></form><div class="login-security"><span>▣</span> Secure access to your academic workspace</div></div><div class="login-language"><span>Language</span><a href="?lang=en">English</a><span>·</span><a href="?lang=ru">Русский</a></div></section></div>
 <?php else:?><div class="layout"><aside class="side"><div class="brand"><div class="logo">S</div><div><b>StudentLife</b><small>ACADEMIC COMPANION</small></div></div><?php if($isAdmin):?><div class="caption">ADMINISTRATION</div><nav><?=nav('dashboard','Dashboard','⌂',$page)?><?=nav('users','User & Role Management','♙',$page)?><div class="nav-group-label">ACADEMIC MANAGEMENT</div><?=nav('academic','Academic Management','▦',$page)?><div class="nav-group-label">COMMUNICATION & RESOURCES</div><?=nav('announcements','Announcements','♧',$page)?><?=nav('documents','Documents','▣',$page)?><div class="nav-group-label">INSIGHTS & CONTROL</div><?=nav('reports','Reports & Analytics','↗',$page)?><?=nav('settings','System Settings','⚙',$page)?></nav><?php else:?><div class="caption">YOUR WORKSPACE</div><nav><?=nav('dashboard','Dashboard','⌂',$page)?><?=nav('profile','My Profile','♙',$page)?><?=nav('courses','My Courses','▱',$page)?><?=nav('tasks','Assignments & Tasks','✓',$page)?><?=nav('timetable','Timetable','▦',$page)?><?=nav('grades','Grades & GPA','▥',$page)?><?=nav('progress','Academic Progress','↗',$page)?><?=nav('documents','Documents','▣',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('settings','Settings','⚙',$page)?></nav><?php endif;?><div class="foot">Signed in as<br><b><?=h($user['name'])?></b><br><a href="?logout=1">Sign out ↗</a></div></aside><main class="main"><header class="top"><div class="top-title"><small><?=$isAdmin?'ADMINISTRATOR WORKSPACE':'STUDENT WORKSPACE'?></small><b><?=h(['users'=>'User & Role Management','academic'=>'Academic Management','announcements'=>'Announcements','documents'=>'Documents & Resources','reports'=>'Reports & Analytics','settings'=>'System Settings','tasks'=>'Assignments & Tasks','courses'=>'My Courses','grades'=>'Grades & GPA','timetable'=>'Timetable','profile'=>'My Profile','progress'=>'Academic Progress'][$page]??ucfirst($page))?></b></div><div class="top-tools"><form class="top-search" method="get" action=""><input type="hidden" name="page" value="search"><input type="search" name="q" value="<?=h($_GET['q']??'')?>" placeholder="Search courses, assignments, tasks..." aria-label="Search StudentLife"><button class="btn search-btn" type="submit">Search</button></form><label class="language-control"><span>Language</span><select aria-label="Choose language" onchange="window.location.href='?page=<?=h($page)?>&lang='+this.value"><option value="en" <?=$language==='en'?'selected':''?>>English</option><option value="ru" <?=$language==='ru'?'selected':''?>>Русский</option></select></label><span class="muted top-user"><?=h($user['name'])?> · <?=date('D, M j')?></span></div></header><div class="content">
 <?php if($page==='dashboard'&&$isAdmin):?>
 <div class="hero"><div class="hero-copy"><div class="eyebrow">ADMINISTRATOR WORKSPACE</div><h1>Welcome, <?=h(explode(' ',$user['name'])[0])?> <span>👋</span></h1><p>Manage users, academic activity and the StudentLife platform.</p></div></div>
