@@ -2,7 +2,7 @@ name: Publish StudentLife PHP to Academic staging
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, "codex/studentlife-preview"]
     paths:
       - "public/index.php"
       - "public/install.php"
@@ -130,5 +130,48 @@ jobs:
           local-dir: academic-staging/
           server-dir: ./
           dangerous-clean-slate: false
+          security: loose
+          log-level: standard
+
+  publish-php-preview:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/codex/studentlife-preview'
+    needs: integration-tests
+    runs-on: ubuntu-latest
+    environment:
+      name: studentlife-preview
+      url: https://preview.studentlife.buildforge.com.ng/
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Prepare preview payload
+        run: |
+          mkdir -p studentlife-preview
+          cp public/index.php public/install.php studentlife-preview/
+          test -s studentlife-preview/index.php
+          test -s studentlife-preview/install.php
+
+      - name: Publish PHP app to the isolated preview document root
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          protocol: ftps
+          local-dir: studentlife-preview/
+          server-dir: ../preview.studentlife.buildforge.com.ng/
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.well-known/**
+            **/.htaccess
+            **/.user.ini
+            **/php.ini
+            **/config.php
+            **/.ftpquota
+            **/.ftp-deploy-sync-state.json
           security: loose
           log-level: standard
