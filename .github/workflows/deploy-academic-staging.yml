@@ -7,6 +7,7 @@ on:
       - "public/index.php"
       - "public/install.php"
       - "tests/studentlife/**"
+      - "docs/ADMIN_PHASE_1.md"
       - ".github/workflows/deploy-academic-staging.yml"
   workflow_dispatch:
 
