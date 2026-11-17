@@ -54,6 +54,9 @@ jobs:
       - name: Install Python test dependency
         run: pip install PyMySQL
 
+      - name: Validate Python test syntax
+        run: python -m py_compile tests/studentlife/acceptance.py
+
       - name: Seed isolated test database
         env:
           TEST_DB_HOST: 127.0.0.1
