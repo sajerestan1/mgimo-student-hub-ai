@@ -51,7 +51,10 @@ jobs:
           php -l public/install.php
           php -l tests/studentlife/seed.php
 
-      - name: Install Python test dependency\n        run: pip install PyMySQL\n\n      - name: Seed isolated test database
+      - name: Install Python test dependency
+        run: pip install PyMySQL
+
+      - name: Seed isolated test database
         env:
           TEST_DB_HOST: 127.0.0.1
           TEST_DB_NAME: studentlife_test
