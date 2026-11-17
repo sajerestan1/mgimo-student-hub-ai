@@ -6,6 +6,8 @@ on:
     paths:
       - "public/index.php"
       - "public/install.php"
+      - "public/.htaccess"
+      - ".github/deploy/**"
       - "tests/studentlife/**"
       - "docs/ADMIN_PHASE_1.md"
       - ".github/workflows/deploy-academic-staging.yml"
@@ -14,6 +16,8 @@ on:
     paths:
       - "public/index.php"
       - "public/install.php"
+      - "public/.htaccess"
+      - ".github/deploy/**"
       - "tests/studentlife/**"
       - "docs/ADMIN_PHASE_1.md"
       - ".github/workflows/deploy-academic-staging.yml"
