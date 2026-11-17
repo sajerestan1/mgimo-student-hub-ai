@@ -109,13 +109,6 @@ def main():
     check(db_count("SELECT COUNT(*) AS n FROM course_enrolments WHERE offering_id=1") == 1,
           "section capacity prevents a second enrolment")
 
-    request("/?logout=1")
-    student_token = login("student1@studentlife.test", "student")
-    status, _ = post_action(student_token, "create_department",
-                            name="Forbidden Department", code="NOPE")
-    check(status == 403, "student is blocked from administrator academic actions")
-
-
     post_action(token, "schedule_session", offering_id="1", session_date="2026-11-20",
                 repeat_until="2026-12-04", starts_at="10:00", ends_at="11:30",
                 room="Room 101", topic="CI scheduled class")
@@ -142,6 +135,10 @@ def main():
     status, _ = post_action(student_token, "mark_attendance", session_id="1",
                             student_id="3", status="absent")
     check(status == 403, "student cannot mark attendance")
+    status, _ = post_action(student_token, "create_department",
+                            name="Forbidden Department", code="NOPE")
+    check(status == 403, "student is blocked from administrator academic actions")
+
 
     print(f"\n{passed} automated acceptance checks passed.")
     return 0
