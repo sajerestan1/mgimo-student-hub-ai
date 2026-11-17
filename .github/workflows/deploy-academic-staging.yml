@@ -7,6 +7,7 @@ on:
       - "public/index.php"
       - "public/install.php"
       - "public/.htaccess"
+      - "public/studentlife-sw.js"
       - ".github/deploy/**"
       - "tests/studentlife/**"
       - "docs/ADMIN_PHASE_1.md"
@@ -17,6 +18,7 @@ on:
       - "public/index.php"
       - "public/install.php"
       - "public/.htaccess"
+      - "public/studentlife-sw.js"
       - ".github/deploy/**"
       - "tests/studentlife/**"
       - "docs/ADMIN_PHASE_1.md"
@@ -152,12 +154,13 @@ jobs:
         run: |
           mkdir -p studentlife-preview
           mkdir -p .github/deploy
-          cp public/index.php public/install.php studentlife-preview/
+          cp public/index.php public/install.php public/studentlife-sw.js studentlife-preview/
           cp public/.htaccess studentlife-preview/.htaccess
           cat .github/deploy/preview-cpanel-php-config.htaccess >> studentlife-preview/.htaccess
           test -s studentlife-preview/index.php
           test -s studentlife-preview/.htaccess
           test -s studentlife-preview/install.php
+          test -s studentlife-preview/studentlife-sw.js
 
       - name: Publish PHP app to the isolated preview document root
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
