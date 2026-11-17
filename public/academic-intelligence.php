@@ -121,7 +121,7 @@ function sl_ai_risk_rules(PDO $db): array
 }
 
 /** Risk flags use recorded attendance only. Missing official grade and submission data is reported separately. */
-function sl_ai_risk_data(PDO $db, array $rules): array
+function sl_ai_risk_data(PDO $db, array $rules, string $courseCode = ''): array
 {
     $students = sl_ai_all($db, "SELECT u.id,u.name,COUNT(DISTINCT e.offering_id) AS sections,COUNT(DISTINCT s.id) AS scheduled,COUNT(DISTINCT ar.id) AS marked,COALESCE(SUM(ar.status='present'),0) AS present,GROUP_CONCAT(DISTINCT c.code ORDER BY c.code SEPARATOR ', ') AS courses
         FROM users u
@@ -130,8 +130,8 @@ function sl_ai_risk_data(PDO $db, array $rules): array
         JOIN academic_courses c ON c.id=o.course_id
         LEFT JOIN class_sessions s ON s.offering_id=o.id
         LEFT JOIN attendance_records ar ON ar.session_id=s.id AND ar.student_id=u.id
-        WHERE u.role='student' AND u.account_status='active'
-        GROUP BY u.id,u.name ORDER BY u.name");
+        WHERE u.role='student' AND u.account_status='active' AND (?='' OR c.code=?)
+        GROUP BY u.id,u.name ORDER BY u.name", [$courseCode,$courseCode]);
     $counts = ['Low' => 0, 'Moderate' => 0, 'High' => 0, 'Critical' => 0, 'Insufficient data' => 0];
     foreach ($students as &$student) {
         $marked = (int)$student['marked'];
@@ -166,8 +166,8 @@ function sl_ai_risk_data(PDO $db, array $rules): array
         LEFT JOIN departments d ON d.id=c.department_id
         LEFT JOIN class_sessions s ON s.offering_id=o.id
         LEFT JOIN attendance_records ar ON ar.session_id=s.id AND ar.student_id=u.id
-        WHERE e.status='enrolled'
-        GROUP BY d.id,d.name ORDER BY department");
+        WHERE e.status='enrolled' AND (?='' OR c.code=?)
+        GROUP BY d.id,d.name ORDER BY department", [$courseCode,$courseCode]);
     foreach ($departments as &$department) {
         $department['attendance_rate'] = (int)$department['marked'] > 0
             ? round(100 * (int)$department['present'] / (int)$department['marked'], 1) : null;
@@ -182,7 +182,8 @@ function sl_ai_risk_data(PDO $db, array $rules): array
         LEFT JOIN course_enrolments e ON e.offering_id=o.id AND e.status='enrolled'
         LEFT JOIN class_sessions s ON s.offering_id=o.id
         LEFT JOIN attendance_records ar ON ar.session_id=s.id AND ar.student_id=e.student_id
-        GROUP BY c.id,c.code,c.title,d.name,l.name ORDER BY c.code");
+        WHERE (?='' OR c.code=?)
+        GROUP BY c.id,c.code,c.title,d.name,l.name ORDER BY c.code", [$courseCode,$courseCode]);
     foreach ($courses as &$course) {
         $course['attendance_rate'] = (int)$course['marked'] > 0
             ? round(100 * (int)$course['present'] / (int)$course['marked'], 1) : null;
@@ -192,7 +193,10 @@ function sl_ai_risk_data(PDO $db, array $rules): array
     $trend = sl_ai_all($db, "SELECT DATE_FORMAT(s.session_date,'%Y-%m') AS month,COUNT(ar.id) AS marked,COALESCE(SUM(ar.status='present'),0) AS present
         FROM attendance_records ar
         JOIN class_sessions s ON s.id=ar.session_id
-        GROUP BY DATE_FORMAT(s.session_date,'%Y-%m') ORDER BY month");
+        JOIN course_offerings o ON o.id=s.offering_id
+        JOIN academic_courses c ON c.id=o.course_id
+        WHERE (?='' OR c.code=?)
+        GROUP BY DATE_FORMAT(s.session_date,'%Y-%m') ORDER BY month", [$courseCode,$courseCode]);
     foreach ($trend as &$month) {
         $month['attendance_rate'] = (int)$month['marked'] > 0
             ? round(100 * (int)$month['present'] / (int)$month['marked'], 1) : null;
@@ -232,7 +236,8 @@ function sl_ai_authorized_context(PDO $db, array $user, string $courseCode = '')
             'scope' => 'Only this authenticated student’s records and shared materials for enrolled courses.',
             'courses' => $courses,
             'tasks' => sl_ai_all($db, "SELECT title,course,due_date,status,priority FROM tasks WHERE user_id=? AND (?='' OR course=? OR course='') ORDER BY due_date LIMIT 60", [$uid,$courseCode,$courseCode]),
-            'grades' => sl_ai_all($db, "SELECT c.code,c.name,g.assessment,g.score,g.created_at FROM grades g JOIN courses c ON c.id=g.course_id WHERE g.user_id=? AND (?='' OR c.code=? OR c.name=?) ORDER BY g.created_at DESC LIMIT 80", [$uid,$courseCode,$courseCode,$courseCode]),
+            'grades' => sl_ai_all($db, "SELECT c.code,c.name,g.assessment,g.score,g.created_at FROM grades g JOIN courses c ON c.id=g.course_id AND c.user_id=g.user_id WHERE g.user_id=? AND (?='' OR c.code=? OR c.name=?) ORDER BY g.created_at DESC LIMIT 80", [$uid,$courseCode,$courseCode,$courseCode]),
+            'timetable' => sl_ai_all($db, "SELECT c.code,c.title,o.section_code,s.session_date,s.starts_at,s.ends_at,s.room,s.topic FROM course_enrolments e JOIN course_offerings o ON o.id=e.offering_id JOIN academic_courses c ON c.id=o.course_id JOIN class_sessions s ON s.offering_id=o.id WHERE e.student_id=? AND e.status='enrolled' AND s.session_date>=CURRENT_DATE AND (?='' OR c.code=?) ORDER BY s.session_date,s.starts_at LIMIT 50", [$uid,$courseCode,$courseCode]),
             'attendance' => sl_ai_all($db, "SELECT c.code,s.session_date,ar.status FROM attendance_records ar JOIN class_sessions s ON s.id=ar.session_id JOIN course_offerings o ON o.id=s.offering_id JOIN academic_courses c ON c.id=o.course_id JOIN course_enrolments e ON e.offering_id=o.id AND e.student_id=ar.student_id AND e.status='enrolled' WHERE ar.student_id=? AND (?='' OR c.code=?) ORDER BY s.session_date DESC LIMIT 80", [$uid,$courseCode,$courseCode]),
             'announcements' => sl_ai_all($db, "SELECT title,body,published_at FROM announcements WHERE status='published' AND (audience='all' OR audience='student') ORDER BY published_at DESC,id DESC LIMIT 10"),
             'resources' => sl_ai_all($db, "SELECT title,description,url FROM resource_library WHERE status='active' AND (audience='all' OR audience='student') ORDER BY created_at DESC,id DESC LIMIT 30"),
@@ -245,6 +250,7 @@ function sl_ai_authorized_context(PDO $db, array $user, string $courseCode = '')
         return [
             'scope' => 'Only courses assigned to this authenticated lecturer and their enrolled roster and attendance records.',
             'courses' => $courses,
+            'timetable' => sl_ai_all($db, "SELECT c.code,c.title,o.section_code,s.session_date,s.starts_at,s.ends_at,s.room,s.topic FROM course_offerings o JOIN academic_courses c ON c.id=o.course_id JOIN class_sessions s ON s.offering_id=o.id WHERE o.lecturer_id=? AND o.status='open' AND s.session_date>=CURRENT_DATE AND (?='' OR c.code=?) ORDER BY s.session_date,s.starts_at LIMIT 80", [$uid,$courseCode,$courseCode]),
             'student_attendance' => sl_ai_all($db, "SELECT c.code,u.name AS student,COUNT(DISTINCT ar.id) AS recorded,COALESCE(SUM(ar.status='present'),0) AS present,COALESCE(SUM(ar.status='absent'),0) AS absent,COALESCE(SUM(ar.status='late'),0) AS late
                 FROM course_enrolments e JOIN course_offerings o ON o.id=e.offering_id JOIN academic_courses c ON c.id=o.course_id
                 JOIN users u ON u.id=e.student_id LEFT JOIN class_sessions s ON s.offering_id=o.id
@@ -257,7 +263,7 @@ function sl_ai_authorized_context(PDO $db, array $user, string $courseCode = '')
     }
     if ($role === 'administrator') {
         $rules = sl_ai_risk_rules($db);
-        $risk = sl_ai_risk_data($db, $rules);
+        $risk = sl_ai_risk_data($db, $rules, $courseCode);
         $students = array_values(array_filter($risk['students'], static fn($row) => in_array($row['risk'], ['Critical','High','Moderate'], true)));
         $risk['students'] = array_slice($students, 0, 100);
         unset($risk['rules']);
