@@ -1,5 +1,7 @@
 import { base44 } from '@/api/base44Client';
 import { getDemoUser } from '@/lib/demoAuth';
+import { loadStudentPortal } from '@/lib/studentPortal';
+import { addDays, isoOf, parseISO } from '@/lib/timetable/week';
 
 // Standalone demo returns a local sample week; production remains server-authorised.
 export async function fetchTimetable(weekStart) {
@@ -7,6 +9,29 @@ export async function fetchTimetable(weekStart) {
     const user = getDemoUser();
     const student = user?.role === 'student';
     const professor = user?.role === 'professor';
+    if (student) {
+      const context = await loadStudentPortal();
+      const weekEnd = isoOf(addDays(parseISO(weekStart), 6));
+      const sessions = (context.sessions || [])
+        .filter((session) => session.date >= weekStart && session.date <= weekEnd)
+        .map((session) => ({
+          id: session.id,
+          date: session.date,
+          start: session.start,
+          end: session.end,
+          course_code: session.courseCode,
+          course_title: session.courseTitle,
+          room: session.room,
+          kind: session.kind,
+          professor_name: session.professorName,
+        }));
+      return {
+        sessions,
+        subtitle: 'Your scheduled week · Demo data',
+        scope_note: context.scopeNote || null,
+        identity: context.profile?.full_name || user.full_name || 'Demo student',
+      };
+    }
     const sessions = [
       { id: 'demo-s1', date: weekStart, start: '09:30', end: '11:00', courseCode: 'IR-201', courseTitle: 'Theory of International Relations', room: 'Room 304', kind: 'lecture' },
       { id: 'demo-s2', date: weekStart, start: '11:30', end: '13:00', courseCode: 'IE-201', courseTitle: 'World Economy', room: 'Room 218', kind: 'seminar' },
