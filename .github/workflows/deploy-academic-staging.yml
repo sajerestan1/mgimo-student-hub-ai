@@ -162,7 +162,7 @@ jobs:
       - name: Publish PHP app to the isolated preview document root
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
-          server: ${{ secrets.FTP_SERVER }}
+          server: server2.globalhosting247.com
           username: ${{ secrets.STUDENTLIFE_PREVIEW_FTP_USERNAME }}
           password: ${{ secrets.STUDENTLIFE_PREVIEW_FTP_PASSWORD }}
           port: 21
