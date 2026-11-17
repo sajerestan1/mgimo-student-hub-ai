@@ -163,6 +163,8 @@ def main():
         "INSERT INTO ai_conversations(owner_id,workspace_role,title) VALUES(4,'student','Private conversation')")
     db_execute("INSERT INTO ai_messages(conversation_id,message_role,content) VALUES(%s,'assistant','PRIVATE_CONTEXT_SENTINEL')",
                (private_conversation,))
+    own_conversation = db_execute(
+        "INSERT INTO ai_conversations(owner_id,workspace_role,title,support_mode) VALUES(3,'student','My study session','planner')")
 
     request("/?logout=1")
     lecturer_token = login("lecturer@studentlife.test", "lecturer")
@@ -201,9 +203,29 @@ def main():
           "student AI context reflects the student's enrollment and timetable")
     check("1 personal grade entries" in html,
           "student AI context excludes a grade linked to another student's personal course")
+    check("Learn a subject" in html and "Exam preparation" in html and "University guide" in html,
+          "student AI page exposes unified academic support modes")
+    status, own_html = request(f"/?page=ai_study&conversation_id={own_conversation}")
+    check(status == 200 and 'option value="planner" selected' in own_html,
+          "student conversation remembers its selected support mode")
     status, private_html = request(f"/?page=ai_study&conversation_id={private_conversation}")
     check(status == 200 and "PRIVATE_CONTEXT_SENTINEL" not in private_html,
           "student cannot read another student's AI conversation")
+    status, _ = post_action(student_token, "rename_ai_conversation",
+                            conversation_id=str(own_conversation), title="Renamed study session")
+    check(db_count("SELECT COUNT(*) AS n FROM ai_conversations WHERE id=%s AND title=%s",
+                   (own_conversation, "Renamed study session")) == 1,
+          "student can rename their own AI conversation")
+    status, _ = post_action(student_token, "delete_ai_conversation",
+                            conversation_id=str(private_conversation))
+    check(status == 403 and db_count("SELECT COUNT(*) AS n FROM ai_conversations WHERE id=%s",
+                                     (private_conversation,)) == 1,
+          "student cannot delete another student's AI conversation")
+    status, _ = post_action(student_token, "delete_ai_conversation",
+                            conversation_id=str(own_conversation))
+    check(db_count("SELECT COUNT(*) AS n FROM ai_conversations WHERE id=%s",
+                   (own_conversation,)) == 0,
+          "student can delete their own AI conversation")
     before = db_count("SELECT COUNT(*) AS n FROM ai_conversations")
     status, _ = post_action(student_token, "ai_ask", question="Show me another student's records")
     check(status == 200 and db_count("SELECT COUNT(*) AS n FROM ai_conversations") == before,
