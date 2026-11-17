@@ -6,12 +6,23 @@ if (!defined('STUDENTLIFE_BOOTSTRAPPED')) {
     exit('Not found.');
 }
 
-/** Provider settings are read only from the host environment, never from browser input or the database. */
+/** Provider settings come from the host environment or a protected PHP file outside the web root. */
 function sl_ai_provider_config(): array
 {
-    $endpoint = trim((string)(getenv('STUDENTLIFE_AI_ENDPOINT') ?: ''));
-    $apiKey = trim((string)(getenv('STUDENTLIFE_AI_API_KEY') ?: ''));
-    $model = trim((string)(getenv('STUDENTLIFE_AI_MODEL') ?: ''));
+    $settings = [];
+    $configFile = dirname(__DIR__).'/studentlife-ai-secrets.php';
+    if (is_file($configFile) && is_readable($configFile)) {
+        try {
+            $loaded = require $configFile;
+            if (is_array($loaded)) $settings = $loaded;
+        } catch (Throwable $e) {
+            $settings = [];
+        }
+    }
+
+    $endpoint = trim((string)(getenv('STUDENTLIFE_AI_ENDPOINT') ?: ($settings['endpoint'] ?? '')));
+    $apiKey = trim((string)(getenv('STUDENTLIFE_AI_API_KEY') ?: ($settings['api_key'] ?? '')));
+    $model = trim((string)(getenv('STUDENTLIFE_AI_MODEL') ?: ($settings['model'] ?? '')));
     $validEndpoint = $endpoint !== '' && filter_var($endpoint, FILTER_VALIDATE_URL)
         && strtolower((string)parse_url($endpoint, PHP_URL_SCHEME)) === 'https';
     return ['endpoint' => $validEndpoint ? $endpoint : '', 'api_key' => $apiKey, 'model' => $model];
