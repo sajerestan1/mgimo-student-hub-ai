@@ -34,7 +34,7 @@ def request(path="/", data=None):
 def csrf_token():
     status, html = request("/?page=login")
     check(status == 200, "sign-in page loads")
-    match = re.search(r"""name=["']csrf["']\\s+value=["']([^"']+)""", html)
+    match = re.search(r"""name=["']csrf["']\s+value=["']([^"']+)""", html)
     if not match:
         raise AssertionError("CSRF token was not found on the sign-in page")
     return match.group(1)
@@ -115,7 +115,7 @@ def main():
                             name="Forbidden Department", code="NOPE")
     check(status == 403, "student is blocked from administrator academic actions")
 
-    print(f"\\n{passed} automated acceptance checks passed.")
+    print(f"\n{passed} automated acceptance checks passed.")
     return 0
 
 if __name__ == "__main__":
