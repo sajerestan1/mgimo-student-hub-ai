@@ -35,7 +35,10 @@ export default function AttendancePage() {
   if (failed) return <p className="card-surface px-5 py-6 text-[15px] text-critical">{t('student.attendance.error')}</p>;
   if (!context) return <div className="h-64 animate-pulse rounded-xl bg-white" />;
 
-  const { overall, held, byCourse } = context.attendance;
+  const attendance = context.attendance || {};
+  const overall = attendance.overall ?? 0;
+  const held = Number(attendance.held) || 0;
+  const byCourse = Array.isArray(attendance.byCourse) ? attendance.byCourse : [];
   const recorded = byCourse.filter((course) => course.total > 0);
 
   if (!context.linked || !held) {
