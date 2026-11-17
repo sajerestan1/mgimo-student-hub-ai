@@ -81,3 +81,21 @@ Test code:
 - `.github/workflows/deploy-academic-staging.yml`
 
 These checks run only against the temporary CI database. They do not create, modify or delete records in the live StudentLife database. A successful CI run is not a substitute for the first live cPanel smoke test.
+
+
+## Phase 2C — Class scheduling, timetables and attendance
+
+Implemented in the standalone PHP/MySQL application:
+- `class_sessions` stores dated class sessions linked to course offerings, including start/end times, room, topic and creator.
+- `attendance_records` stores one attendance status per student per session, with a unique session/student key and the staff member who recorded it.
+- Administrators can create a one-off session or a weekly recurring series from Academic Management. Recurring creation is capped at 60 sessions per submission.
+- Students see sessions for course offerings in which they are actively enrolled.
+- Lecturers see sessions assigned to them and can mark enrolled students Present, Absent or Late. Attendance updates are recorded against the lecturer account.
+- Administrators can view the institutional attendance register; lecturers see records for their assigned offerings; students see only their own attendance records.
+- Attendance entry is staff-only. Student self-check-in is not enabled.
+- Existing personal timetable events remain unchanged and separate from institutional class sessions.
+
+The schema upgrades are additive and create the two new tables if absent. The feature does not migrate or delete existing personal events, grades, courses or tasks.
+
+### Phase 2C verification scope
+The CI acceptance suite now covers recurring weekly session creation, lecturer timetable access, lecturer attendance marking, student timetable visibility, student-only attendance reports and student restrictions on attendance actions. Live cPanel verification is still required after the gated Academic staging deployment.
