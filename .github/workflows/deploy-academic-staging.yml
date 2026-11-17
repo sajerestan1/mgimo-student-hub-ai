@@ -2,10 +2,22 @@ name: Publish StudentLife PHP to Academic staging
 
 on:
   push:
+    branches: [main, develop, "codex/studentlife-preview"]
+    paths:
+      - "public/index.php"
+      - "public/install.php"
+      - "public/.htaccess"
+      - ".github/deploy/**"
+      - "tests/studentlife/**"
+      - "docs/ADMIN_PHASE_1.md"
+      - ".github/workflows/deploy-academic-staging.yml"
+  pull_request:
     branches: [main]
     paths:
       - "public/index.php"
       - "public/install.php"
+      - "public/.htaccess"
+      - ".github/deploy/**"
       - "tests/studentlife/**"
       - "docs/ADMIN_PHASE_1.md"
       - ".github/workflows/deploy-academic-staging.yml"
@@ -89,6 +101,7 @@ jobs:
           if [ -f /tmp/studentlife-php.log ]; then cat /tmp/studentlife-php.log; else echo 'PHP server log was not created; inspect the earlier failing step.'; fi
 
   publish-php-staging:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: integration-tests
     runs-on: ubuntu-latest
     steps:
@@ -121,5 +134,51 @@ jobs:
           local-dir: academic-staging/
           server-dir: ./
           dangerous-clean-slate: false
-          security: loose
+          security: strict
+          log-level: standard
+
+  publish-php-preview:
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/codex/studentlife-preview'
+    needs: integration-tests
+    runs-on: ubuntu-latest
+    environment:
+      name: studentlife-preview
+      url: https://preview.studentlife.buildforge.com.ng/
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Prepare preview payload
+        run: |
+          mkdir -p studentlife-preview
+          mkdir -p .github/deploy
+          cp public/index.php public/install.php studentlife-preview/
+          cp public/.htaccess studentlife-preview/.htaccess
+          cat .github/deploy/preview-cpanel-php-config.htaccess >> studentlife-preview/.htaccess
+          test -s studentlife-preview/index.php
+          test -s studentlife-preview/.htaccess
+          test -s studentlife-preview/install.php
+
+      - name: Publish PHP app to the isolated preview document root
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: server2.globalhosting247.com
+          username: ${{ secrets.STUDENTLIFE_PREVIEW_FTP_USERNAME }}
+          password: ${{ secrets.STUDENTLIFE_PREVIEW_FTP_PASSWORD }}
+          port: 21
+          protocol: ftps
+          local-dir: studentlife-preview/
+          server-dir: ./
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.well-known/**
+            **/.user.ini
+            **/php.ini
+            **/config.php
+            **/.ftpquota
+            **/.ftp-deploy-sync-state.json
+          security: strict
           log-level: standard
