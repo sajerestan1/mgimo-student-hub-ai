@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+"""Black-box acceptance tests for the StudentLife PHP/MySQL application."""
+import http.cookiejar
+import os
+import re
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+
+BASE = os.environ.get("STUDENTLIFE_TEST_URL", "http://127.0.0.1:8080")
+PASSWORD = "TestPassword-2026!"
+COOKIE_JAR = http.cookiejar.CookieJar()
+OPENER = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(COOKIE_JAR))
+passed = 0
+
+def check(condition, message):
+    global passed
+    if not condition:
+        raise AssertionError(message)
+    passed += 1
+    print("PASS:", message)
+
+def request(path="/", data=None):
+    url = BASE + path
+    encoded = urllib.parse.urlencode(data).encode() if data is not None else None
+    req = urllib.request.Request(url, data=encoded)
+    try:
+        response = OPENER.open(req)
+        return response.status, response.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as error:
+        return error.code, error.read().decode("utf-8", "replace")
+
+def csrf_token():
+    status, html = request("/?page=login")
+    check(status == 200, "sign-in page loads")
+    match = re.search(r'name=["\\']csrf["\\']\\s+value=["\\']([^"\\']+)', html)
+    if not match:
+        match = re.search(r'value=["\\']([^"\\']+)["\\']\\s+name=["\\']csrf["\\']', html)
+    if not match:
+        raise AssertionError("CSRF token was not found on the sign-in page")
+    return match.group(1)
+
+def login(email, role):
+    token = csrf_token()
+    status, _ = request("/", {
+        "csrf": token, "action": "login", "email": email,
+        "password": PASSWORD, "role": role,
+    })
+    check(status in (200, 302), f"{role} account can authenticate")
+    return csrf_token()
+
+def post_action(token, action, **fields):
+    payload = {"csrf": token, "action": action}
+    payload.update(fields)
+    return request("/", payload)
+
+def main():
+    token = login("admin@studentlife.test", "administrator")
+    status, html = request("/?page=academic")
+    check(status == 200, "administrator can open Academic Management")
+    check("Create Department" in html and "Create Academic Term" in html,
+          "academic management controls render")
+
+    post_action(token, "create_department", name="CI Test Department", code="CIT")
+    status, html = request("/?page=academic")
+    check("CI Test Department" in html, "department creation persists and appears")
+
+    post_action(token, "create_term", name="CI Test Term", starts_on="2026-09-01", ends_on="2026-12-20")
+    status, html = request("/?page=academic")
+    check("CI Test Term" in html, "academic term creation persists and appears")
+
+    post_action(token, "create_academic_course", code="CIT101", title="Automated Test Course",
+                credits="3", department_id="1", description="CI acceptance test")
+    status, html = request("/?page=academic")
+    check("Automated Test Course" in html, "catalogue course creation persists and appears")
+
+    # A student account cannot be assigned as a lecturer.
+    post_action(token, "create_offering", course_id="1", term_id="1", lecturer_id="3",
+                section_code="BAD", capacity="5")
+    status, html = request("/?page=academic")
+    check("BAD" not in html, "non-lecturer assignment is rejected")
+
+    post_action(token, "create_offering", course_id="1", term_id="1", lecturer_id="2",
+                section_code="A", capacity="1")
+    status, html = request("/?page=academic")
+    check("CIT101" in html and "A" in html, "course section creation with active lecturer succeeds")
+
+    post_action(token, "create_academic_course", code="CIT999", title="Invalid Credits",
+                credits="99", department_id="1")
+    status, html = request("/?page=academic")
+    check("Invalid Credits" not in html, "course credits outside 1–30 are rejected")
+
+    post_action(token, "enrol_student", offering_id="1", student_id="3")
+    status, html = request("/?page=academic")
+    check("1 / 1" in html or "1/1" in html or "CI Student One" in html,
+          "first student enrolment is accepted")
+
+    post_action(token, "enrol_student", offering_id="1", student_id="3")
+    status, html = request("/?page=academic")
+    check("1 / 1" in html or "1/1" in html, "duplicate enrolment does not increase enrolment count")
+
+    post_action(token, "enrol_student", offering_id="1", student_id="4")
+    status, html = request("/?page=academic")
+    check("1 / 1" in html or "1/1" in html, "section capacity prevents a second enrolment")
+
+    # Log out and prove a student cannot submit administrator academic actions.
+    request("/?logout=1")
+    student_token = login("student1@studentlife.test", "student")
+    status, _ = post_action(student_token, "create_department", name="Forbidden Department", code="NOPE")
+    check(status == 403, "student is blocked from administrator academic actions")
+
+    print(f"\\n{passed} automated acceptance checks passed.")
+    return 0
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except Exception as exc:
+        print("FAIL:", exc, file=sys.stderr)
+        sys.exit(1)
