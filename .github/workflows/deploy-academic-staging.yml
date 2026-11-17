@@ -1,0 +1,48 @@
+name: Publish StudentLife PHP to Academic staging
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "public/index.php"
+      - ".github/workflows/deploy-academic-staging.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish-php-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate PHP entry point
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+
+      - name: Check PHP syntax
+        run: php -l public/index.php
+
+      - name: Prepare staging payload
+        run: |
+          mkdir -p academic-staging
+          cp public/index.php academic-staging/index.php
+          test -s academic-staging/index.php
+
+      - name: Publish only index.php to Academic homepage
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          protocol: ftps
+          local-dir: academic-staging/
+          server-dir: ./
+          dangerous-clean-slate: false
+          security: loose
+          log-level: standard
