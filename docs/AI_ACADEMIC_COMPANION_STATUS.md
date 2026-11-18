@@ -37,18 +37,18 @@ Feature branch: `codex/ai-academic-companion`
 - Exam dates and institution grading rules are not present in the AI context. The assistant must not invent them or calculate an official GPA.
 - Existing quiz scaffolds generate local reflection prompts. AI-generated mock exams and saved practice results are not implemented. Practice marks must not be written as official grades.
 - AI mode selection does not create new role permissions. Student, lecturer, and administrator data retrieval remains governed by the existing backend scope.
-- No production deployment is included. Feature branch changes are not automatically uploaded to the preview or production host.
+- Feature branches run CI only. Merging into `codex/studentlife-preview` triggers the isolated preview deployment; Academic staging and production remain separate.
 
 ## Automated verification
 
 The existing MariaDB integration suite covers AI mode persistence, conversation rename/delete ownership, confirmed task creation, rejection of a task for an un-enrolled course, private text upload outside the web root, document deletion ownership, and separation between the two CI student accounts.
 
-Status: GitHub Actions run 87 completed successfully on 2026-11-17. PHP syntax, Python test syntax, disposable MariaDB setup, and the academic acceptance suite passed. The tests use fictional `studentlife.test` accounts and do not contact the configured external AI provider.
+Status: GitHub Actions run 88 completed successfully on 2026-11-17. PHP syntax, Python test syntax, disposable MariaDB setup, and the academic acceptance suite passed. The tests use fictional `studentlife.test` accounts and do not contact the configured external AI provider.
 
 ## Deployment and remaining work
 
 - Branch isolation: `codex/ai-academic-companion`, based on the preview branch.
-- Preview status: not deployed from this feature branch.
-- Production status: untouched.
-- After CI passes, the feature can be reviewed and merged to `codex/studentlife-preview` for the existing isolated preview workflow. Live preview login, provider behavior, and a 360px mobile review still need to be checked after deployment.
+- Preview status: deployed from commit `8cc5d882c20ca549e28c649819a76d738fca86d5`. GitHub Actions run 89 passed the MariaDB acceptance suite and the preview upload step.
+- Production status: untouched. The Academic staging job was skipped.
+- The preview login page loaded after deployment. The previously signed-in browser session had expired, so the updated AI page, a new live provider request, Stanley/Patience account separation, and the 360px layout still need a fresh signed-in browser check.
 - Document analysis, saved mock-exam results, complete language localization, and application status integration remain future work because the PHP database and routes do not currently support them.
