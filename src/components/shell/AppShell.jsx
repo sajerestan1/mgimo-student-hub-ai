@@ -82,7 +82,7 @@ export default function AppShell() {
   };
   const outstanding = missingProfileFields(profile).filter((item) => item.owner === 'self');
 
-  if (outstanding.length && pathname !== '/complete-profile') {
+  if (import.meta.env.VITE_DEMO_MODE !== 'true' && outstanding.length && pathname !== '/complete-profile') {
     return <Navigate to="/complete-profile" replace />;
   }
 
