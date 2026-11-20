@@ -1,0 +1,84 @@
+name: Deploy StudentLife demo preview
+
+on:
+  push:
+    branches: [codex/studentlife-preview]
+    paths:
+      - ".github/workflows/deploy-demo-preview.yml"
+      - "src/**"
+      - "public/**"
+      - "index.html"
+      - "package.json"
+      - "package-lock.json"
+      - "vite.config.js"
+      - ".env.demo"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy-demo:
+    runs-on: ubuntu-latest
+    environment:
+      name: studentlife-preview
+      url: https://preview.studentlife.buildforge.com.ng/
+    steps:
+      - name: Check out preview branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build standalone demo app
+        run: npm run build:demo
+
+      - name: Prepare SPA routing and protect PHP config
+        run: |
+          cat > dist/.htaccess <<'HTACCESS'
+          DirectoryIndex index.html index.php
+          Options -Indexes
+          <Files "config.php">
+            <IfModule mod_authz_core.c>
+              Require all denied
+            </IfModule>
+            <IfModule !mod_authz_core.c>
+              Order allow,deny
+              Deny from all
+            </IfModule>
+          </Files>
+          <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteCond %{REQUEST_FILENAME} !-f
+            RewriteCond %{REQUEST_FILENAME} !-d
+            RewriteRule ^ index.html [L]
+          </IfModule>
+          HTACCESS
+          cat .github/deploy/preview-cpanel-php-config.htaccess >> dist/.htaccess
+          test -s dist/index.html
+          test -s dist/.htaccess
+
+      - name: Deploy standalone demo to the preview document root
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: server2.globalhosting247.com
+          username: ${{ secrets.STUDENTLIFE_PREVIEW_FTP_USERNAME }}
+          password: ${{ secrets.STUDENTLIFE_PREVIEW_FTP_PASSWORD }}
+          port: 21
+          protocol: ftps
+          local-dir: dist/
+          server-dir: ./
+          dangerous-clean-slate: false
+          exclude: |
+            **/config.php
+            **/.ftp-deploy-sync-state.json
+            **/.user.ini
+            **/php.ini
+          security: strict
+          log-level: standard
