@@ -1,2 +1,0 @@
-FTP_PATH=/
-  index.php=True; index.html=True; .htaccess=True
