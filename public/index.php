@@ -1017,6 +1017,8 @@ body{min-width:320px}
  .side nav{margin-inline:-9px;padding-inline:9px}
  .nav{font-size:11px;padding:9px 10px}
  .content{padding-inline:10px}
+ .form input,.form select,.form textarea{min-height:44px}
+ .student-action-list a{min-height:46px;gap:12px}
  .hero{padding:15px 13px}
  .dashboard-top-grid .stat-card{padding-inline:9px}
  .admin-summary-grid{gap:7px}
