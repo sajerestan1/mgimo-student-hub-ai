@@ -1357,6 +1357,8 @@ body{min-width:320px}
  .phone-search button{min-width:52px;padding-inline:7px}
  .phone-language{width:48px;height:36px}
  .content{padding:8px 8px calc(16px + env(safe-area-inset-bottom));overflow-x:clip}
+ .academic-admin-forms{grid-template-columns:minmax(0,1fr)!important}
+ .form[style*="grid-template-columns"]{grid-template-columns:minmax(0,1fr)!important}
  .hero{margin-bottom:8px;padding:12px}
  .hero h1{font-size:21px}
  .hero p{margin-bottom:0;font-size:12px}
