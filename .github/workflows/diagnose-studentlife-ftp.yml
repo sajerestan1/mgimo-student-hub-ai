@@ -7,12 +7,15 @@ on:
       - ".github/workflows/diagnose-studentlife-ftp.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Inspect FTP starting directory
         env:
           FTP_PASSWORD: ${{ secrets.STUDENTLIFE_PROD_FTP_PASSWORD }}
@@ -21,6 +24,7 @@ jobs:
           from ftplib import FTP_TLS
           import os
 
+          report = []
           ftp = FTP_TLS(timeout=20)
           ftp.connect("server2.globalhosting247.com", 21)
           ftp.login("studentlife@buildforge.com.ng", os.environ["FTP_PASSWORD"])
@@ -31,8 +35,8 @@ jobs:
                   ftp.cwd(path)
                   here = ftp.pwd()
                   names = set(ftp.nlst())
-                  print(f"FTP_PATH={here}")
-                  print(f"  index.php={'index.php' in names}; index.html={'index.html' in names}; .htaccess={'.htaccess' in names}")
+                  report.append(f"FTP_PATH={here}")
+                  report.append(f"  index.php={'index.php' in names}; index.html={'index.html' in names}; .htaccess={'.htaccess' in names}")
                   if depth < 3:
                       dirs = []
                       for name in sorted(names):
@@ -51,8 +55,17 @@ jobs:
                           if any(term in name.lower() for term in ("studentlife", "buildforge", "public_html", "www", "htdocs")):
                               inspect(name, depth + 1)
               except Exception as error:
-                  print(f"Could not inspect {path}: {type(error).__name__}")
+                  report.append(f"Could not inspect {path}: {type(error).__name__}")
 
           inspect(".")
           ftp.quit()
+          with open("ftp-root-report.txt", "w", encoding="utf-8") as output:
+              output.write("\n".join(report) + "\n")
           PY
+      - name: Save the non-secret FTP path report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ftp-root-report.txt
+          git commit -m "Record StudentLife FTP root diagnosis"
+          git push
