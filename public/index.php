@@ -1619,8 +1619,30 @@ body{min-width:320px}
 }
 @media(max-width:380px) and (min-height:700px){
  body.login-page .login-shell{grid-template-rows:56px minmax(0,1fr)!important}
- body.login-page .login-panel{padding-inline:7px!important}
- body.login-page .login-card{padding:9px 10px!important}
+ body.login-page .login-panel{
+  align-items:center!important;justify-content:center!important;gap:7px!important;
+  padding:10px 7px!important;overflow:hidden!important
+ }
+ body.login-page .login-card{
+  flex:0 1 auto!important;height:auto!important;max-height:100%;padding:14px 12px!important
+ }
+ body.login-page .login-heading{margin:0 0 8px!important}
+ body.login-page .login-heading .eyebrow{font-size:9px!important;letter-spacing:1.2px!important}
+ body.login-page .login-heading h1{font-size:25px!important;line-height:1.15!important}
+ body.login-page .login-heading p{font-size:11px!important;line-height:1.3!important}
+ body.login-page .login-form{
+  flex:0 0 auto!important;justify-content:flex-start!important;gap:9px!important
+ }
+ body.login-page .role-fieldset legend{font-size:11px!important}
+ body.login-page .role-option{min-height:54px!important}
+ body.login-page .role-option b{font-size:9px!important}
+ body.login-page .login-label{font-size:11px!important}
+ body.login-page .login-input{height:42px!important;min-height:42px!important}
+ body.login-page .login-options{font-size:10px!important}
+ body.login-page .remember-option{font-size:10px!important}
+ body.login-page .forgot-note{font-size:9px!important}
+ body.login-page .login-submit{height:42px!important;min-height:42px!important;font-size:13px!important}
+ body.login-page .login-language{flex:0 0 auto!important;margin:0 auto!important;font-size:10px!important}
 }
 </style></head><body class="<?=$user?'app-page':'login-page'?>">
 <?php if(!$user):?><div class="login-shell"><section class="login-visual"><div class="visual-brand"><div class="visual-cap">⌂</div><div class="visual-name">StudentLife</div><div class="visual-subtitle">ACADEMIC COMPANION</div><div class="gold-rule"></div><p>Your all-in-one academic space for learning, teaching and academic management.</p></div><div class="visual-footer">Learn · Teach · Achieve</div></section><section class="login-panel"><div class="login-card"><div class="login-heading"><div class="eyebrow">YOUR ACADEMIC SPACE</div><h1>Sign In</h1><p>Sign in to continue to your workspace.</p></div><?php if($err):?><div class="notice"><?=h($err)?></div><?php endif;?><form method="post" class="login-form"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="login"><fieldset class="role-fieldset"><legend>Access as</legend><div class="role-options"><label class="role-option"><input type="radio" name="role" value="student" checked><span class="role-icon">♙</span><b>Student</b></label><label class="role-option"><input type="radio" name="role" value="lecturer"><span class="role-icon">▤</span><b>Lecturer / Professor</b></label><label class="role-option"><input type="radio" name="role" value="administrator"><span class="role-icon">⚙</span><b>Administrator</b></label></div></fieldset><label class="login-label">Email address<div class="login-input"><span>✉</span><input name="email" type="email" placeholder="Enter your email address" required autocomplete="username"></div></label><label class="login-label">Password<div class="login-input"><span>▣</span><input id="login-password" name="password" type="password" placeholder="Enter your password" required autocomplete="current-password"><button class="password-toggle" type="button" aria-label="Show password" onclick="const p=document.getElementById('login-password');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'Show':'Hide'">Show</button></div></label><div class="login-options"><label class="remember-option"><input type="checkbox" name="remember" value="1"> Remember me</label><span class="forgot-note">Forgot password? Contact your administrator.</span></div><button class="login-submit" type="submit">Sign In <span>→</span></button></form><div class="login-security"><span>▣</span> Secure access to your academic workspace</div></div><div class="login-language"><span>Language</span><a href="?lang=en">English</a><span>·</span><a href="?lang=ru">Русский</a></div></section></div>
