@@ -1038,7 +1038,7 @@ body{min-width:320px}
 /* Keep the sign-in form in view on mobile, even when the viewport is short. */
 @media(max-width:720px){
  body:has(.login-shell){overflow:hidden}
- .login-shell{height:100vh;height:100svh;height:100dvh;min-height:0;grid-template-rows:clamp(132px,19svh,160px) minmax(0,1fr)}
+ .login-shell{height:100vh;height:100svh;height:100dvh;min-height:0;grid-template-columns:minmax(0,1fr);grid-template-rows:clamp(132px,19svh,160px) minmax(0,1fr)}
  .login-visual{height:auto;min-height:0}
  .login-panel{height:auto;min-height:0;padding:12px 10px max(12px,env(safe-area-inset-bottom));justify-content:flex-start;overflow-y:auto;overscroll-behavior:contain}
  .login-card{flex:0 0 auto;width:min(540px,100%);margin:0}
