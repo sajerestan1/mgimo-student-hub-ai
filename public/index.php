@@ -1462,6 +1462,106 @@ body{min-width:320px}
  body.login-page .login-form{flex:1 1 auto;display:flex;flex-direction:column;justify-content:space-evenly;gap:0}
  body.login-page .login-language{flex:0 0 auto;margin:2px auto 0}
 }
+/* Rebuilt authenticated phone shell: one 360px-wide app viewport, one contained content scroller */
+@media(max-width:680px){
+ html,body.app-page{
+  width:100%;
+  height:100%;
+  margin:0;
+  overflow:hidden!important;
+  overscroll-behavior:none;
+ }
+ body.app-page{
+  position:fixed;
+  inset:0;
+  height:100vh;
+  height:100svh;
+  height:100dvh;
+  min-height:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:auto minmax(0,1fr);
+ }
+ body.app-page>.phone-header{
+  grid-column:1;
+  grid-row:1;
+  position:relative;
+  top:auto;
+  z-index:1000;
+  width:100%;
+  min-width:0;
+ }
+ body.app-page>.phone-backdrop:not([hidden]){
+  position:fixed;
+  inset:0;
+  z-index:1001;
+ }
+ body.app-page>.layout{
+  grid-column:1;
+  grid-row:2;
+  display:block;
+  position:relative;
+  width:100%;
+  height:100%;
+  min-height:0;
+  overflow:hidden;
+ }
+ body.app-page>.layout>.main{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+ }
+ body.app-page>.layout>.main>.top{display:none!important}
+ body.app-page>.layout>.main>.content{
+  flex:1 1 auto;
+  width:100%;
+  height:0;
+  min-width:0;
+  min-height:0;
+  max-height:100%;
+  margin:0;
+  padding:10px 9px calc(14px + env(safe-area-inset-bottom));
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+ }
+ body.app-page .side{
+  position:fixed;
+  z-index:1002;
+  height:100vh;
+  height:100svh;
+  height:100dvh;
+ }
+ body.app-page .phone-header,
+ body.app-page .phone-tools,
+ body.app-page .phone-search,
+ body.app-page .content,
+ body.app-page .content>*{
+  min-width:0;
+  max-width:100%;
+ }
+ body.app-page .content .grid,
+ body.app-page .content .dashboard-columns,
+ body.app-page .content .lower-columns,
+ body.app-page .content .student-page-grid{
+  grid-template-columns:minmax(0,1fr)!important;
+ }
+}
+@media(max-width:380px) and (min-height:760px){
+ body.app-page>.phone-header{padding:calc(4px + env(safe-area-inset-top)) 8px 5px}
+ body.app-page .phone-bar{min-height:36px}
+ body.app-page .phone-tools{grid-template-columns:minmax(0,1fr) 48px;gap:5px;margin-top:4px}
+ body.app-page .phone-search{height:36px}
+ body.app-page .phone-search input{height:34px}
+ body.app-page .phone-search button{min-width:50px;padding-inline:7px}
+ body.app-page .phone-language{width:48px;height:36px}
+ body.app-page>.layout>.main>.content{padding:8px 8px calc(12px + env(safe-area-inset-bottom))}
+}
 </style></head><body class="<?=$user?'app-page':'login-page'?>">
 <?php if(!$user):?><div class="login-shell"><section class="login-visual"><div class="visual-brand"><div class="visual-cap">⌂</div><div class="visual-name">StudentLife</div><div class="visual-subtitle">ACADEMIC COMPANION</div><div class="gold-rule"></div><p>Your all-in-one academic space for learning, teaching and academic management.</p></div><div class="visual-footer">Learn · Teach · Achieve</div></section><section class="login-panel"><div class="login-card"><div class="login-heading"><div class="eyebrow">YOUR ACADEMIC SPACE</div><h1>Sign In</h1><p>Sign in to continue to your workspace.</p></div><?php if($err):?><div class="notice"><?=h($err)?></div><?php endif;?><form method="post" class="login-form"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="login"><fieldset class="role-fieldset"><legend>Access as</legend><div class="role-options"><label class="role-option"><input type="radio" name="role" value="student" checked><span class="role-icon">♙</span><b>Student</b></label><label class="role-option"><input type="radio" name="role" value="lecturer"><span class="role-icon">▤</span><b>Lecturer / Professor</b></label><label class="role-option"><input type="radio" name="role" value="administrator"><span class="role-icon">⚙</span><b>Administrator</b></label></div></fieldset><label class="login-label">Email address<div class="login-input"><span>✉</span><input name="email" type="email" placeholder="Enter your email address" required autocomplete="username"></div></label><label class="login-label">Password<div class="login-input"><span>▣</span><input id="login-password" name="password" type="password" placeholder="Enter your password" required autocomplete="current-password"><button class="password-toggle" type="button" aria-label="Show password" onclick="const p=document.getElementById('login-password');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'Show':'Hide'">Show</button></div></label><div class="login-options"><label class="remember-option"><input type="checkbox" name="remember" value="1"> Remember me</label><span class="forgot-note">Forgot password? Contact your administrator.</span></div><button class="login-submit" type="submit">Sign In <span>→</span></button></form><div class="login-security"><span>▣</span> Secure access to your academic workspace</div></div><div class="login-language"><span>Language</span><a href="?lang=en">English</a><span>·</span><a href="?lang=ru">Русский</a></div></section></div>
 <?php else:?><header class="phone-header"><div class="phone-bar"><a class="phone-brand" href="?page=dashboard"><b><?=h($appName)?></b><small><?=h(['users'=>'User & Role Management','academic'=>'Academic Management','announcements'=>'Announcements','documents'=>'Documents & Resources','reports'=>'Attendance Reports','analytics'=>'Reports & Analytics','settings'=>'System Settings','tasks'=>'Assignments & Tasks','courses'=>'My Courses','teaching_courses'=>'My Courses','grades'=>'Grades & Transcript','timetable'=>'Timetable','profile'=>'Profile & Settings','progress'=>'Academic Progress','quizzes'=>'Quizzes & Exams','intelligence'=>'Academic Intelligence','integrity'=>'Academic Integrity','applications'=>'Applications & Certificates','library'=>'Library','study_groups'=>'Study Groups','notifications'=>'Notifications','companion'=>'Study Companion','recommendations'=>'Study Recommendations','inbox'=>'Inbox','risk_radar'=>'Academic Risk Radar','ai_study'=>'AI Study Companion','ai_teaching'=>'AI Teaching Assistant','dashboard'=>'Dashboard'][$page]??ucfirst($page))?></small></a><button class="phone-menu-trigger" type="button" aria-expanded="false" aria-controls="phone-navigation"><span aria-hidden="true">☰</span> Menu</button></div><div class="phone-tools"><form class="phone-search" method="get" action=""><input type="hidden" name="page" value="search"><input type="search" name="q" value="<?=h($_GET['q']??'')?>" placeholder="Search courses, tasks…" aria-label="Search StudentLife"><button type="submit">Search</button></form><select class="phone-language" aria-label="Choose language" onchange="window.location.href='?page=<?=h($page)?>&lang='+this.value"><option value="en" <?=$language==='en'?'selected':''?>>EN</option><option value="ru" <?=$language==='ru'?'selected':''?>>RU</option></select></div></header><button class="phone-backdrop" type="button" aria-label="Close navigation menu" hidden></button><div class="layout"><aside class="side" id="phone-drawer"><div class="brand"><div class="logo">S</div><div><b><?=h($appName)?></b><small>ACADEMIC COMPANION</small></div><button class="phone-drawer-close" type="button" aria-label="Close navigation menu">×</button></div><?php if($isAdmin):?><div class="caption">ADMINISTRATION</div><nav id="phone-navigation"><?=nav('dashboard','Dashboard','⌂',$page)?><?=nav('users','User & Role Management','♙',$page)?><?=nav('profile','My Profile & Password','♙',$page)?><div class="nav-group-label">ACADEMIC MANAGEMENT</div><?=nav('academic','Academic Management','▦',$page)?><?=nav('reports','Attendance Reports','↗',$page)?><?=nav('risk_radar','Academic Risk Radar','◈',$page)?><div class="nav-group-label">COMMUNICATION & RESOURCES</div><?=nav('inbox','Inbox','✉',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('documents','Documents','▣',$page)?><div class="nav-group-label">INSIGHTS & CONTROL</div><?=nav('analytics','Reports & Analytics','↗',$page)?><?=nav('settings','System Settings','⚙',$page)?></nav><?php else:?><div class="caption"><?=($user['role']??'')==='lecturer'?'LECTURER WORKSPACE':'YOUR WORKSPACE'?></div><nav id="phone-navigation"><?=nav('dashboard','Dashboard','⌂',$page)?><?php if(($user['role']??'')==='lecturer'):?><div class="nav-group-label">TEACHING</div><?=nav('profile','My Profile','♙',$page)?><?=nav('teaching_courses','My Courses','▱',$page)?><?=nav('ai_teaching','AI Teaching Assistant','✦',$page)?><?=nav('tasks','Assignments & Tasks','✓',$page)?><?=nav('timetable','Teaching Timetable','▦',$page)?><?=nav('reports','Attendance Reports','↗',$page)?><div class="nav-group-label">RESOURCES & SETTINGS</div><?=nav('inbox','Inbox','✉',$page)?><?=nav('documents','Documents','▣',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('settings','Settings','⚙',$page)?><?php else:?><div class="nav-group-label">LEARNING</div><?=nav('courses','My Courses','▱',$page)?><?=nav('tasks','Assignments','✓',$page)?><?=nav('quizzes','Quizzes & Exams','▤',$page)?><?=nav('grades','Grades & Transcript','▥',$page)?><?=nav('timetable','Timetable','▦',$page)?><?=nav('reports','Attendance','↗',$page)?><?=nav('intelligence','Academic Intelligence','◈',$page)?><?=nav('integrity','Academic Integrity','◇',$page)?><div class="nav-group-label">CAMPUS & SUPPORT</div><?=nav('applications','Applications & Certificates','▧',$page)?><?=nav('library','Library','▣',$page)?><?=nav('study_groups','Study Groups','♧',$page)?><?=nav('notifications','Notifications','●',$page)?><?=nav('ai_study','AI Study Companion','✦',$page)?><?=nav('companion','Study Planner','◷',$page)?><?=nav('recommendations','Study Recommendations','↗',$page)?><div class="nav-group-label">COMMUNICATION</div><?=nav('inbox','Inbox','✉',$page)?><div class="nav-group-label">ACCOUNT</div><?=nav('profile','Profile & Settings','♙',$page)?><?=nav('documents','Documents & Resources','▣',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('settings','Settings','⚙',$page)?><?php endif;?></nav><?php endif;?><div class="foot">Signed in as<br><b><?=h($user['name'])?></b><br><a href="?logout=1">Sign out ↗</a></div></aside><main class="main"><header class="top"><div class="top-title"><small><?=$isAdmin?'ADMINISTRATOR WORKSPACE':(($user['role']??'')==='lecturer'?'LECTURER WORKSPACE':'STUDENT WORKSPACE')?></small><b><?=h(['users'=>'User & Role Management','academic'=>'Academic Management','announcements'=>'Announcements','documents'=>'Documents & Resources','reports'=>'Attendance Reports','analytics'=>'Reports & Analytics','settings'=>'System Settings','tasks'=>'Assignments & Tasks','courses'=>'My Courses','teaching_courses'=>'My Courses','grades'=>'Grades & Transcript','timetable'=>'Timetable','profile'=>'Profile & Settings','progress'=>'Academic Progress','quizzes'=>'Quizzes & Exams','intelligence'=>'Academic Intelligence','integrity'=>'Academic Integrity','applications'=>'Applications & Certificates','library'=>'Library','study_groups'=>'Study Groups','notifications'=>'Notifications','companion'=>'Study Companion','recommendations'=>'Study Recommendations','inbox'=>'Inbox','risk_radar'=>'Academic Risk Radar','ai_study'=>'AI Study Companion','ai_teaching'=>'AI Teaching Assistant'][$page]??ucfirst($page))?></b></div><div class="top-tools"><form class="top-search" method="get" action=""><input type="hidden" name="page" value="search"><input type="search" name="q" value="<?=h($_GET['q']??'')?>" placeholder="Search courses, assignments, tasks..." aria-label="Search StudentLife"><button class="btn search-btn" type="submit">Search</button></form><label class="language-control"><span>Language</span><select aria-label="Choose language" onchange="window.location.href='?page=<?=h($page)?>&lang='+this.value"><option value="en" <?=$language==='en'?'selected':''?>>English</option><option value="ru" <?=$language==='ru'?'selected':''?>>Русский</option></select></label><span class="muted top-user"><?=h($user['name'])?> · <?=date('D, M j')?></span></div></header><div class="content">
