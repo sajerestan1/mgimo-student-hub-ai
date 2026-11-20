@@ -1,0 +1,10 @@
+account_root=/
+path=studentlife.buildforge.com.ng; inaccessible=error_perm
+path=../studentlife.buildforge.com.ng; inaccessible=error_perm
+path=../../studentlife.buildforge.com.ng; inaccessible=error_perm
+path=../../../studentlife.buildforge.com.ng; inaccessible=error_perm
+path=/studentlife.buildforge.com.ng; inaccessible=error_perm
+path=/home/buildfor/studentlife.buildforge.com.ng; inaccessible=error_perm
+path=..; resolved=/; index.php=True; .htaccess=True
+path=../..; resolved=/; index.php=True; .htaccess=True
+path=../../..; resolved=/; index.php=True; .htaccess=True
