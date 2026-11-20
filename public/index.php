@@ -1341,6 +1341,113 @@ body{min-width:320px}
  body.phone-menu-open{overflow:hidden}
  .phone-drawer-close{display:inline-flex;align-items:center;justify-content:center;flex:0 0 38px;width:38px;height:38px;margin-left:auto;border:1px solid #587293;border-radius:10px;background:#203d62;color:#fff;font:400 25px/1 system-ui,-apple-system,"Segoe UI",sans-serif}
 }
+
+/* Remove sideways movement and trim empty space on phone screens */
+@media(max-width:680px){
+ html,body{overflow-x:clip!important;overscroll-behavior-x:none}
+ .layout,.main,.content,.card,.section,.hero,.phone-header,.phone-tools,.phone-search,.ai-workspace{max-width:100%;min-width:0}
+ .phone-header{padding:4px 9px 6px}
+ .phone-bar{min-height:36px}
+ .phone-brand b{font-size:16px}
+ .phone-brand small{font-size:9px}
+ .phone-menu-trigger{min-height:36px}
+ .phone-tools{grid-template-columns:minmax(0,1fr) 48px;gap:5px;margin-top:5px}
+ .phone-search{height:36px}
+ .phone-search input{height:34px}
+ .phone-search button{min-width:52px;padding-inline:7px}
+ .phone-language{width:48px;height:36px}
+ .content{padding:8px 8px calc(16px + env(safe-area-inset-bottom));overflow-x:clip}
+ .academic-admin-forms{grid-template-columns:minmax(0,1fr)!important}
+ .form[style*="grid-template-columns"]{grid-template-columns:minmax(0,1fr)!important}
+ .hero{margin-bottom:8px;padding:12px}
+ .hero h1{font-size:21px}
+ .hero p{margin-bottom:0;font-size:12px}
+ .dashboard-top-grid{gap:6px}
+ .semester-card{min-height:76px;padding:11px}
+ .dashboard-top-grid .stat-card{min-height:72px;padding:32px 7px 7px}
+ .dashboard-top-grid .stat-icon{top:6px;left:7px;width:21px;height:21px}
+ .dashboard-top-grid .metric{font-size:18px}
+ .section{margin-top:8px}
+ .card,.feature-card,.student-page-grid .card{padding:10px}
+ .head{gap:6px}
+ .head h2{font-size:16px}
+ .table-wrap,.ai-table-wrap{width:100%;max-width:100%;overflow:visible!important}
+ .table,.ai-response-table,.ai-response-table tbody{display:block;width:100%;min-width:0;max-width:100%;overflow:visible;white-space:normal}
+ .table tr.mobile-table-head,.ai-response-table tr.mobile-table-head{position:absolute;display:block;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+ .table tr.mobile-table-data,.ai-response-table tr.mobile-table-data{display:grid;grid-template-columns:minmax(0,1fr);width:100%;min-width:0;max-width:100%;margin:6px 0;padding:5px 8px;overflow:hidden;border:1px solid #e6eaf0;border-radius:9px;background:#fff}
+ .table tr.mobile-table-data td,.ai-response-table tr.mobile-table-data td{display:flex;align-items:flex-start;justify-content:space-between;gap:7px;width:100%;min-width:0;max-width:100%;padding:6px 0;border-bottom:1px solid #edf0f4;font-size:11px;line-height:1.35;white-space:normal;text-align:right;overflow-wrap:anywhere;word-break:break-word}
+ .table tr.mobile-table-data td:last-child,.ai-response-table tr.mobile-table-data td:last-child{border-bottom:0}
+ .table tr.mobile-table-data td:before,.ai-response-table tr.mobile-table-data td:before{content:attr(data-label);flex:0 0 32%;max-width:38%;color:#71819a;font-size:9px;font-weight:650;text-align:left}
+ .table tr.mobile-table-data td>* ,.ai-response-table tr.mobile-table-data td>*{min-width:0;max-width:100%;overflow-wrap:anywhere}
+ .ai-response-table th,.ai-response-table td{min-width:0}
+ .ai-workspace{gap:8px}
+ .ai-chat,.ai-history{width:100%;max-width:100%}
+ .timetable-tools{margin:8px 0}
+ .timetable-tool-actions{gap:6px}
+ .timetable-tool-actions .btn{min-height:42px;padding:7px;font-size:11px}
+}
+@media(max-width:390px){
+ .phone-header{padding-inline:8px}
+ .content{padding-inline:7px}
+ .card,.feature-card,.student-page-grid .card{padding:9px}
+ .dashboard-top-grid{gap:5px}
+ .dashboard-top-grid .stat-card{padding-right:6px;padding-left:6px}
+ .table tr.mobile-table-data,.ai-response-table tr.mobile-table-data{padding-inline:7px}
+}
+
+/* Compact the sign-in screen so it fits a 360px portrait phone */
+@media(max-width:680px){
+ body:has(.login-shell){width:100%;height:100vh;height:100svh;height:100dvh;min-height:0;overflow:hidden}
+ .login-shell{display:grid;width:100%;max-width:100%;height:100vh;height:100svh;height:100dvh;min-height:0;grid-template-columns:minmax(0,1fr);grid-template-rows:62px minmax(0,1fr);overflow:hidden}
+ .login-visual{display:flex;align-items:center;justify-content:center;width:100%;height:62px;min-height:0;padding:0 12px;background:linear-gradient(110deg,#10284b,#173d6a)}
+ .visual-brand{max-width:100%;transform:none;text-align:center}
+ .visual-cap,.visual-subtitle,.gold-rule,.visual-brand p,.visual-footer{display:none}
+ .visual-name{font-size:21px;line-height:1;letter-spacing:-.5px}
+ .login-panel{display:flex;align-items:center;justify-content:center;width:100%;height:auto;min-width:0;min-height:0;padding:6px 9px max(6px,env(safe-area-inset-bottom));overflow:hidden}
+ .login-card{flex:0 1 auto;width:100%;max-width:440px;margin:0;padding:10px 12px;border-radius:14px;box-shadow:0 8px 24px #142b4d0d}
+ .login-heading{margin-bottom:6px}
+ .login-heading .eyebrow{font-size:8px;letter-spacing:1.1px}
+ .login-heading h1{margin:1px 0;font-size:21px;line-height:1.15}
+ .login-heading p{margin:3px 0 0;font-size:10px;line-height:1.25}
+ .login-form{gap:6px}
+ .role-fieldset legend{margin-bottom:4px;font-size:10px}
+ .role-options{gap:5px}
+ .role-option{min-height:54px;padding:4px 3px;gap:3px;border-radius:9px}
+ .role-icon{font-size:17px}
+ .role-option b{font-size:9px;line-height:1.12}
+ .login-label{gap:3px;font-size:10px;line-height:1.2}
+ .login-input{height:37px;min-height:37px;padding:0 9px;gap:6px}
+ .login-input>span{font-size:14px}
+ .login-input input{min-width:0;font-size:16px}
+ .password-toggle{padding-inline:4px;font-size:10px}
+ .login-options{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:9px;line-height:1.2}
+ .remember-option{font-size:9px;white-space:nowrap}
+ .forgot-note{font-size:8px;text-align:right}
+ .login-submit{height:39px;min-height:39px;font-size:12px}
+ .login-security{display:none}
+ .login-language{margin:4px auto 0;font-size:9px;line-height:1.2}
+}
+@media(max-width:380px){
+ .login-visual{height:56px}
+ .login-shell{grid-template-rows:56px minmax(0,1fr)}
+ .login-panel{padding-inline:7px}
+ .login-card{padding:9px 10px}
+ .role-option{min-height:50px}
+ .role-option b{font-size:8px}
+ .login-input{height:35px;min-height:35px}
+ .login-submit{height:37px;min-height:37px}
+}
+@media(max-width:680px) and (max-height:620px){
+ .login-shell{grid-template-rows:48px minmax(0,1fr)}
+ .login-visual{height:48px}
+ .login-visual .visual-name{font-size:19px}
+ .login-card{padding-block:7px}
+ .login-heading{margin-bottom:4px}
+ .login-form{gap:4px}
+ .role-option{min-height:46px}
+ .login-language{margin-top:3px}
+}
+
 </style></head><body>
 <?php if(!$user):?><div class="login-shell"><section class="login-visual"><div class="visual-brand"><div class="visual-cap">⌂</div><div class="visual-name">StudentLife</div><div class="visual-subtitle">ACADEMIC COMPANION</div><div class="gold-rule"></div><p>Your all-in-one academic space for learning, teaching and academic management.</p></div><div class="visual-footer">Learn · Teach · Achieve</div></section><section class="login-panel"><div class="login-card"><div class="login-heading"><div class="eyebrow">YOUR ACADEMIC SPACE</div><h1>Sign In</h1><p>Sign in to continue to your workspace.</p></div><?php if($err):?><div class="notice"><?=h($err)?></div><?php endif;?><form method="post" class="login-form"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="login"><fieldset class="role-fieldset"><legend>Access as</legend><div class="role-options"><label class="role-option"><input type="radio" name="role" value="student" checked><span class="role-icon">♙</span><b>Student</b></label><label class="role-option"><input type="radio" name="role" value="lecturer"><span class="role-icon">▤</span><b>Lecturer / Professor</b></label><label class="role-option"><input type="radio" name="role" value="administrator"><span class="role-icon">⚙</span><b>Administrator</b></label></div></fieldset><label class="login-label">Email address<div class="login-input"><span>✉</span><input name="email" type="email" placeholder="Enter your email address" required autocomplete="username"></div></label><label class="login-label">Password<div class="login-input"><span>▣</span><input id="login-password" name="password" type="password" placeholder="Enter your password" required autocomplete="current-password"><button class="password-toggle" type="button" aria-label="Show password" onclick="const p=document.getElementById('login-password');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'Show':'Hide'">Show</button></div></label><div class="login-options"><label class="remember-option"><input type="checkbox" name="remember" value="1"> Remember me</label><span class="forgot-note">Forgot password? Contact your administrator.</span></div><button class="login-submit" type="submit">Sign In <span>→</span></button></form><div class="login-security"><span>▣</span> Secure access to your academic workspace</div></div><div class="login-language"><span>Language</span><a href="?lang=en">English</a><span>·</span><a href="?lang=ru">Русский</a></div></section></div>
 <?php else:?><header class="phone-header"><div class="phone-bar"><a class="phone-brand" href="?page=dashboard"><b><?=h($appName)?></b><small><?=h(['users'=>'User & Role Management','academic'=>'Academic Management','announcements'=>'Announcements','documents'=>'Documents & Resources','reports'=>'Attendance Reports','analytics'=>'Reports & Analytics','settings'=>'System Settings','tasks'=>'Assignments & Tasks','courses'=>'My Courses','teaching_courses'=>'My Courses','grades'=>'Grades & Transcript','timetable'=>'Timetable','profile'=>'Profile & Settings','progress'=>'Academic Progress','quizzes'=>'Quizzes & Exams','intelligence'=>'Academic Intelligence','integrity'=>'Academic Integrity','applications'=>'Applications & Certificates','library'=>'Library','study_groups'=>'Study Groups','notifications'=>'Notifications','companion'=>'Study Companion','recommendations'=>'Study Recommendations','inbox'=>'Inbox','risk_radar'=>'Academic Risk Radar','ai_study'=>'AI Study Companion','ai_teaching'=>'AI Teaching Assistant','dashboard'=>'Dashboard'][$page]??ucfirst($page))?></small></a><button class="phone-menu-trigger" type="button" aria-expanded="false" aria-controls="phone-navigation"><span aria-hidden="true">☰</span> Menu</button></div><div class="phone-tools"><form class="phone-search" method="get" action=""><input type="hidden" name="page" value="search"><input type="search" name="q" value="<?=h($_GET['q']??'')?>" placeholder="Search courses, tasks…" aria-label="Search StudentLife"><button type="submit">Search</button></form><select class="phone-language" aria-label="Choose language" onchange="window.location.href='?page=<?=h($page)?>&lang='+this.value"><option value="en" <?=$language==='en'?'selected':''?>>EN</option><option value="ru" <?=$language==='ru'?'selected':''?>>RU</option></select></div></header><button class="phone-backdrop" type="button" aria-label="Close navigation menu" hidden></button><div class="layout"><aside class="side" id="phone-drawer"><div class="brand"><div class="logo">S</div><div><b><?=h($appName)?></b><small>ACADEMIC COMPANION</small></div><button class="phone-drawer-close" type="button" aria-label="Close navigation menu">×</button></div><?php if($isAdmin):?><div class="caption">ADMINISTRATION</div><nav id="phone-navigation"><?=nav('dashboard','Dashboard','⌂',$page)?><?=nav('users','User & Role Management','♙',$page)?><?=nav('profile','My Profile & Password','♙',$page)?><div class="nav-group-label">ACADEMIC MANAGEMENT</div><?=nav('academic','Academic Management','▦',$page)?><?=nav('reports','Attendance Reports','↗',$page)?><?=nav('risk_radar','Academic Risk Radar','◈',$page)?><div class="nav-group-label">COMMUNICATION & RESOURCES</div><?=nav('inbox','Inbox','✉',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('documents','Documents','▣',$page)?><div class="nav-group-label">INSIGHTS & CONTROL</div><?=nav('analytics','Reports & Analytics','↗',$page)?><?=nav('settings','System Settings','⚙',$page)?></nav><?php else:?><div class="caption"><?=($user['role']??'')==='lecturer'?'LECTURER WORKSPACE':'YOUR WORKSPACE'?></div><nav id="phone-navigation"><?=nav('dashboard','Dashboard','⌂',$page)?><?php if(($user['role']??'')==='lecturer'):?><div class="nav-group-label">TEACHING</div><?=nav('profile','My Profile','♙',$page)?><?=nav('teaching_courses','My Courses','▱',$page)?><?=nav('ai_teaching','AI Teaching Assistant','✦',$page)?><?=nav('tasks','Assignments & Tasks','✓',$page)?><?=nav('timetable','Teaching Timetable','▦',$page)?><?=nav('reports','Attendance Reports','↗',$page)?><div class="nav-group-label">RESOURCES & SETTINGS</div><?=nav('inbox','Inbox','✉',$page)?><?=nav('documents','Documents','▣',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('settings','Settings','⚙',$page)?><?php else:?><div class="nav-group-label">LEARNING</div><?=nav('courses','My Courses','▱',$page)?><?=nav('tasks','Assignments','✓',$page)?><?=nav('quizzes','Quizzes & Exams','▤',$page)?><?=nav('grades','Grades & Transcript','▥',$page)?><?=nav('timetable','Timetable','▦',$page)?><?=nav('reports','Attendance','↗',$page)?><?=nav('intelligence','Academic Intelligence','◈',$page)?><?=nav('integrity','Academic Integrity','◇',$page)?><div class="nav-group-label">CAMPUS & SUPPORT</div><?=nav('applications','Applications & Certificates','▧',$page)?><?=nav('library','Library','▣',$page)?><?=nav('study_groups','Study Groups','♧',$page)?><?=nav('notifications','Notifications','●',$page)?><?=nav('ai_study','AI Study Companion','✦',$page)?><?=nav('companion','Study Planner','◷',$page)?><?=nav('recommendations','Study Recommendations','↗',$page)?><div class="nav-group-label">COMMUNICATION</div><?=nav('inbox','Inbox','✉',$page)?><div class="nav-group-label">ACCOUNT</div><?=nav('profile','Profile & Settings','♙',$page)?><?=nav('documents','Documents & Resources','▣',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('settings','Settings','⚙',$page)?><?php endif;?></nav><?php endif;?><div class="foot">Signed in as<br><b><?=h($user['name'])?></b><br><a href="?logout=1">Sign out ↗</a></div></aside><main class="main"><header class="top"><div class="top-title"><small><?=$isAdmin?'ADMINISTRATOR WORKSPACE':(($user['role']??'')==='lecturer'?'LECTURER WORKSPACE':'STUDENT WORKSPACE')?></small><b><?=h(['users'=>'User & Role Management','academic'=>'Academic Management','announcements'=>'Announcements','documents'=>'Documents & Resources','reports'=>'Attendance Reports','analytics'=>'Reports & Analytics','settings'=>'System Settings','tasks'=>'Assignments & Tasks','courses'=>'My Courses','teaching_courses'=>'My Courses','grades'=>'Grades & Transcript','timetable'=>'Timetable','profile'=>'Profile & Settings','progress'=>'Academic Progress','quizzes'=>'Quizzes & Exams','intelligence'=>'Academic Intelligence','integrity'=>'Academic Integrity','applications'=>'Applications & Certificates','library'=>'Library','study_groups'=>'Study Groups','notifications'=>'Notifications','companion'=>'Study Companion','recommendations'=>'Study Recommendations','inbox'=>'Inbox','risk_radar'=>'Academic Risk Radar','ai_study'=>'AI Study Companion','ai_teaching'=>'AI Teaching Assistant'][$page]??ucfirst($page))?></b></div><div class="top-tools"><form class="top-search" method="get" action=""><input type="hidden" name="page" value="search"><input type="search" name="q" value="<?=h($_GET['q']??'')?>" placeholder="Search courses, assignments, tasks..." aria-label="Search StudentLife"><button class="btn search-btn" type="submit">Search</button></form><label class="language-control"><span>Language</span><select aria-label="Choose language" onchange="window.location.href='?page=<?=h($page)?>&lang='+this.value"><option value="en" <?=$language==='en'?'selected':''?>>English</option><option value="ru" <?=$language==='ru'?'selected':''?>>Русский</option></select></label><span class="muted top-user"><?=h($user['name'])?> · <?=date('D, M j')?></span></div></header><div class="content">
@@ -1582,7 +1689,7 @@ var phoneMenuTrigger=document.querySelector('.phone-menu-trigger');var phoneDraw
 function setPhoneMenu(open){if(!phoneMenuTrigger||!phoneDrawer||!phoneBackdrop)return;phoneDrawer.classList.toggle('mobile-nav-open',open);document.body.classList.toggle('phone-menu-open',open);phoneBackdrop.hidden=!open;phoneMenuTrigger.setAttribute('aria-expanded',open?'true':'false');if(open){var firstLink=phoneDrawer.querySelector('nav a');if(firstLink)firstLink.focus()}else phoneMenuTrigger.focus()}
 if(phoneMenuTrigger&&phoneDrawer&&phoneBackdrop){phoneMenuTrigger.addEventListener('click',function(){setPhoneMenu(phoneMenuTrigger.getAttribute('aria-expanded')!=='true')});if(phoneDrawerClose)phoneDrawerClose.addEventListener('click',function(){setPhoneMenu(false)});phoneBackdrop.addEventListener('click',function(){setPhoneMenu(false)});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&phoneMenuTrigger.getAttribute('aria-expanded')==='true')setPhoneMenu(false)});phoneDrawer.querySelectorAll('nav a').forEach(function(link){link.addEventListener('click',function(){phoneDrawer.classList.remove('mobile-nav-open');phoneBackdrop.hidden=true;document.body.classList.remove('phone-menu-open')})})}
 var mobileMenuButton=document.querySelector('.mobile-menu-toggle');var mobileSidebar=document.querySelector('.side');if(mobileMenuButton&&mobileSidebar){mobileSidebar.classList.add('mobile-nav-ready');mobileMenuButton.addEventListener('click',function(){var isOpen=mobileSidebar.classList.toggle('mobile-nav-open');mobileMenuButton.setAttribute('aria-expanded',isOpen?'true':'false');mobileMenuButton.querySelector('span:last-child').textContent=isOpen?'Close menu':'Menu';});}
-document.querySelectorAll('table.table').forEach(function(table){var header=table.querySelector('tr');if(!header)return;var labels=Array.from(header.querySelectorAll('th')).map(function(cell){return cell.textContent.trim()});if(!labels.length)return;header.classList.add('mobile-table-head');Array.from(table.querySelectorAll('tr')).slice(1).forEach(function(row){row.classList.add('mobile-table-data');Array.from(row.querySelectorAll('td')).forEach(function(cell,index){if(labels[index])cell.dataset.label=labels[index]})})});
+document.querySelectorAll('table.table,table.ai-response-table').forEach(function(table){var header=table.querySelector('tr');if(!header)return;var labels=Array.from(header.querySelectorAll('th')).map(function(cell){return cell.textContent.trim()});if(!labels.length)return;header.classList.add('mobile-table-head');Array.from(table.querySelectorAll('tr')).slice(1).forEach(function(row){row.classList.add('mobile-table-data');Array.from(row.querySelectorAll('td')).forEach(function(cell,index){if(labels[index])cell.dataset.label=labels[index]})})});
 document.querySelectorAll('.ai-copy-button').forEach(function(button){button.addEventListener('click',function(){var content=button.closest('.ai-bubble').querySelector('.ai-message-content');if(navigator.clipboard&&content){navigator.clipboard.writeText(content.innerText).then(function(){button.textContent='Copied';setTimeout(function(){button.textContent='Copy'},1500)}).catch(function(){button.textContent='Copy failed'})}});});
 document.querySelectorAll('.ai-quick-action').forEach(function(card){card.addEventListener('click',function(){var mode=document.getElementById('ai-mode'),question=document.getElementById('ai-question');if(mode)mode.value=card.dataset.mode||'general';if(question){question.value=card.dataset.prompt||'';question.focus();question.scrollIntoView({behavior:'smooth',block:'center'});}});});
 if('serviceWorker'in navigator){navigator.serviceWorker.register('/studentlife-sw.js',{scope:'/'}).catch(function(){})}
