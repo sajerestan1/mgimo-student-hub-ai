@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { loadStudentCourses, shortDate } from '@/lib/studentCourses';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
 import { useI18n } from '@/i18n/I18nProvider';
+import { DEMO_INSTITUTION } from '@/lib/demoInstitutionData';
 
 // A zero-course result is never reported as a generic empty page: each cause
 // has its own message so the reader knows whether to enrol, ask the office, or
@@ -36,10 +37,10 @@ export default function CoursesPage() {
           const portal = await (await import('@/lib/studentPortal')).loadStudentPortal();
           if (active) setData({
             student: context.student, courses,
-            modules: [{ id: 'mod-1', course_id: courses[0]?.id, title: 'Foundations & key concepts' }, { id: 'mod-2', course_id: courses[1]?.id, title: 'Applied analysis' }],
-            resources: [{ id: 'res-1', course_id: courses[0]?.id, title: portal.materials?.[0]?.title || 'Lecture notes', visible_to_students: true }],
+            modules: (portal.modules || []).map((module) => ({ id: module.id, course_id: module.courseId, title: module.title })),
+            resources: (portal.materials || []).map((resource) => ({ id: resource.id, course_id: resource.courseId, title: resource.title, visible_to_students: true })),
             assignments: (portal.assignments || []).map((a) => ({ id: a.id, course_id: courses.find(c => c.code === a.courseCode)?.id, title: a.title, due_date: a.dueDate, status: 'published' })),
-            professors: [{ id: 'prof-demo', full_name: 'Dr. Elena Petrova' }], reason: 'ok',
+            professors: DEMO_INSTITUTION.professors, reason: 'ok',
           });
           return;
         }
@@ -178,6 +179,11 @@ export default function CoursesPage() {
                   <p className="mt-1 text-[11.5px] text-mutedink">
                     {professor?.full_name || t('student.courses.card.instructor')}
                   </p>
+                  {professor?.email && (
+                    <a className="mt-0.5 block text-[11px] text-brand hover:underline" href={`mailto:${professor.email}`}>
+                      {professor.email}
+                    </a>
+                  )}
                 </div>
                 <span className="shrink-0 rounded-lg bg-brand/10 px-2 py-1 text-[10.5px] font-semibold text-brand">
                   {t('student.courses.card.credits', { count: course.credits })}

@@ -2,7 +2,7 @@
 export const DEMO_USERS = [
   { id: 'demo-student-a', email: 'stanley.demo@mgimo.example', full_name: 'Stanley', role: 'student', faculty: 'International Relations' },
   { id: 'demo-student-b', email: 'patience.demo@mgimo.example', full_name: 'Patience', role: 'student', faculty: 'International Economic Relations' },
-  { id: 'demo-professor', email: 'professor.demo@mgimo.example', full_name: 'Demo Professor', role: 'professor' },
+  { id: 'demo-professor', email: 'elena.petrova@mgimo.example', full_name: 'Dr. Elena Petrova', role: 'professor' },
   { id: 'demo-admin', email: 'admin.demo@mgimo.example', full_name: 'Demo Administrator', role: 'admin' },
 ];
 

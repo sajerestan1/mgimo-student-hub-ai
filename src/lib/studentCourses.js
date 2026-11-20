@@ -11,7 +11,7 @@ export async function loadStudentCourses(userId) {
     const context = await loadStudentPortal();
     const courses = (context.courses || []).map((c) => ({
       id: c.id, code: c.code, title: c.title, name: c.title, status: 'published',
-      credits: 6, level: 'intermediate', professor_id: 'prof-demo',
+      credits: c.credits || 4, level: c.level || 'intermediate', professor_id: c.professorId, professor_email: c.professorEmail, description: c.description, semester: c.semester,
       progress: c.progress, weighted: c.weighted,
     }));
     return { student: context.profile, courses, courseIds: courses.map((c) => c.id), enrolments: courses.length, reason: 'ok' };
