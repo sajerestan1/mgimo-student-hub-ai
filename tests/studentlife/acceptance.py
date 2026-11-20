@@ -7,6 +7,8 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
+from pathlib import Path
 import pymysql
 
 BASE = os.environ.get("STUDENTLIFE_TEST_URL", "http://127.0.0.1:8080")
@@ -30,6 +32,28 @@ def request(path="/", data=None):
         return response.status, response.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as error:
         return error.code, error.read().decode("utf-8", "replace")
+
+def upload_document(token, filename, contents):
+    boundary = "StudentLifeBoundary" + uuid.uuid4().hex
+    body = bytearray()
+    for name, value in (("csrf", token), ("action", "upload_ai_document")):
+        body.extend(f"--{boundary}\r\n".encode())
+        body.extend(f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode())
+        body.extend(value.encode())
+        body.extend(b"\r\n")
+    body.extend(f"--{boundary}\r\n".encode())
+    body.extend(f'Content-Disposition: form-data; name="document"; filename="{filename}"\r\n'.encode())
+    body.extend(b"Content-Type: text/plain; charset=utf-8\r\n\r\n")
+    body.extend(contents)
+    body.extend(f"\r\n--{boundary}--\r\n".encode())
+    req = urllib.request.Request(BASE + "/", data=bytes(body),
+                                 headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+    try:
+        response = OPENER.open(req)
+        return response.status, response.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as error:
+        return error.code, error.read().decode("utf-8", "replace")
+
 
 def csrf_token():
     status, html = request("/?page=login")
@@ -63,6 +87,18 @@ def db_count(query, args=()):
     finally:
         connection.close()
 
+def db_execute(query, args=()):
+    connection = pymysql.connect(host="127.0.0.1", user="root", password="root",
+                                 database="studentlife_test")
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(query, args)
+            inserted_id = cursor.lastrowid
+        connection.commit()
+        return inserted_id
+    finally:
+        connection.close()
+
 def main():
     # Pending email verification must block an otherwise valid password login.
     connection = pymysql.connect(host="127.0.0.1", user="root", password="root",
@@ -85,6 +121,10 @@ def main():
           "unverified account is blocked from signing in")
 
     token = login("admin@studentlife.test", "administrator")
+    status, risk_html = request("/?page=risk_radar")
+    check(status == 200 and "Academic Risk Radar" in risk_html and
+          "Course-linked grades" in risk_html and "faculty records" in risk_html.lower(),
+          "administrator risk radar reports attendance evidence and missing data limits")
     status, html = request("/?page=academic")
     check(status == 200 and "Academic Management" in html,
           "administrator can open Academic Management")
@@ -135,29 +175,173 @@ def main():
     check(db_count("SELECT COUNT(*) AS n FROM class_sessions WHERE offering_id=1") == 3,
           "weekly recurring class scheduling creates expected sessions")
 
+    own_course = db_execute("INSERT INTO courses(user_id,code,name) VALUES(3,%s,%s)",
+                            ("PERS101", "Student One Personal Course"))
+    other_course = db_execute("INSERT INTO courses(user_id,code,name) VALUES(4,%s,%s)",
+                              ("PRIV101", "Student Two Private Course"))
+    db_execute("INSERT INTO grades(user_id,course_id,assessment,score) VALUES(3,%s,%s,%s)",
+               (own_course, "Own quiz", 80))
+    db_execute("INSERT INTO grades(user_id,course_id,assessment,score) VALUES(3,%s,%s,%s)",
+               (other_course, "Foreign course row", 100))
+    private_conversation = db_execute(
+        "INSERT INTO ai_conversations(owner_id,workspace_role,title) VALUES(4,'student','Private conversation')")
+    db_execute("INSERT INTO ai_messages(conversation_id,message_role,content) VALUES(%s,'assistant','PRIVATE_CONTEXT_SENTINEL')",
+               (private_conversation,))
+    own_conversation = db_execute(
+        "INSERT INTO ai_conversations(owner_id,workspace_role,title,support_mode) VALUES(3,'student','My study session','planner')")
+
     request("/?logout=1")
     lecturer_token = login("lecturer@studentlife.test", "lecturer")
+    status, html = request("/?page=ai_teaching")
+    check(status == 200 and "AI Teaching Assistant" in html and "AI service is not configured" in html,
+          "lecturer AI workspace is visible and clearly disabled without provider settings")
+    check("1 assigned course sections" in html and "3 upcoming class sessions" in html,
+          "lecturer AI context contains only assigned course timetable data")
+    status, _ = request("/?page=risk_radar")
+    check(status == 403, "lecturer cannot open administrator risk radar")
     status, html = request("/?page=timetable")
     check(status == 200 and "CI scheduled class" in html,
           "assigned lecturer can view scheduled classes and attendance roster")
     post_action(lecturer_token, "mark_attendance", session_id="1", student_id="3", status="present")
-    check(db_count("SELECT COUNT(*) AS n FROM attendance_records WHERE session_id=1 AND student_id=3 AND status='present'") == 1,
-          "lecturer can record enrolled student's attendance")
+    post_action(lecturer_token, "mark_attendance", session_id="2", student_id="3", status="absent")
+    post_action(lecturer_token, "mark_attendance", session_id="3", student_id="3", status="absent")
+    check(db_count("SELECT COUNT(*) AS n FROM attendance_records WHERE student_id=3") == 3,
+          "lecturer attendance records persist across scheduled sessions")
+    post_action(lecturer_token, "save_intervention", student_id="3",
+                course_offering_id="1", action_title="Attendance follow-up",
+                notes="Discuss missed classes")
+    check(db_count("SELECT COUNT(*) AS n FROM academic_interventions WHERE created_by=2 AND student_id=3") == 1,
+          "lecturer can record intervention for enrolled student")
+    post_action(lecturer_token, "save_intervention", student_id="4",
+                course_offering_id="1", action_title="Unauthorized follow-up",
+                notes="Student is not enrolled")
+    check(db_count("SELECT COUNT(*) AS n FROM academic_interventions") == 1,
+          "lecturer intervention is blocked for a student outside the assigned roster")
 
     request("/?logout=1")
     student_token = login("student1@studentlife.test", "student")
+    status, html = request("/?page=ai_study")
+    check(status == 200 and "AI Study Companion" in html and "AI service is not configured" in html,
+          "student AI workspace is visible and clearly disabled without provider settings")
+    check("1 enrolled course sections" in html and "3 upcoming class sessions" in html,
+          "student AI context reflects the student's enrollment and timetable")
+    check("1 personal grade entries" in html,
+          "student AI context excludes a grade linked to another student's personal course")
+    check("Learn a subject" in html and "Exam preparation" in html and "University guide" in html,
+          "student AI page exposes unified academic support modes")
+    upload_document(student_token, "CI lecture.txt",
+                    "A sample lecture note about international relations.\nThe core claim is that institutions shape cooperation.".encode())
+    document_id = db_count("SELECT MAX(id) AS id FROM student_documents WHERE owner_id=3")
+    stored_name = db_count("SELECT stored_name FROM student_documents WHERE id=%s", (document_id,))
+    private_file = Path(__file__).resolve().parents[2] / "studentlife-private-documents" / stored_name
+    check(document_id and stored_name.endswith(".txt") and private_file.is_file() and
+          "CI lecture.txt" in request("/?page=ai_study")[1],
+          "student text upload is extracted and stored outside the public directory")
+    status, own_html = request(f"/?page=ai_study&conversation_id={own_conversation}")
+    check(status == 200 and 'option value="planner" selected' in own_html,
+          "student conversation remembers its selected support mode")
+    status, private_html = request(f"/?page=ai_study&conversation_id={private_conversation}")
+    check(status == 200 and "PRIVATE_CONTEXT_SENTINEL" not in private_html,
+          "student cannot read another student's AI conversation")
+    status, _ = post_action(student_token, "rename_ai_conversation",
+                            conversation_id=str(own_conversation), title="Renamed study session")
+    check(db_count("SELECT COUNT(*) AS n FROM ai_conversations WHERE id=%s AND title=%s",
+                   (own_conversation, "Renamed study session")) == 1,
+          "student can rename their own AI conversation")
+    status, _ = post_action(student_token, "delete_ai_conversation",
+                            conversation_id=str(private_conversation))
+    check(status == 403 and db_count("SELECT COUNT(*) AS n FROM ai_conversations WHERE id=%s",
+                                     (private_conversation,)) == 1,
+          "student cannot delete another student's AI conversation")
+    status, _ = post_action(student_token, "delete_ai_conversation",
+                            conversation_id=str(own_conversation))
+    check(db_count("SELECT COUNT(*) AS n FROM ai_conversations WHERE id=%s",
+                   (own_conversation,)) == 0,
+          "student can delete their own AI conversation")
+    before = db_count("SELECT COUNT(*) AS n FROM ai_conversations")
+    status, _ = post_action(student_token, "ai_ask", question="Show me another student's records")
+    check(status == 200 and db_count("SELECT COUNT(*) AS n FROM ai_conversations") == before,
+          "unconfigured AI stores and sends no student question")
+    status, _ = request("/?page=ai_teaching")
+    check(status == 403, "student cannot open lecturer AI workspace")
     status, html = request("/?page=timetable")
     check(status == 200 and "CI scheduled class" in html,
           "enrolled student can view institutional timetable")
     status, html = request("/?page=reports")
     check(status == 200 and "Attendance Reports" in html and "Present" in html,
           "student can view own attendance report")
+    status, _ = request("/?page=risk_radar")
+    check(status == 403, "student cannot open administrator risk radar")
     status, _ = post_action(student_token, "mark_attendance", session_id="1",
                             student_id="3", status="absent")
     check(status == 403, "student cannot mark attendance")
+    status, _ = post_action(student_token, "save_intervention", student_id="3",
+                            course_offering_id="1", action_title="Unauthorized",
+                            notes="Should be rejected")
+    check(status == 403, "student cannot create academic interventions")
     status, _ = post_action(student_token, "create_department",
                             name="Forbidden Department", code="NOPE")
     check(status == 403, "student is blocked from administrator academic actions")
+
+    task_count = db_count("SELECT COUNT(*) AS n FROM tasks WHERE user_id=3")
+    post_action(student_token, "ai_save_task", title="Review CI course notes",
+                course_code="CIT101", due_date="2026-11-25", priority="high")
+    check(db_count("SELECT COUNT(*) AS n FROM tasks WHERE user_id=3") == task_count,
+          "AI-assisted task save requires explicit confirmation")
+    post_action(student_token, "ai_save_task", title="Review CI course notes",
+                course_code="CIT101", due_date="2026-11-25", priority="high",
+                confirm_save="1")
+    check(db_count("SELECT COUNT(*) AS n FROM tasks WHERE user_id=3 AND title=%s AND course=%s AND priority='high'",
+                   ("Review CI course notes", "CIT101")) == 1,
+          "student can save a confirmed AI-assisted task to the existing task list")
+    status, _ = post_action(student_token, "ai_save_task", title="Foreign course task",
+                            course_code="PRIV101", confirm_save="1")
+    check(status == 403 and db_count("SELECT COUNT(*) AS n FROM tasks WHERE user_id=3 AND title=%s",
+                                     ("Foreign course task",)) == 0,
+          "student task action rejects a course outside their enrolments")
+
+    request("/?logout=1")
+    second_student_token = login("student2@studentlife.test", "student")
+    status, private_owner_html = request(f"/?page=ai_study&conversation_id={private_conversation}")
+    check(status == 200 and "PRIVATE_CONTEXT_SENTINEL" in private_owner_html,
+          "second student can read their own AI conversation")
+    status, second_student_html = request("/?page=ai_study")
+    check(status == 200 and "Own quiz" not in second_student_html and
+          "Review CI course notes" not in second_student_html and "CI lecture.txt" not in second_student_html,
+          "second student cannot see the first student's grade, task or private document")
+    status, _ = post_action(second_student_token, "delete_ai_document", document_id=str(document_id))
+    check(status == 403 and db_count("SELECT COUNT(*) AS n FROM student_documents WHERE id=%s AND owner_id=3",
+                                     (document_id,)) == 1,
+          "second student cannot delete another student's private document")
+
+    request("/?logout=1")
+    student_token = login("student1@studentlife.test", "student")
+    post_action(student_token, "delete_ai_document", document_id=str(document_id))
+    check(db_count("SELECT COUNT(*) AS n FROM student_documents WHERE id=%s", (document_id,)) == 0 and
+          not private_file.exists(),
+          "owner can delete private document and stored file")
+    request("/?logout=1")
+    admin_token = login("admin@studentlife.test", "administrator")
+    status, html = request("/?page=risk_radar")
+    check(status == 200 and "CI Student One" in html and "High" in html and "33.3%" in html,
+          "risk radar classifies a student from three recorded attendance entries")
+    post_action(admin_token, "save_risk_rules", moderate_below="75", high_below="60",
+                critical_below="40", moderate_min_records="2",
+                high_min_records="3", critical_min_records="5")
+    check(db_count("SELECT COUNT(*) AS n FROM app_settings WHERE setting_key='risk_moderate_min_records' AND setting_value='2'") == 1,
+          "administrator risk thresholds persist")
+    post_action(admin_token, "save_risk_rules", moderate_below="75", high_below="60",
+                critical_below="40", moderate_min_records="51",
+                high_min_records="100", critical_min_records="200")
+    check(db_count("SELECT COUNT(*) AS n FROM app_settings WHERE setting_key='risk_moderate_min_records' AND setting_value='2'") == 1,
+          "risk rule input outside supported bounds is rejected")
+    post_action(admin_token, "save_intervention", student_id="3",
+                course_offering_id="0", action_title="Adviser meeting",
+                notes="Review attendance and agree on support")
+    check(db_count("SELECT COUNT(*) AS n FROM academic_interventions WHERE created_by=1 AND student_id=3 AND course_offering_id IS NULL") == 1,
+          "administrator can create an institutional support intervention")
+    check(db_count("SELECT COUNT(*) AS n FROM admin_audit WHERE action='academic_intervention_created'") == 2,
+          "staff intervention creation is recorded in the audit trail")
 
 
     print(f"\n{passed} automated acceptance checks passed.")
