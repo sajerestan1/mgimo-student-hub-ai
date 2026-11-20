@@ -915,6 +915,123 @@ body:has(.login-shell){overflow:hidden}
 .ai-document-upload{margin-bottom:16px}.ai-document-list{display:grid;gap:8px}.ai-document-list article{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-top:1px solid #edf0f5}.ai-document-list small{display:block;color:#71819a}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:620px){.ai-quick-actions{grid-template-columns:1fr}.ai-workspace{grid-template-columns:1fr!important}.ai-app-links{margin-inline:-4px;padding-inline:4px}.ai-question-form{grid-template-columns:1fr}.ai-history{max-height:300px;overflow:auto}}
+
+/* Responsive layout system for wide desktop, laptop, tablet and phone */
+html{scroll-behavior:smooth}
+body{min-width:320px}
+.layout,.main,.content,.card,.section,.hero,.top-title,.top-tools,.ai-workspace,.ai-history,.ai-conversation{min-width:0}
+.content{width:100%;overflow-x:clip}
+.top{gap:16px;min-width:0}
+.top-title{flex:0 0 auto;min-width:170px}
+.top-tools{flex:1;justify-content:flex-end}
+.top-search{width:clamp(230px,29vw,420px)}
+.top-search input{min-height:42px}
+.top-search .search-btn,.language-control select{min-height:42px}
+:focus-visible{outline:3px solid #86a9d8;outline-offset:2px}
+.btn,.nav,.ai-quick-action,.login-submit{transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease}
+.card,.ai-quick-action{min-width:0}
+.table-wrap,.ai-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media(min-width:1500px){
+ .content{max-width:1640px;margin-inline:auto;padding-inline:clamp(34px,3vw,58px)}
+ .side{width:270px}
+ .hero h1{font-size:clamp(31px,2.2vw,38px)}
+}
+@media(min-width:861px) and (max-width:1279px){
+ .side{width:230px;padding-inline:15px}
+ .content{padding-inline:22px}
+ .top{padding-inline:22px;gap:12px}
+ .top-title{min-width:155px}
+ .top-search{width:clamp(220px,27vw,340px)}
+ .dashboard-top-grid{gap:11px}
+ .dashboard-top-grid .stat-card{padding-inline:11px}
+ .admin-summary-grid{gap:11px}
+}
+@media(max-width:860px){
+ .layout{display:block}
+ .side{display:grid;grid-template-columns:minmax(0,1fr);width:100%;height:auto;min-height:0;position:relative;top:auto;padding:12px 16px 0}
+ .brand{margin:0 4px 8px;min-height:42px}
+ .brand:after{display:none}
+ .side nav{display:flex;flex:initial;min-height:48px;max-height:58px;overflow-x:auto;overflow-y:hidden;gap:5px;padding:2px 1px 8px;scrollbar-width:thin;scrollbar-color:#70839c transparent}
+ .side nav::-webkit-scrollbar{height:4px}
+ .side nav::-webkit-scrollbar-thumb{background:#70839c;border-radius:8px}
+ .nav-group-label,.caption{display:none}
+ .nav{flex:0 0 auto;white-space:nowrap;padding:10px 12px;margin:0;font-size:12px}
+ .foot{display:none}
+ .main{width:100%}
+ .top{height:auto;min-height:68px;align-items:center;padding:12px 20px;gap:12px}
+ .top-title{min-width:150px}
+ .top-tools{width:auto;min-width:0;flex:1;gap:9px}
+ .top-search{width:clamp(210px,34vw,350px)}
+ .content{padding:22px clamp(16px,3vw,28px) 34px}
+ .dashboard-top-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+ .semester-card{grid-column:span 2}
+ .dashboard-columns,.lower-columns{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .admin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:680px){
+ .side{padding:10px 12px 0}
+ .brand b{font-size:20px}
+ .brand small{font-size:10px}
+ .side nav{margin-inline:-12px;padding-inline:12px}
+ .top{align-items:stretch;flex-direction:column;padding:11px 14px;gap:8px}
+ .top-title{min-width:0}
+ .top-tools{display:grid;width:100%;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+ .top-search{grid-column:1/-1;width:100%;max-width:none}
+ .top-search .search-btn{padding-inline:12px}
+ .language-control{grid-column:1/-1;justify-self:start}
+ .language-control select{min-height:38px}
+ .content{padding:18px 13px 28px}
+ .hero{padding:18px 17px;min-height:0}
+ .hero h1{font-size:clamp(23px,6vw,28px);line-height:1.2}
+ .hero p{font-size:13px}
+ .dashboard-top-grid{gap:9px}
+ .dashboard-top-grid .stat-card{min-height:108px;padding:49px 10px 12px}
+ .dashboard-top-grid .stat-icon{left:11px;top:10px}
+ .dashboard-top-grid .metric{font-size:23px}
+ .dashboard-columns,.lower-columns{grid-template-columns:1fr}
+ .admin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .admin-stat{min-width:0}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .card,.feature-card{padding:14px}
+ .form{grid-template-columns:minmax(0,1fr)}
+ .form .wide{grid-column:auto}
+ .table{display:block;max-width:100%;overflow-x:auto;white-space:nowrap}
+ .ai-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .ai-quick-action{padding:12px;font-size:13px}
+ .ai-quick-action span{font-size:11px;line-height:1.45}
+ .ai-workspace{grid-template-columns:minmax(0,1fr)!important}
+ .ai-question-form{grid-template-columns:minmax(0,1fr)}
+ .ai-question-form textarea{width:100%;min-height:110px}
+ .ai-history{max-height:260px;overflow:auto}
+ .ai-app-links{margin-inline:-5px;padding-inline:5px}
+ .ai-document-list article{align-items:flex-start;flex-wrap:wrap}
+ .brief-list li{display:block}
+ .brief-list li span{display:block;margin-top:4px;white-space:normal}
+ .student-page-grid{grid-template-columns:minmax(0,1fr)}
+ .timetable-tool-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .btn{min-height:42px}
+}
+@media(max-width:390px){
+ .side{padding-inline:9px}
+ .side nav{margin-inline:-9px;padding-inline:9px}
+ .nav{font-size:11px;padding:9px 10px}
+ .content{padding-inline:10px}
+ .hero{padding:15px 13px}
+ .dashboard-top-grid .stat-card{padding-inline:9px}
+ .admin-summary-grid{gap:7px}
+ .admin-stat{padding:11px}
+ .admin-stat .metric{font-size:21px}
+ .grid{gap:7px}
+ .card,.feature-card{padding:12px}
+ .ai-quick-action{padding:10px;font-size:12px}
+ .timetable-tool-actions{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
+}
+
 </style></head><body>
 <?php if(!$user):?><div class="login-shell"><section class="login-visual"><div class="visual-brand"><div class="visual-cap">⌂</div><div class="visual-name">StudentLife</div><div class="visual-subtitle">ACADEMIC COMPANION</div><div class="gold-rule"></div><p>Your all-in-one academic space for learning, teaching and academic management.</p></div><div class="visual-footer">Learn · Teach · Achieve</div></section><section class="login-panel"><div class="login-card"><div class="login-heading"><div class="eyebrow">YOUR ACADEMIC SPACE</div><h1>Sign In</h1><p>Sign in to continue to your workspace.</p></div><?php if($err):?><div class="notice"><?=h($err)?></div><?php endif;?><form method="post" class="login-form"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="login"><fieldset class="role-fieldset"><legend>Access as</legend><div class="role-options"><label class="role-option"><input type="radio" name="role" value="student" checked><span class="role-icon">♙</span><b>Student</b></label><label class="role-option"><input type="radio" name="role" value="lecturer"><span class="role-icon">▤</span><b>Lecturer / Professor</b></label><label class="role-option"><input type="radio" name="role" value="administrator"><span class="role-icon">⚙</span><b>Administrator</b></label></div></fieldset><label class="login-label">Email address<div class="login-input"><span>✉</span><input name="email" type="email" placeholder="Enter your email address" required autocomplete="username"></div></label><label class="login-label">Password<div class="login-input"><span>▣</span><input id="login-password" name="password" type="password" placeholder="Enter your password" required autocomplete="current-password"><button class="password-toggle" type="button" aria-label="Show password" onclick="const p=document.getElementById('login-password');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'Show':'Hide'">Show</button></div></label><div class="login-options"><label class="remember-option"><input type="checkbox" name="remember" value="1"> Remember me</label><span class="forgot-note">Forgot password? Contact your administrator.</span></div><button class="login-submit" type="submit">Sign In <span>→</span></button></form><div class="login-security"><span>▣</span> Secure access to your academic workspace</div></div><div class="login-language"><span>Language</span><a href="?lang=en">English</a><span>·</span><a href="?lang=ru">Русский</a></div></section></div>
 <?php else:?><div class="layout"><aside class="side"><div class="brand"><div class="logo">S</div><div><b><?=h($appName)?></b><small>ACADEMIC COMPANION</small></div></div><?php if($isAdmin):?><div class="caption">ADMINISTRATION</div><nav><?=nav('dashboard','Dashboard','⌂',$page)?><?=nav('users','User & Role Management','♙',$page)?><?=nav('profile','My Profile & Password','♙',$page)?><div class="nav-group-label">ACADEMIC MANAGEMENT</div><?=nav('academic','Academic Management','▦',$page)?><?=nav('reports','Attendance Reports','↗',$page)?><?=nav('risk_radar','Academic Risk Radar','◈',$page)?><div class="nav-group-label">COMMUNICATION & RESOURCES</div><?=nav('inbox','Inbox','✉',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('documents','Documents','▣',$page)?><div class="nav-group-label">INSIGHTS & CONTROL</div><?=nav('analytics','Reports & Analytics','↗',$page)?><?=nav('settings','System Settings','⚙',$page)?></nav><?php else:?><div class="caption"><?=($user['role']??'')==='lecturer'?'LECTURER WORKSPACE':'YOUR WORKSPACE'?></div><nav><?=nav('dashboard','Dashboard','⌂',$page)?><?php if(($user['role']??'')==='lecturer'):?><div class="nav-group-label">TEACHING</div><?=nav('profile','My Profile','♙',$page)?><?=nav('teaching_courses','My Courses','▱',$page)?><?=nav('ai_teaching','AI Teaching Assistant','✦',$page)?><?=nav('tasks','Assignments & Tasks','✓',$page)?><?=nav('timetable','Teaching Timetable','▦',$page)?><?=nav('reports','Attendance Reports','↗',$page)?><div class="nav-group-label">RESOURCES & SETTINGS</div><?=nav('inbox','Inbox','✉',$page)?><?=nav('documents','Documents','▣',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('settings','Settings','⚙',$page)?><?php else:?><div class="nav-group-label">LEARNING</div><?=nav('courses','My Courses','▱',$page)?><?=nav('tasks','Assignments','✓',$page)?><?=nav('quizzes','Quizzes & Exams','▤',$page)?><?=nav('grades','Grades & Transcript','▥',$page)?><?=nav('timetable','Timetable','▦',$page)?><?=nav('reports','Attendance','↗',$page)?><?=nav('intelligence','Academic Intelligence','◈',$page)?><?=nav('integrity','Academic Integrity','◇',$page)?><div class="nav-group-label">CAMPUS & SUPPORT</div><?=nav('applications','Applications & Certificates','▧',$page)?><?=nav('library','Library','▣',$page)?><?=nav('study_groups','Study Groups','♧',$page)?><?=nav('notifications','Notifications','●',$page)?><?=nav('ai_study','AI Study Companion','✦',$page)?><?=nav('companion','Study Planner','◷',$page)?><?=nav('recommendations','Study Recommendations','↗',$page)?><div class="nav-group-label">COMMUNICATION</div><?=nav('inbox','Inbox','✉',$page)?><div class="nav-group-label">ACCOUNT</div><?=nav('profile','Profile & Settings','♙',$page)?><?=nav('documents','Documents & Resources','▣',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('settings','Settings','⚙',$page)?><?php endif;?></nav><?php endif;?><div class="foot">Signed in as<br><b><?=h($user['name'])?></b><br><a href="?logout=1">Sign out ↗</a></div></aside><main class="main"><header class="top"><div class="top-title"><small><?=$isAdmin?'ADMINISTRATOR WORKSPACE':(($user['role']??'')==='lecturer'?'LECTURER WORKSPACE':'STUDENT WORKSPACE')?></small><b><?=h(['users'=>'User & Role Management','academic'=>'Academic Management','announcements'=>'Announcements','documents'=>'Documents & Resources','reports'=>'Attendance Reports','analytics'=>'Reports & Analytics','settings'=>'System Settings','tasks'=>'Assignments & Tasks','courses'=>'My Courses','teaching_courses'=>'My Courses','grades'=>'Grades & Transcript','timetable'=>'Timetable','profile'=>'Profile & Settings','progress'=>'Academic Progress','quizzes'=>'Quizzes & Exams','intelligence'=>'Academic Intelligence','integrity'=>'Academic Integrity','applications'=>'Applications & Certificates','library'=>'Library','study_groups'=>'Study Groups','notifications'=>'Notifications','companion'=>'Study Companion','recommendations'=>'Study Recommendations','inbox'=>'Inbox','risk_radar'=>'Academic Risk Radar','ai_study'=>'AI Study Companion','ai_teaching'=>'AI Teaching Assistant'][$page]??ucfirst($page))?></b></div><div class="top-tools"><form class="top-search" method="get" action=""><input type="hidden" name="page" value="search"><input type="search" name="q" value="<?=h($_GET['q']??'')?>" placeholder="Search courses, assignments, tasks..." aria-label="Search StudentLife"><button class="btn search-btn" type="submit">Search</button></form><label class="language-control"><span>Language</span><select aria-label="Choose language" onchange="window.location.href='?page=<?=h($page)?>&lang='+this.value"><option value="en" <?=$language==='en'?'selected':''?>>English</option><option value="ru" <?=$language==='ru'?'selected':''?>>Русский</option></select></label><span class="muted top-user"><?=h($user['name'])?> · <?=date('D, M j')?></span></div></header><div class="content">
