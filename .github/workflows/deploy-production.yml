@@ -1,5 +1,4 @@
-name: Deploy MGIMO Student Hub
-# Trigger production deployment after FTP credentials were refreshed.
+name: Deploy StudentLife
 
 on:
   push:
@@ -22,16 +21,17 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Set up PHP for standalone cPanel app
+      - name: Set up PHP for StudentLife
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: "8.2"
           coverage: none
 
       - name: Validate PHP application files
         run: |
           php -l public/index.php
           php -l public/install.php
+          php -l public/academic-intelligence.php
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -47,18 +47,39 @@ jobs:
         env:
           VITE_BASE44_APP_ID: ${{ secrets.VITE_BASE44_APP_ID }}
 
-      - name: Deploy over explicit FTPS
+      - name: Add the StudentLife PHP app to the deployment
+        run: |
+          cp public/index.php public/install.php public/academic-intelligence.php public/studentlife-sw.js public/sw.js public/.htaccess dist/
+          test -s dist/index.php
+          test -s dist/.htaccess
+
+      - name: Check StudentLife FTP secrets
+        env:
+          STUDENTLIFE_PROD_FTP_SERVER: ${{ secrets.STUDENTLIFE_PROD_FTP_SERVER }}
+          STUDENTLIFE_PROD_FTP_USERNAME: ${{ secrets.STUDENTLIFE_PROD_FTP_USERNAME }}
+          STUDENTLIFE_PROD_FTP_PASSWORD: ${{ secrets.STUDENTLIFE_PROD_FTP_PASSWORD }}
+        run: |
+          test -n "$STUDENTLIFE_PROD_FTP_SERVER" || { echo "Missing STUDENTLIFE_PROD_FTP_SERVER"; exit 1; }
+          test -n "$STUDENTLIFE_PROD_FTP_USERNAME" || { echo "Missing STUDENTLIFE_PROD_FTP_USERNAME"; exit 1; }
+          test -n "$STUDENTLIFE_PROD_FTP_PASSWORD" || { echo "Missing STUDENTLIFE_PROD_FTP_PASSWORD"; exit 1; }
+
+      - name: Deploy StudentLife over explicit FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          server: ${{ secrets.STUDENTLIFE_PROD_FTP_SERVER }}
+          username: ${{ secrets.STUDENTLIFE_PROD_FTP_USERNAME }}
+          password: ${{ secrets.STUDENTLIFE_PROD_FTP_PASSWORD }}
           port: 21
           protocol: ftps
           local-dir: dist/
           server-dir: ./
-          # Pushes deploy the built site. Manual runs default to a safe dry-run.
+          # The FTP account must be jailed to the StudentLife production document root.
           dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
           dangerous-clean-slate: false
-          security: loose
+          exclude: |
+            **/config.php
+            **/.ftp-deploy-sync-state.json
+            **/.user.ini
+            **/php.ini
+          security: strict
           log-level: standard
