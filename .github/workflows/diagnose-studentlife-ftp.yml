@@ -1,0 +1,58 @@
+name: Check StudentLife FTP path access
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/diagnose-studentlife-ftp.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check access to the StudentLife document root
+        env:
+          FTP_PASSWORD: ${{ secrets.STUDENTLIFE_PROD_FTP_PASSWORD }}
+        run: |
+          python - <<'PY'
+          from ftplib import FTP_TLS
+          import os
+
+          ftp = FTP_TLS(timeout=20)
+          ftp.connect("server2.globalhosting247.com", 21)
+          ftp.login("studentlife@buildforge.com.ng", os.environ["FTP_PASSWORD"])
+          ftp.prot_p()
+          lines = [f"account_root={ftp.pwd()}"]
+          candidates = [
+              "studentlife.buildforge.com.ng",
+              "../studentlife.buildforge.com.ng",
+              "../../studentlife.buildforge.com.ng",
+              "../../../studentlife.buildforge.com.ng",
+              "/studentlife.buildforge.com.ng",
+              "/home/buildfor/studentlife.buildforge.com.ng",
+              "..", "../..", "../../..",
+          ]
+          for candidate in candidates:
+              try:
+                  ftp.cwd("/")
+                  ftp.cwd(candidate)
+                  here = ftp.pwd()
+                  names = set(ftp.nlst())
+                  lines.append(f"path={candidate}; resolved={here}; index.php={'index.php' in names}; .htaccess={'.htaccess' in names}")
+              except Exception as error:
+                  lines.append(f"path={candidate}; inaccessible={type(error).__name__}")
+          ftp.quit()
+          with open("ftp-path-report.txt", "w", encoding="utf-8") as output:
+              output.write("\n".join(lines) + "\n")
+          PY
+      - name: Save the non-secret path report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ftp-path-report.txt
+          git commit -m "Record StudentLife FTP path check"
+          git push
