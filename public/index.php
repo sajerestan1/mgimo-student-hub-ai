@@ -1117,6 +1117,115 @@ body{min-width:320px}
  .btn{min-height:44px}
 }
 
+
+/* Rebuilt portrait phone workspace for 320–680 CSS px */
+@media(max-width:680px){
+ html,body{width:100%;min-width:320px;overflow-x:hidden}
+ body{font-size:14px}
+ .layout{display:block;min-height:100svh}
+ .side{position:sticky;top:0;z-index:50;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:0;width:100%;height:auto;min-height:56px;padding:8px 12px;background:linear-gradient(105deg,#0d2343,#17375f);box-shadow:0 3px 12px #10284b25}
+ .brand{grid-column:1;display:flex;align-items:center;gap:9px;min-width:0;min-height:40px;margin:0}
+ .brand .logo{display:grid;flex:0 0 34px;width:34px;height:34px;border-radius:10px;font-size:17px}
+ .brand b{font-size:17px;line-height:1.15}
+ .brand small{display:none}
+ .mobile-menu-toggle{grid-column:2;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:76px;min-height:40px;padding:0 11px;border:1px solid #587293;border-radius:10px;background:#203d62;color:#fff;font:600 13px/1 system-ui,-apple-system,"Segoe UI",sans-serif}
+ .side .caption{display:none}
+ .side nav{grid-column:1/-1;display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;min-height:0;max-height:calc(100svh - 72px);margin:8px -12px 0;padding:9px 12px 12px;overflow-y:auto;overflow-x:hidden;border-top:1px solid #ffffff25;background:#10284b}
+ .side.mobile-nav-ready nav{display:none}
+ .side.mobile-nav-ready.mobile-nav-open nav{display:grid}
+ .side:not(.mobile-nav-ready) nav{display:grid;max-height:none;overflow:visible}
+ .side nav .nav-group-label{display:block;grid-column:1/-1;padding:12px 5px 3px;color:#bac8dc;font-size:10px;letter-spacing:1px}
+ .side nav .nav{display:flex;align-items:center;min-width:0;min-height:44px;margin:0;padding:8px 9px;border-radius:9px;font-size:12px;line-height:1.3;white-space:normal;overflow-wrap:anywhere}
+ .side nav .nav.sel{box-shadow:none}
+ .side.mobile-nav-open .foot{display:block;grid-column:1/-1;padding:10px 5px 4px;border-top:1px solid #ffffff25}
+ .side:not(.mobile-nav-open) .foot{display:none}
+ .main{width:100%;min-width:0}
+ .top{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 8px;width:100%;height:auto;min-height:50px;padding:7px 12px;background:#fff}
+ .top-title{min-width:0;flex:initial}
+ .top-title small{display:none}
+ .top-title b{display:block;max-width:100%;font-size:15px;line-height:1.2;overflow-wrap:anywhere}
+ .top-tools{display:contents}
+ .top-search{grid-column:1/-1;grid-row:2;width:100%;max-width:none;min-height:40px}
+ .top-search input{min-height:40px;padding:8px 10px;font-size:16px}
+ .top-search .search-btn{min-height:40px;padding:7px 11px}
+ .language-control{grid-column:2;grid-row:1;justify-self:end;gap:0;font-size:0}
+ .language-control select{min-height:36px;padding:6px 8px;font-size:12px}
+ .top-user{display:none}
+ .content{width:100%;max-width:none;margin:0;padding:13px 12px 28px;overflow-x:hidden}
+ .hero{min-height:0;margin-bottom:12px;padding:16px 15px;border-radius:14px}
+ .hero h1{font-size:clamp(21px,6vw,25px);line-height:1.2}
+ .hero p{margin-top:6px;font-size:13px;line-height:1.45}
+ .dashboard-top-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .semester-card{grid-column:1/-1;min-height:106px;padding:15px}
+ .semester-card h2{font-size:19px}
+ .semester-card p{font-size:11px}
+ .dashboard-top-grid .stat-card{min-width:0;min-height:88px;padding:38px 9px 9px;border-radius:12px}
+ .dashboard-top-grid .stat-icon{top:8px;left:9px;width:25px;height:25px;font-size:14px}
+ .dashboard-top-grid .metric{font-size:21px;line-height:1.1}
+ .dashboard-columns,.lower-columns,.grid,.student-page-grid,.student-toolkit{grid-template-columns:minmax(0,1fr)}
+ .admin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .admin-stat{min-width:0}
+ .section{margin-top:12px}
+ .card,.feature-card,.student-page-grid .card{min-width:0;padding:14px;border-radius:13px}
+ .feature-card{min-height:0}
+ .head{align-items:flex-start;gap:8px;flex-wrap:wrap}
+ .head>*{min-width:0;max-width:100%}
+ .head h2{font-size:17px;line-height:1.3}
+ .form,.ai-question-form{grid-template-columns:minmax(0,1fr);gap:12px}
+ .form .wide{grid-column:auto}
+ .form label{min-width:0;font-size:13px}
+ .form input,.form select,.form textarea{width:100%;max-width:100%;min-height:44px;padding:10px 11px;font-size:16px}
+ .form input[type=checkbox],.form input[type=radio]{width:auto;min-height:0}
+ .form textarea{min-height:104px}
+ .form button,.btn{min-height:44px}
+ .form .inline-form,.inline-form{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+ .table{display:block;width:100%;max-width:100%;overflow:visible;white-space:normal;border-collapse:separate;border-spacing:0}
+ .table tr:first-child{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+ .table tr:not(:first-child){display:grid;grid-template-columns:minmax(0,1fr);margin:9px 0;padding:7px 10px;border:1px solid #e6eaf0;border-radius:11px;background:#fff}
+ .table tr:not(:first-child) td{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;min-width:0;padding:7px 0;border-bottom:1px solid #edf0f4;font-size:12px;line-height:1.45;white-space:normal;text-align:right;overflow-wrap:anywhere}
+ .table tr:not(:first-child) td:last-child{border-bottom:0}
+ .table tr:not(:first-child) td:before{content:attr(data-label);flex:0 0 34%;max-width:40%;color:#71819a;font-size:10px;font-weight:650;line-height:1.4;text-align:left}
+ .table tr:not(:first-child) td>*{min-width:0;max-width:100%}
+ .table tr:not(:first-child) td form{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}
+ .table-wrap,.ai-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+ .ai-workspace{display:flex;flex-direction:column;gap:12px}
+ .ai-chat{order:1;width:100%}
+ .ai-history{order:2;width:100%;max-height:none;overflow:visible}
+ .ai-quick-actions{grid-template-columns:minmax(0,1fr);gap:8px}
+ .ai-quick-action{min-height:62px;padding:12px;text-align:left}
+ .ai-quick-action span{font-size:12px}
+ .ai-app-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0;padding:0;overflow:visible}
+ .ai-app-links a{display:flex;align-items:center;min-height:42px;white-space:normal;border-radius:10px}
+ .ai-question-form textarea{width:100%;min-height:104px}
+ .ai-history-entry{padding:8px 0}
+ .ai-document-list article{align-items:flex-start;flex-wrap:wrap}
+ .brief-list li{display:block}
+ .brief-list li span{display:block;margin-top:4px;white-space:normal}
+ .student-action-list a{min-height:46px;gap:10px;padding:11px 12px}
+ .timetable-tools{margin:12px 0}
+ .timetable-tool-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .timetable-tool-actions .btn{width:100%;min-width:0;min-height:46px;padding:9px 8px;white-space:normal;font-size:12px}
+ .footer{padding:10px 0 20px;font-size:11px}
+}
+@media(max-width:390px){
+ .side{padding-inline:10px}
+ .mobile-menu-toggle{min-width:72px;padding-inline:9px}
+ .top{padding-inline:10px}
+ .content{padding:11px 10px 24px}
+ .card,.feature-card,.student-page-grid .card{padding:12px}
+ .dashboard-top-grid{gap:7px}
+ .dashboard-top-grid .stat-card{padding:37px 8px 8px}
+ .dashboard-top-grid .metric{font-size:20px}
+ .admin-summary-grid{gap:7px}
+ .ai-app-links{grid-template-columns:minmax(0,1fr)}
+ .timetable-tool-actions{grid-template-columns:1fr}
+ .table tr:not(:first-child){padding-inline:8px}
+}
+@media(max-width:680px) and (orientation:landscape){
+ .side{position:relative}
+ .side nav{max-height:55vh}
+}
+
 </style></head><body>
 <?php if(!$user):?><div class="login-shell"><section class="login-visual"><div class="visual-brand"><div class="visual-cap">⌂</div><div class="visual-name">StudentLife</div><div class="visual-subtitle">ACADEMIC COMPANION</div><div class="gold-rule"></div><p>Your all-in-one academic space for learning, teaching and academic management.</p></div><div class="visual-footer">Learn · Teach · Achieve</div></section><section class="login-panel"><div class="login-card"><div class="login-heading"><div class="eyebrow">YOUR ACADEMIC SPACE</div><h1>Sign In</h1><p>Sign in to continue to your workspace.</p></div><?php if($err):?><div class="notice"><?=h($err)?></div><?php endif;?><form method="post" class="login-form"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="login"><fieldset class="role-fieldset"><legend>Access as</legend><div class="role-options"><label class="role-option"><input type="radio" name="role" value="student" checked><span class="role-icon">♙</span><b>Student</b></label><label class="role-option"><input type="radio" name="role" value="lecturer"><span class="role-icon">▤</span><b>Lecturer / Professor</b></label><label class="role-option"><input type="radio" name="role" value="administrator"><span class="role-icon">⚙</span><b>Administrator</b></label></div></fieldset><label class="login-label">Email address<div class="login-input"><span>✉</span><input name="email" type="email" placeholder="Enter your email address" required autocomplete="username"></div></label><label class="login-label">Password<div class="login-input"><span>▣</span><input id="login-password" name="password" type="password" placeholder="Enter your password" required autocomplete="current-password"><button class="password-toggle" type="button" aria-label="Show password" onclick="const p=document.getElementById('login-password');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'Show':'Hide'">Show</button></div></label><div class="login-options"><label class="remember-option"><input type="checkbox" name="remember" value="1"> Remember me</label><span class="forgot-note">Forgot password? Contact your administrator.</span></div><button class="login-submit" type="submit">Sign In <span>→</span></button></form><div class="login-security"><span>▣</span> Secure access to your academic workspace</div></div><div class="login-language"><span>Language</span><a href="?lang=en">English</a><span>·</span><a href="?lang=ru">Русский</a></div></section></div>
 <?php else:?><div class="layout"><aside class="side"><div class="brand"><div class="logo">S</div><div><b><?=h($appName)?></b><small>ACADEMIC COMPANION</small></div></div><button class="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation"><span aria-hidden="true">☰</span><span>Menu</span></button><?php if($isAdmin):?><div class="caption">ADMINISTRATION</div><nav id="primary-navigation"><?=nav('dashboard','Dashboard','⌂',$page)?><?=nav('users','User & Role Management','♙',$page)?><?=nav('profile','My Profile & Password','♙',$page)?><div class="nav-group-label">ACADEMIC MANAGEMENT</div><?=nav('academic','Academic Management','▦',$page)?><?=nav('reports','Attendance Reports','↗',$page)?><?=nav('risk_radar','Academic Risk Radar','◈',$page)?><div class="nav-group-label">COMMUNICATION & RESOURCES</div><?=nav('inbox','Inbox','✉',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('documents','Documents','▣',$page)?><div class="nav-group-label">INSIGHTS & CONTROL</div><?=nav('analytics','Reports & Analytics','↗',$page)?><?=nav('settings','System Settings','⚙',$page)?></nav><?php else:?><div class="caption"><?=($user['role']??'')==='lecturer'?'LECTURER WORKSPACE':'YOUR WORKSPACE'?></div><nav><?=nav('dashboard','Dashboard','⌂',$page)?><?php if(($user['role']??'')==='lecturer'):?><div class="nav-group-label">TEACHING</div><?=nav('profile','My Profile','♙',$page)?><?=nav('teaching_courses','My Courses','▱',$page)?><?=nav('ai_teaching','AI Teaching Assistant','✦',$page)?><?=nav('tasks','Assignments & Tasks','✓',$page)?><?=nav('timetable','Teaching Timetable','▦',$page)?><?=nav('reports','Attendance Reports','↗',$page)?><div class="nav-group-label">RESOURCES & SETTINGS</div><?=nav('inbox','Inbox','✉',$page)?><?=nav('documents','Documents','▣',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('settings','Settings','⚙',$page)?><?php else:?><div class="nav-group-label">LEARNING</div><?=nav('courses','My Courses','▱',$page)?><?=nav('tasks','Assignments','✓',$page)?><?=nav('quizzes','Quizzes & Exams','▤',$page)?><?=nav('grades','Grades & Transcript','▥',$page)?><?=nav('timetable','Timetable','▦',$page)?><?=nav('reports','Attendance','↗',$page)?><?=nav('intelligence','Academic Intelligence','◈',$page)?><?=nav('integrity','Academic Integrity','◇',$page)?><div class="nav-group-label">CAMPUS & SUPPORT</div><?=nav('applications','Applications & Certificates','▧',$page)?><?=nav('library','Library','▣',$page)?><?=nav('study_groups','Study Groups','♧',$page)?><?=nav('notifications','Notifications','●',$page)?><?=nav('ai_study','AI Study Companion','✦',$page)?><?=nav('companion','Study Planner','◷',$page)?><?=nav('recommendations','Study Recommendations','↗',$page)?><div class="nav-group-label">COMMUNICATION</div><?=nav('inbox','Inbox','✉',$page)?><div class="nav-group-label">ACCOUNT</div><?=nav('profile','Profile & Settings','♙',$page)?><?=nav('documents','Documents & Resources','▣',$page)?><?=nav('announcements','Announcements','♧',$page)?><?=nav('settings','Settings','⚙',$page)?><?php endif;?></nav><?php endif;?><div class="foot">Signed in as<br><b><?=h($user['name'])?></b><br><a href="?logout=1">Sign out ↗</a></div></aside><main class="main"><header class="top"><div class="top-title"><small><?=$isAdmin?'ADMINISTRATOR WORKSPACE':(($user['role']??'')==='lecturer'?'LECTURER WORKSPACE':'STUDENT WORKSPACE')?></small><b><?=h(['users'=>'User & Role Management','academic'=>'Academic Management','announcements'=>'Announcements','documents'=>'Documents & Resources','reports'=>'Attendance Reports','analytics'=>'Reports & Analytics','settings'=>'System Settings','tasks'=>'Assignments & Tasks','courses'=>'My Courses','teaching_courses'=>'My Courses','grades'=>'Grades & Transcript','timetable'=>'Timetable','profile'=>'Profile & Settings','progress'=>'Academic Progress','quizzes'=>'Quizzes & Exams','intelligence'=>'Academic Intelligence','integrity'=>'Academic Integrity','applications'=>'Applications & Certificates','library'=>'Library','study_groups'=>'Study Groups','notifications'=>'Notifications','companion'=>'Study Companion','recommendations'=>'Study Recommendations','inbox'=>'Inbox','risk_radar'=>'Academic Risk Radar','ai_study'=>'AI Study Companion','ai_teaching'=>'AI Teaching Assistant'][$page]??ucfirst($page))?></b></div><div class="top-tools"><form class="top-search" method="get" action=""><input type="hidden" name="page" value="search"><input type="search" name="q" value="<?=h($_GET['q']??'')?>" placeholder="Search courses, assignments, tasks..." aria-label="Search StudentLife"><button class="btn search-btn" type="submit">Search</button></form><label class="language-control"><span>Language</span><select aria-label="Choose language" onchange="window.location.href='?page=<?=h($page)?>&lang='+this.value"><option value="en" <?=$language==='en'?'selected':''?>>English</option><option value="ru" <?=$language==='ru'?'selected':''?>>Русский</option></select></label><span class="muted top-user"><?=h($user['name'])?> · <?=date('D, M j')?></span></div></header><div class="content">
