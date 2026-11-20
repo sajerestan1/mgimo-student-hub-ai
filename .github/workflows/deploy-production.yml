@@ -53,23 +53,25 @@ jobs:
           test -s dist/index.php
           test -s dist/.htaccess
 
-      - name: Check StudentLife FTP password secret
+      - name: Check StudentLife production FTP secrets
         env:
+          STUDENTLIFE_PROD_FTP_USERNAME: ${{ secrets.STUDENTLIFE_PROD_FTP_USERNAME }}
           STUDENTLIFE_PROD_FTP_PASSWORD: ${{ secrets.STUDENTLIFE_PROD_FTP_PASSWORD }}
         run: |
+          test -n "$STUDENTLIFE_PROD_FTP_USERNAME" || { echo "Missing STUDENTLIFE_PROD_FTP_USERNAME"; exit 1; }
           test -n "$STUDENTLIFE_PROD_FTP_PASSWORD" || { echo "Missing STUDENTLIFE_PROD_FTP_PASSWORD"; exit 1; }
 
       - name: Deploy StudentLife over explicit FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: server2.globalhosting247.com
-          username: studentlife@buildforge.com.ng
+          username: ${{ secrets.STUDENTLIFE_PROD_FTP_USERNAME }}
           password: ${{ secrets.STUDENTLIFE_PROD_FTP_PASSWORD }}
           port: 21
           protocol: ftps
           local-dir: dist/
           server-dir: ./
-          # The FTP account must be jailed to the StudentLife production document root.
+          # Create this FTP account with home directory /home/buildfor/studentlife.buildforge.com.ng.
           dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
           dangerous-clean-slate: false
           exclude: |
