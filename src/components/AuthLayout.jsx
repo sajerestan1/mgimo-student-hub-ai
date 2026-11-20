@@ -44,14 +44,14 @@ export default function AuthLayout({ icon: Icon, title, subtitle, footer, childr
         <p className="relative max-w-sm text-[10px] leading-relaxed text-white/35">{UNIVERSITY.disclaimer}</p>
       </aside>
 
-      <main className="flex flex-1 items-center justify-center px-4 py-10 sm:px-8">
+      <main className="flex flex-1 items-start justify-center px-4 py-4 sm:items-center sm:px-8 sm:py-10">
         <div className="w-full max-w-[400px]">
-          <div className="mb-6 flex items-center gap-2.5 lg:hidden">
+          <div className="mb-4 flex items-center gap-2.5 sm:mb-6 lg:hidden">
             <BrandMark className="h-8 w-8" />
             <p className="text-[13px] font-semibold tracking-tight text-ink">{t("common.appName")}</p>
           </div>
 
-          <div className="mb-5 flex items-start gap-3">
+          <div className="mb-4 flex items-start gap-3 sm:mb-5">
             {Icon && (
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
                 <Icon className="h-5 w-5" aria-hidden="true" />
@@ -63,11 +63,11 @@ export default function AuthLayout({ icon: Icon, title, subtitle, footer, childr
             </div>
           </div>
 
-          <div className="card-surface p-5 sm:p-6">{children}</div>
+          <div className="card-surface p-4 sm:p-6">{children}</div>
 
-          {footer && <p className="mt-5 text-center text-[12px] text-mutedink">{footer}</p>}
+          {footer && <p className="mt-4 text-center text-[12px] text-mutedink sm:mt-5">{footer}</p>}
 
-          <p className="mt-5 text-center text-[10px] leading-relaxed text-mutedink/80">{UNIVERSITY.disclaimer}</p>
+          <p className="mt-4 text-center text-[10px] leading-relaxed text-mutedink/80 sm:mt-5">{UNIVERSITY.disclaimer}</p>
         </div>
       </main>
     </div>
