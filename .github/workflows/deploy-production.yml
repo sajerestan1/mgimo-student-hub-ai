@@ -56,18 +56,16 @@ jobs:
       - name: Check StudentLife FTP secrets
         env:
           STUDENTLIFE_PROD_FTP_SERVER: ${{ secrets.STUDENTLIFE_PROD_FTP_SERVER }}
-          STUDENTLIFE_PROD_FTP_USERNAME: ${{ secrets.STUDENTLIFE_PROD_FTP_USERNAME }}
           STUDENTLIFE_PROD_FTP_PASSWORD: ${{ secrets.STUDENTLIFE_PROD_FTP_PASSWORD }}
         run: |
           test -n "$STUDENTLIFE_PROD_FTP_SERVER" || { echo "Missing STUDENTLIFE_PROD_FTP_SERVER"; exit 1; }
-          test -n "$STUDENTLIFE_PROD_FTP_USERNAME" || { echo "Missing STUDENTLIFE_PROD_FTP_USERNAME"; exit 1; }
           test -n "$STUDENTLIFE_PROD_FTP_PASSWORD" || { echo "Missing STUDENTLIFE_PROD_FTP_PASSWORD"; exit 1; }
 
       - name: Deploy StudentLife over explicit FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.STUDENTLIFE_PROD_FTP_SERVER }}
-          username: ${{ secrets.STUDENTLIFE_PROD_FTP_USERNAME }}
+          username: studentlife
           password: ${{ secrets.STUDENTLIFE_PROD_FTP_PASSWORD }}
           port: 21
           protocol: ftps
