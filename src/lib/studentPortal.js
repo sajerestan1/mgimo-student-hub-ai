@@ -26,9 +26,9 @@ export function loadStudentPortal({ fresh = false } = {}) {
     const profile = {
       id: user.id, full_name: user.full_name, email: user.email,
       student_number: second ? 'DEMO-STU-002' : 'DEMO-STU-001',
-      faculty: second ? 'School of International Economic Relations' : 'School of International Relations',
-      program: second ? 'International Economics' : 'International Relations',
-      year: 1, group: second ? 'IER-1A' : 'IR-1A'
+      faculty: 'School of International Relations',
+      program: 'International Relations',
+      year: second ? 2 : 1, group: second ? 'IR-2A' : 'IR-1A'
     };
     const courseSeeds = DEMO_INSTITUTION.courses;
     const courses = courseSeeds.map((course, index) => {
