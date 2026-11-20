@@ -62,7 +62,7 @@ jobs:
       - name: Deploy StudentLife over explicit FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
-          server: ftp.buildforge.com.ng
+          server: server2.globalhosting247.com
           username: studentlife@buildforge.com.ng
           password: ${{ secrets.STUDENTLIFE_PROD_FTP_PASSWORD }}
           port: 21
