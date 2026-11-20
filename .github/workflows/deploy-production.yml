@@ -71,7 +71,7 @@ jobs:
           protocol: ftps
           local-dir: dist/
           server-dir: ./
-          # Create this FTP account with home directory /home/buildfor/studentlife.buildforge.com.ng.
+          # FTP account home is the StudentLife document root: /home/buildfor/studentlife.buildforge.com.ng.
           dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
           dangerous-clean-slate: false
           exclude: |
