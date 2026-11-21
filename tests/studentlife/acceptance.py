@@ -192,6 +192,11 @@ def main():
                (private_conversation,))
     own_conversation = db_execute(
         "INSERT INTO ai_conversations(owner_id,workspace_role,title,support_mode) VALUES(3,'student','My study session','planner')")
+    formatted_conversation = db_execute(
+        "INSERT INTO ai_conversations(owner_id,workspace_role,title) VALUES(3,'student','Formatted response check')")
+    db_execute("INSERT INTO ai_messages(conversation_id,message_role,content) VALUES(%s,'assistant',%s)",
+               (formatted_conversation,
+                "#### Revision plan\n\n**Review this topic**\n\n- First point\n- Second point\n\n<script>alert(1)</script>"))
 
     request("/?logout=1")
     lecturer_token = login("lecturer@studentlife.test", "lecturer")
@@ -232,6 +237,14 @@ def main():
           "student AI context excludes a grade linked to another student's personal course")
     check("Learn a subject" in html and "Exam preparation" in html and "University guide" in html,
           "student AI page exposes unified academic support modes")
+    check("Document output" in html and "Quick summary" in html and
+          "Flashcards" in html and "Multiple-choice practice" in html,
+          "student can choose useful outputs for a selected lecture document")
+    status, formatted_html = request(f"/?page=ai_study&conversation_id={formatted_conversation}")
+    check(status == 200 and "<h4>Revision plan</h4>" in formatted_html and
+          "<strong>Review this topic</strong>" in formatted_html and "#### " not in formatted_html and
+          "<script>alert(1)</script>" not in formatted_html,
+          "AI response headings and emphasis render as safe formatted HTML without raw hashes")
     check("Memory and Personalization" in html and "No memories saved" in html,
           "student memory controls start empty and private")
     post_action(student_token, "save_ai_memory", category="learning",
