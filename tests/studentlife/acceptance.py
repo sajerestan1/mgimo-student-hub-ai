@@ -67,15 +67,15 @@ def upload_communication(token, conversation_id, filename, contents):
               ("conversation_id", str(conversation_id)), ("body", "Shared class note"),
               ("client_nonce", uuid.uuid4().hex), ("parent_message_id", "0"))
     for name, value in fields:
-        body.extend(f"--{boundary}\\r\\n".encode())
-        body.extend(f'Content-Disposition: form-data; name="{name}"\\r\\n\\r\\n'.encode())
+        body.extend(f"--{boundary}\r\n".encode())
+        body.extend(f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode())
         body.extend(value.encode())
-        body.extend(b"\\r\\n")
-    body.extend(f"--{boundary}\\r\\n".encode())
-    body.extend(f'Content-Disposition: form-data; name="attachment"; filename="{filename}"\\r\\n'.encode())
-    body.extend(b"Content-Type: text/plain; charset=utf-8\\r\\n\\r\\n")
+        body.extend(b"\r\n")
+    body.extend(f"--{boundary}\r\n".encode())
+    body.extend(f'Content-Disposition: form-data; name="attachment"; filename="{filename}"\r\n'.encode())
+    body.extend(b"Content-Type: text/plain; charset=utf-8\r\n\r\n")
     body.extend(contents)
-    body.extend(f"\\r\\n--{boundary}--\\r\\n".encode())
+    body.extend(f"\r\n--{boundary}--\r\n".encode())
     req = urllib.request.Request(BASE + "/", data=bytes(body),
                                  headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
     try:
