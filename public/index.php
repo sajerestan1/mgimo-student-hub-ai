@@ -1842,10 +1842,10 @@ function downloadTimetableIcs(){const rows=timetableRows();const events=rows.map
 <h1 class="h1">Quizzes &amp; Exams</h1>
 <p class="sub">Take a published quiz or exam practice set. Your lecturers and administrators publish assessments; students answer them here.</p>
 <div class="student-note"><b>Student access:</b> You can take and review assessments. Creating or publishing quizzes and exams is restricted to lecturers and administrators. These are clearly marked demo assessments, not official examinations.</div>
-<div class="dashboard-stats section">
- <article class="card"><span class="muted">Available demo assessments</span><strong>4</strong><small>Across your enrolled courses</small></article>
- <article class="card"><span class="muted">Question formats</span><strong>6</strong><small>Choice, true/false, multi-select, short answer, matching and written response</small></article>
- <article class="card"><span class="muted">Completed by you</span><strong id="quiz-completed-count">0</strong><small>Saved on this device</small></article>
+<div class="grid dashboard-stats section">
+ <article class="stat-card"><span class="stat-icon gold-icon">▤</span><span class="metriclabel">Available demo assessments</span><div class="metric">4</div><small class="muted">Across your enrolled courses</small></article>
+ <article class="stat-card"><span class="stat-icon gold-icon">✓</span><span class="metriclabel">Question formats</span><div class="metric">6</div><small class="muted">Choice, true/false, multi-select, short answer, matching and written response</small></article>
+ <article class="stat-card"><span class="stat-icon gold-icon">◷</span><span class="metriclabel">Completed by you</span><div class="metric" id="quiz-completed-count">0</div><small class="muted">Saved on this device</small></article>
 </div>
 <div class="quiz-tabs" role="tablist" aria-label="Assessment views">
  <button class="btn soft quiz-tab active" type="button" role="tab" aria-selected="true" data-view="available">Available</button>
