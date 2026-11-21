@@ -511,8 +511,6 @@ function sl_i18n_phrase_map(): array
         'No interventions have been recorded.'=>'Меры поддержки пока не зафиксированы.','Open'=>'Открыто','In progress'=>'В процессе','Closed'=>'Закрыто',
         'Update'=>'Обновить','Choose your section'=>'Выберите свою учебную группу','Enrolled student'=>'Зачисленный студент','Assigned course section'=>'Назначенная учебная группа',
         'Attendance marked'=>'Посещаемость отмечена','LEARNING RESOURCES'=>'УЧЕБНЫЕ МАТЕРИАЛЫ','COMMUNICATION'=>'ОБЩЕНИЕ',
-    ];
-    $extraMore = array_merge($extraMore ?? [], $coverage);
         // Demo course titles, instructors, descriptions, assignments and announcements.
         'Welcome, Stanley 👋'=>'Добро пожаловать, Стэнли 👋',
         'Welcome,'=>'Добро пожаловать,',
@@ -564,6 +562,8 @@ function sl_i18n_phrase_map(): array
         'Write a concise policy brief that defines a regional water-security problem, compares two policy options, and recommends one course of action. Support the recommendation with at least three credible sources. Include a short executive summary and a references section.'=>'Подготовьте краткую аналитическую записку, в которой определите проблему региональной водной безопасности, сравните два варианта политики и предложите один вариант действий. Обоснуйте рекомендацию как минимум тремя надёжными источниками. Включите краткое резюме и список литературы.',
         'Use a public economic dataset to describe recent food-price inflation in one country. Include a small table or chart, explain two possible causes, and distinguish observed data from your interpretation. Cite the dataset and any additional sources.'=>'Используйте открытый экономический набор данных, чтобы описать недавнюю инфляцию цен на продукты в одной стране. Добавьте небольшую таблицу или диаграмму, объясните две возможные причины и отделите наблюдаемые данные от собственной интерпретации. Укажите источник набора данных и другие использованные материалы.',
         '4 cr'=>'4 зачётные единицы','6 cr'=>'6 зачётных единиц',
+    ];
+    $extraMore = array_merge($extraMore ?? [], $coverage);
     /* STUDENTLIFE_RUSSIAN_DEMO_NAMES_V2 */
     /* STUDENTLIFE_RUSSIAN_COVERAGE_V1 */
     $extra=array_merge($extra,$extraMore);
