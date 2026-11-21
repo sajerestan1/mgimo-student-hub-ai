@@ -8,10 +8,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+from datetime import date, timedelta
 from pathlib import Path
 import pymysql
 
 BASE = os.environ.get("STUDENTLIFE_TEST_URL", "http://127.0.0.1:8080")
+TEST_SESSION_DATE = (date.today() + timedelta(days=1)).isoformat()
+TEST_REPEAT_UNTIL = (date.today() + timedelta(days=15)).isoformat()
 PASSWORD = "TestPassword-2026!"
 COOKIE_JAR = http.cookiejar.CookieJar()
 OPENER = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(COOKIE_JAR))
@@ -169,8 +172,8 @@ def main():
     check(db_count("SELECT COUNT(*) AS n FROM course_enrolments WHERE offering_id=1") == 1,
           "section capacity prevents a second enrolment")
 
-    post_action(token, "schedule_session", offering_id="1", session_date="2026-11-20",
-                repeat_until="2026-12-04", starts_at="10:00", ends_at="11:30",
+    post_action(token, "schedule_session", offering_id="1", session_date=TEST_SESSION_DATE,
+                repeat_until=TEST_REPEAT_UNTIL, starts_at="10:00", ends_at="11:30",
                 room="Room 101", topic="CI scheduled class")
     check(db_count("SELECT COUNT(*) AS n FROM class_sessions WHERE offering_id=1") == 3,
           "weekly recurring class scheduling creates expected sessions")
