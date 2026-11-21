@@ -347,51 +347,80 @@ function sl_comms_render(PDO $db, array $user): void
     #slCommunication .sc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
     #slCommunication h1{margin:0 0 6px;font-size:clamp(1.6rem,4vw,2.2rem)}
     #slCommunication .sc-muted{color:var(--sc-muted);font-size:.94rem}
-    #slCommunication .sc-layout{display:grid;grid-template-columns:minmax(250px,320px) minmax(0,1fr);gap:16px;min-height:520px}
+    #slCommunication .sc-layout{display:grid;grid-template-columns:minmax(260px,320px) minmax(0,1fr);gap:14px;min-height:580px;height:min(76vh,780px)}
     #slCommunication .sc-panel{background:#fff;border:1px solid var(--sc-line);border-radius:16px;overflow:hidden}
     #slCommunication .sc-side{display:flex;flex-direction:column;min-width:0}
-    #slCommunication .sc-side-top,#slCommunication .sc-thread-top{padding:16px;border-bottom:1px solid var(--sc-line)}
-    #slCommunication .sc-room-list{overflow:auto;max-height:620px}
-    #slCommunication .sc-room{display:block;padding:12px 14px;border-bottom:1px solid #edf0f5;color:inherit;text-decoration:none}
-    #slCommunication .sc-room[aria-current="page"]{background:#fff8e8}
-    #slCommunication .sc-room b{display:block}
-    #slCommunication .sc-room small{color:var(--sc-muted)}
-    #slCommunication .sc-badge{display:inline-block;border-radius:999px;background:#244a76;color:#fff;padding:2px 8px;font-size:.75rem}
-    #slCommunication .sc-thread{display:flex;flex-direction:column;min-width:0;min-height:520px}
-    #slCommunication .sc-messages{padding:16px;overflow:auto;display:flex;flex-direction:column;gap:12px;max-height:65vh}
-    #slCommunication .sc-message{max-width:min(85%,760px);border:1px solid var(--sc-line);border-radius:14px;padding:12px;background:#f9fbfe;overflow-wrap:anywhere}
-    #slCommunication .sc-message.sc-own{align-self:flex-end;background:#eff6ff}
-    #slCommunication .sc-message p{margin:8px 0;white-space:pre-wrap}
-    #slCommunication .sc-message small{color:var(--sc-muted)}
-    #slCommunication .sc-reply{border-left:3px solid var(--sc-gold);padding:6px 9px;background:#fff;border-radius:5px;color:var(--sc-muted)}
-    #slCommunication .sc-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    #slCommunication .sc-side-top,#slCommunication .sc-thread-top{padding:14px 16px;border-bottom:1px solid var(--sc-line)}
+    #slCommunication .sc-room-list{overflow:auto;flex:1}
+    #slCommunication .sc-room{display:block;padding:14px 16px;border-bottom:1px solid #edf0f5;color:inherit;text-decoration:none;transition:background .15s}
+    #slCommunication .sc-room:hover,#slCommunication .sc-room[aria-current="page"]{background:#f2f7fb}
+    #slCommunication .sc-room b{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+    #slCommunication .sc-room small{display:block;color:var(--sc-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #slCommunication .sc-badge{display:inline-block;flex:none;border-radius:999px;background:#244a76;color:#fff;padding:3px 8px;font-size:.75rem}
+    #slCommunication .sc-thread{display:flex;flex-direction:column;min-width:0;min-height:0;height:100%}
+    #slCommunication .sc-thread-top{flex:none}
+    #slCommunication .sc-conversation-title{display:flex;align-items:center;gap:12px;min-width:0}
+    #slCommunication .sc-conversation-title>a{flex:none;text-decoration:none}
+    #slCommunication .sc-room-avatar{width:42px;height:42px;display:grid;place-items:center;flex:none;border-radius:50%;background:#e8f2f7;color:var(--sc-navy);font-weight:700}
+    #slCommunication .sc-room-name{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+    #slCommunication .sc-room-name strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #slCommunication .sc-room-name small{color:var(--sc-muted)}
+    #slCommunication .sc-messages{padding:20px;overflow:auto;display:flex;flex:1;flex-direction:column;gap:9px;min-height:0;background-color:#f5f7f6;background-image:radial-gradient(#d8e1dc .7px,transparent .7px);background-size:18px 18px}
+    #slCommunication .sc-message{position:relative;max-width:min(78%,680px);border:1px solid #e5e9e6;border-radius:4px 15px 15px 15px;padding:8px 12px;background:#fff;overflow-wrap:anywhere;box-shadow:0 1px 1px #102c4712}
+    #slCommunication .sc-message.sc-own{align-self:flex-end;background:#dcf8c6;border-color:#d0edb8;border-radius:15px 4px 15px 15px}
+    #slCommunication .sc-message-meta{display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:.76rem}
+    #slCommunication .sc-message-meta b{color:#477a6b}
+    #slCommunication .sc-message-meta small{color:#718078;text-align:right;font-size:.7rem}
+    #slCommunication .sc-message-body{margin:4px 22px 2px 0;white-space:pre-wrap;line-height:1.45}
+    #slCommunication .sc-message.sc-own .sc-message-body{margin-right:0}
+    #slCommunication .sc-attachment{display:inline-flex;align-items:center;gap:6px;margin:5px 0;padding:7px 10px;border-radius:9px;background:#ffffffc9;color:var(--sc-navy);text-decoration:none;overflow-wrap:anywhere}
+    #slCommunication .sc-message-options{position:absolute;top:5px;right:6px}
+    #slCommunication .sc-message-options>summary{list-style:none;cursor:pointer;color:#73817a;font-size:18px;line-height:20px;width:24px;text-align:center;border-radius:50%}
+    #slCommunication .sc-message-options>summary::-webkit-details-marker{display:none}
+    #slCommunication .sc-options-popover{position:absolute;z-index:4;right:0;top:24px;display:flex;flex-direction:column;gap:7px;min-width:180px;max-height:270px;overflow:auto;padding:10px;background:#fff;border:1px solid var(--sc-line);border-radius:12px;box-shadow:0 8px 25px #142b4926}
+    #slCommunication .sc-reactions{display:flex;flex-wrap:wrap;gap:4px}
+    #slCommunication .sc-actions{display:flex;flex-wrap:wrap;gap:4px}
     #slCommunication button,#slCommunication input,#slCommunication select,#slCommunication textarea{font:inherit}
-    #slCommunication .sc-btn{border:1px solid var(--sc-line);background:#fff;color:var(--sc-navy);border-radius:8px;padding:8px 10px;cursor:pointer}
-    #slCommunication .sc-btn.primary{background:var(--sc-navy);color:#fff}
+    #slCommunication .sc-btn{border:1px solid var(--sc-line);background:#fff;color:var(--sc-navy);border-radius:9px;padding:7px 10px;cursor:pointer}
+    #slCommunication .sc-btn.primary{background:var(--sc-navy);color:#fff;border-color:var(--sc-navy)}
+    #slCommunication .sc-btn.icon{width:40px;height:40px;padding:0;border-radius:50%}
     #slCommunication .sc-form{display:flex;gap:8px;align-items:center}
-    #slCommunication .sc-form textarea{flex:1;min-width:0;resize:vertical;border:1px solid var(--sc-line);border-radius:10px;padding:10px}
-    #slCommunication .sc-form input[type=file]{max-width:220px}
-    #slCommunication .sc-compose{padding:14px;border-top:1px solid var(--sc-line);display:flex;flex-direction:column;gap:8px}
+    #slCommunication .sc-form textarea{flex:1;min-width:0;min-height:42px;max-height:120px;resize:vertical;border:1px solid var(--sc-line);border-radius:22px;padding:10px 14px}
+    #slCommunication .sc-form input[type=file]{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;clip-path:inset(50%)}
+    #slCommunication .sc-attach{display:inline-grid;place-items:center;flex:none;width:40px;height:40px;border:1px solid var(--sc-line);border-radius:50%;color:var(--sc-navy);cursor:pointer}
+    #slCommunication .sc-compose{flex:none;padding:12px 14px;border-top:1px solid var(--sc-line);display:flex;flex-direction:column;gap:6px;background:#fff}
     #slCommunication .sc-toolbar{display:flex;gap:8px;flex-wrap:wrap}
-    #slCommunication .sc-search{display:flex;gap:6px;margin:8px 0}
+    #slCommunication .sc-search{display:flex;gap:6px;margin:8px 0 0}
     #slCommunication .sc-search input{min-width:0;flex:1}
     #slCommunication .sc-empty{padding:24px;text-align:center;color:var(--sc-muted)}
     #slCommunication .sc-panel input,#slCommunication .sc-panel select{max-width:100%;padding:8px;border:1px solid var(--sc-line);border-radius:8px}
-    #slCommunication .sc-older{padding:10px;text-align:center}
+    #slCommunication .sc-older{padding:8px;text-align:center;background:#f5f7f6}
+    #slCommunication .sc-older a{color:var(--sc-navy)}
+    #slCommunication .sc-header-actions{margin-left:auto}
     @media(max-width:760px){
-      #slCommunication .sc-layout{display:block;min-height:0}
-      #slCommunication .sc-side{margin-bottom:12px}
+      #slCommunication .sc-head{align-items:center}
+      #slCommunication .sc-head .sc-muted{max-width:34ch}
+      #slCommunication .sc-layout{display:block;min-height:0;height:auto}
+      #slCommunication .sc-side{min-height:60vh}
       #slCommunication.sc-active .sc-side{display:none}
-      #slCommunication .sc-thread{min-height:calc(100dvh - 210px)}
-      #slCommunication .sc-messages{max-height:none;min-height:45vh;flex:1}
-      #slCommunication .sc-message{max-width:94%}
-      #slCommunication .sc-form{align-items:stretch;flex-direction:column}
-      #slCommunication .sc-form input[type=file]{max-width:100%}
-      #slCommunication .sc-compose{position:sticky;bottom:0;background:#fff;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+      #slCommunication .sc-thread{height:calc(100dvh - 190px);min-height:420px}
+      #slCommunication .sc-messages{padding:14px 10px}
+      #slCommunication .sc-message{max-width:88%}
+      #slCommunication .sc-thread-top{padding:10px}
+      #slCommunication .sc-compose{padding:9px}
+      #slCommunication .sc-compose>small{font-size:.72rem}
+      #slCommunication .sc-form{align-items:center}
+    }
+    @media(max-width:420px){
+      #slCommunication .sc-message{max-width:92%}
+      #slCommunication .sc-side-top{padding:10px}
+      #slCommunication .sc-side-top .sc-toolbar{flex-wrap:nowrap}
+      #slCommunication .sc-side-top select{min-width:0;flex:1}
+      #slCommunication .sc-messages{gap:7px}
     }
     </style>
     <div id="slCommunication" class="<?=$room?'sc-active':''?>">
-      <div class="sc-head"><div><div class="eyebrow">STUDENT COMMUNICATION</div><h1>Communication Hub</h1><p class="sc-muted">Class-section chats, private student messages and study-group discussions.</p></div><span class="sc-badge"><?=$unreadCount?> unread</span></div>
+      <div class="sc-head"><div><div class="eyebrow">STUDENT COMMUNICATION</div><h1>Communication Hub</h1><p class="sc-muted">Class and study-group chats, with direct student messages when you need them.</p></div><span class="sc-badge"><?=$unreadCount?> unread</span></div>
       <?php if(!empty($_SESSION['notice'])):?><div class="notice success-notice"><?=h($_SESSION['notice'])?></div><?php unset($_SESSION['notice']);endif;?>
       <?php if(!empty($_SESSION['err'])):?><div class="notice"><?=h($_SESSION['err'])?></div><?php unset($_SESSION['err']);endif;?>
       <div class="sc-layout">
@@ -405,29 +434,32 @@ function sl_comms_render(PDO $db, array $user): void
         </nav></aside>
         <section class="sc-panel sc-thread" aria-label="Active conversation">
           <?php if(!$room):?><div class="sc-empty"><h2>Choose a conversation</h2><p>Open a course-section chat, start a private student message, or join a study group.</p></div>
-          <?php else:?><div class="sc-thread-top"><div class="sc-toolbar"><a class="sc-btn" href="?page=communication">← Conversations</a><strong><?=h($room['title'])?></strong><form method="post" style="margin-left:auto"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_mute"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><?php if($room['muted_at']):?><button class="sc-btn" name="unmute" value="1">Unmute</button><?php else:?><button class="sc-btn" name="mute" value="1">Mute</button><?php endif;?></form></div>
+          <?php else:?><div class="sc-thread-top"><div class="sc-conversation-title"><a class="sc-btn" href="?page=communication" aria-label="Back to conversations">←</a><div class="sc-room-avatar" aria-hidden="true"><?=h(mb_strtoupper(mb_substr((string)$room['title'],0,1)))?></div><div class="sc-room-name"><strong><?=h($room['title'])?></strong><small><?=h(ucfirst($room['room_type']))?> chat</small></div><form method="post" class="sc-header-actions"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_mute"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><?php if($room['muted_at']):?><button class="sc-btn" name="unmute" value="1">Unmute</button><?php else:?><button class="sc-btn" name="mute" value="1">Mute</button><?php endif;?></form></div>
           <?php if($query!==''):?><p class="sc-muted">Search results for “<?=h($query)?>” · <?=count($messages)?> shown</p><?php endif;?>
           </div>
           <?php if($messages&&count($messages)>=50):?><div class="sc-older"><a href="?page=communication&conversation_id=<?=$conversationId?>&before=<?=(int)$messages[0]['id']?>&q=<?=urlencode($query)?>">Load earlier messages</a></div><?php endif;?>
-          <div class="sc-messages" id="scMessages"><?php if(!$messages):?><div class="sc-empty"><?=$query?'No messages match your search.':'No messages yet. Start the conversation.'?></div><?php endif;?>
-            <?php foreach($messages as $message):?><article class="sc-message <?=(int)$message['sender_id']===$userId?'sc-own':''?>" id="msg-<?=(int)$message['id']?>"><?php if($message['parent_message_id']):?><div class="sc-reply">Reply to <?=h($message['parent_sender']?:'message')?>: <?=h(mb_strimwidth((string)($message['parent_body']??'Message removed'),0,140,'…'))?></div><?php endif;?>
-              <div><b><?=h($message['sender'])?></b> <small><?=h($message['created_at'])?><?=!empty($message['edited_at'])?' · edited':''?></small></div>
-              <?php if($message['deleted_at']):?><p class="sc-muted"><em>Message removed</em></p><?php else:?><p><?=nl2br(h($message['body']))?></p>
-                <?php $aq=$db->prepare("SELECT id,original_name,file_size FROM sl_message_attachments WHERE message_id=?");$aq->execute([(int)$message['id']]);foreach($aq as $att):?><p><a href="?page=communication&comms_attachment=<?=(int)$att['id']?>"><?=h($att['original_name'])?> · <?=number_format((int)$att['file_size']/1024,0)?> KB</a></p><?php endforeach;?>
-                <div class="sc-actions">
-                  <?php foreach(['like'=>'👍','love'=>'❤️','helpful'=>'✅','celebrate'=>'🎉','laugh'=>'😂'] as $reactionKey=>$emoji):?><form method="post"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_react"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="message_id" value="<?=(int)$message['id']?>"><input type="hidden" name="reaction" value="<?=h($reactionKey)?>"><button class="sc-btn" title="Toggle <?=$reactionKey?> reaction"><?=$emoji?> <span><?= (int)$message[$reactionKey.'_count']?></span></button></form><?php endforeach;?>
-                  <form method="get"><input type="hidden" name="page" value="communication"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="reply_to" value="<?=(int)$message['id']?>"><button class="sc-btn">Reply</button></form>
-                  <form method="post"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_report"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="message_id" value="<?=(int)$message['id']?>"><select name="reason" aria-label="Report reason"><option value="harassment">Harassment</option><option value="spam">Spam</option><option value="threat">Threat</option><option value="private_information">Private information</option><option value="other">Other</option></select><button class="sc-btn">Report</button></form>
-                </div>
-                <?php if((int)$message['sender_id']===$userId):?><details><summary>Edit or remove</summary><form method="post" class="sc-toolbar"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_edit"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="message_id" value="<?=(int)$message['id']?>"><input name="body" value="<?=h($message['body'])?>" maxlength="4000"><button class="sc-btn">Save edit</button></form><form method="post"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_delete"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="message_id" value="<?=(int)$message['id']?>"><button class="sc-btn">Remove message</button></form></details><?php endif;?>
-              <?php endif;?></article><?php endforeach;?>
+          <div class="sc-messages" id="scMessages" role="log" aria-live="polite" aria-label="Chat messages"><?php if(!$messages):?><div class="sc-empty"><?=$query?'No messages match your search.':'No messages yet. Start the conversation.'?></div><?php endif;?>
+            <?php foreach($messages as $message):?>
+              <article class="sc-message <?=(int)$message['sender_id']===$userId?'sc-own':''?>" id="msg-<?=(int)$message['id']?>">
+                <div class="sc-message-meta"><?php if((int)$message['sender_id']!==$userId):?><b><?=h($message['sender'])?></b><?php endif;?><small><?=h($message['created_at'])?><?=!empty($message['edited_at'])?' · edited':''?></small></div>
+                <?php if($message['deleted_at']):?><p class="sc-muted"><em>Message removed</em></p><?php else:?><p class="sc-message-body"><?=nl2br(h($message['body']))?></p>
+                  <?php $aq=$db->prepare("SELECT id,original_name,file_size FROM sl_message_attachments WHERE message_id=?");$aq->execute([(int)$message['id']]);foreach($aq as $att):?><a class="sc-attachment" href="?page=communication&comms_attachment=<?=(int)$att['id']?>">📎 <?=h($att['original_name'])?> · <?=number_format((int)$att['file_size']/1024,0)?> KB</a><?php endforeach;?>
+                  <details class="sc-message-options"><summary aria-label="Message options">⋯</summary><div class="sc-options-popover">
+                    <div class="sc-reactions">
+                      <?php foreach(['like'=>'👍','love'=>'❤️','helpful'=>'✅','celebrate'=>'🎉','laugh'=>'😂'] as $reactionKey=>$emoji):?><form method="post"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_react"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="message_id" value="<?=(int)$message['id']?>"><input type="hidden" name="reaction" value="<?=h($reactionKey)?>"><button class="sc-btn" title="Toggle <?=$reactionKey?> reaction"><?=$emoji?> <span><?= (int)$message[$reactionKey.'_count']?></span></button></form><?php endforeach;?>
+                    </div>
+                    <form method="post" class="sc-actions"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_report"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="message_id" value="<?=(int)$message['id']?>"><select name="reason" aria-label="Report reason"><option value="harassment">Harassment</option><option value="spam">Spam</option><option value="threat">Threat</option><option value="private_information">Private information</option><option value="other">Other</option></select><button class="sc-btn">Report</button></form>
+                    <?php if((int)$message['sender_id']===$userId):?><form method="post" class="sc-actions"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_edit"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="message_id" value="<?=(int)$message['id']?>"><input name="body" value="<?=h($message['body'])?>" maxlength="4000" aria-label="Edit message"><button class="sc-btn">Save edit</button></form><form method="post"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_delete"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="message_id" value="<?=(int)$message['id']?>"><button class="sc-btn">Remove message</button></form><?php endif;?>
+                  </div></details>
+                <?php endif;?>
+              </article>
+            <?php endforeach;?>
           </div>
-          <?php $replyTo=(int)($_GET['reply_to']??0);$reply=null;if($replyTo){$rq=$db->prepare("SELECT m.id,m.body,u.name FROM sl_messages m JOIN users u ON u.id=m.sender_id WHERE m.id=? AND m.conversation_id=? AND m.deleted_at IS NULL");$rq->execute([$replyTo,$conversationId]);$reply=$rq->fetch()?:null;}?>
-          <?php if($reply):?><div class="sc-reply">Replying to <?=h($reply['name'])?>: <?=h(mb_strimwidth($reply['body'],0,130,'…'))?> <a href="?page=communication&conversation_id=<?=$conversationId?>">Cancel</a></div><?php endif;?>
-          <form method="post" enctype="multipart/form-data" class="sc-compose"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_send"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="parent_message_id" value="<?=$reply?(int)$reply['id']:0?>"><input type="hidden" name="client_nonce" value="<?=h(bin2hex(random_bytes(16)))?>"><div class="sc-form"><label class="sr-only" for="scBody">Message</label><textarea id="scBody" name="body" rows="2" maxlength="4000" placeholder="Write a message…"></textarea><label class="sr-only" for="scAttachment">Attach an academic file</label><input id="scAttachment" type="file" name="attachment" accept=".pdf,.txt,.docx,.pptx,.png,.jpg,.jpeg,.webp"><button class="sc-btn primary">Send</button></div><small class="sc-muted">PDF, TXT, DOCX, PPTX, PNG, JPG or WebP · up to 10 MB. Attachments are private to conversation members.</small></form>
+          <form method="post" enctype="multipart/form-data" class="sc-compose"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_send"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="parent_message_id" value="0"><input type="hidden" name="client_nonce" value="<?=h(bin2hex(random_bytes(16)))?>"><div class="sc-form"><label class="sc-attach" for="scAttachment" title="Attach a file" aria-label="Attach a file">＋</label><label class="sr-only" for="scBody">Message</label><textarea id="scBody" name="body" rows="1" maxlength="4000" placeholder="Message the group…" required></textarea><label class="sr-only" for="scAttachment">Attach an academic file</label><input id="scAttachment" type="file" name="attachment" accept=".pdf,.txt,.docx,.pptx,.png,.jpg,.jpeg,.webp"><button class="sc-btn primary icon" aria-label="Send message" title="Send">➤</button></div><small class="sc-muted">Attach PDF, TXT, DOCX, PPTX, PNG, JPG or WebP (up to 10 MB).</small></form>
           <?php endif;?>
         </section>
       </div>
     </div>
+    <script>document.addEventListener("DOMContentLoaded",function(){var box=document.getElementById("scMessages");if(box)box.scrollTop=box.scrollHeight;});</script>
     <?php
 }
