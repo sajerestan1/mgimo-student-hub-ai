@@ -521,8 +521,6 @@ def main():
     check(status == 200 and "PRIVATE_CONTEXT_SENTINEL" in private_owner_html,
           "second student can read their own AI conversation")
 
-    status, denied_class = request(f"/?page=communication&conversation_id={class_conversation_id}")
-    check(status == 404, "student outside a course section cannot open its class chat")
     status, direct_html = request(f"/?page=communication&conversation_id={direct_id}")
     check(status == 200 and "CI direct message" in direct_html and "CI reply" in direct_html,
           "direct conversation history persists for the other authorized participant")
@@ -531,8 +529,16 @@ def main():
     check(db_count("SELECT COUNT(*) AS n FROM sl_messages WHERE id=%s AND sender_id=3 AND body=%s",
                    (direct_message_id, "CI direct message")) == 1,
           "a participant cannot edit another participant's message")
+    outsider_id = db_execute(
+        "INSERT INTO users(name,email,password_hash,role,account_status) SELECT %s,%s,password_hash,'student','active' FROM users WHERE id=3",
+        ("CI Outsider", "outsider@studentlife.test"))
+    request("/?logout=1")
+    outsider_token = login("outsider@studentlife.test", "student")
+    status, denied_class = request(f"/?page=communication&conversation_id={class_conversation_id}")
+    check(status == 404, "student outside a course section cannot open its class chat")
     status, denied_attachment = request(f"/?page=communication&comms_attachment={attachment_id}")
-    check(status == 404, "non-member cannot download a class-chat attachment by guessing its ID")
+    check(status == 404 and outsider_id > 0,
+          "non-member cannot download a class-chat attachment by guessing its ID")
 
     status, second_student_html = request("/?page=ai_study")
     check(status == 200 and "Own quiz" not in second_student_html and
