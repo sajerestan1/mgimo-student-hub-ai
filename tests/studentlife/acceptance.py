@@ -224,14 +224,57 @@ def main():
     request("/?logout=1")
     student_token = login("student1@studentlife.test", "student")
     status, html = request("/?page=ai_study")
-    check(status == 200 and "AI Study Companion" in html and "AI service is not configured" in html,
-          "student AI workspace is visible and clearly disabled without provider settings")
+    check(status == 200 and "AI Academic Assistant" in html and "AI service is not configured" in html,
+          "student AI workspace uses the requested name and clearly reports provider status")
     check("1 enrolled course sections" in html and "3 upcoming class sessions" in html,
           "student AI context reflects the student's enrollment and timetable")
     check("1 personal grade entries" in html,
           "student AI context excludes a grade linked to another student's personal course")
     check("Learn a subject" in html and "Exam preparation" in html and "University guide" in html,
           "student AI page exposes unified academic support modes")
+    check("Memory and Personalization" in html and "No memories saved" in html,
+          "student memory controls start empty and private")
+    post_action(student_token, "save_ai_memory", category="learning",
+                memory_text="I prefer a short example before a detailed explanation.",
+                confirm_memory="1")
+    check(db_count("SELECT COUNT(*) AS n FROM student_ai_memories WHERE owner_id=3") == 0,
+          "memory cannot be saved until the student enables consent")
+    post_action(student_token, "save_ai_memory_settings", memory_enabled="1",
+                allow_learning="1")
+    post_action(student_token, "save_ai_memory", category="personal",
+                memory_text="Unapproved personal detail", confirm_memory="1")
+    check(db_count("SELECT COUNT(*) AS n FROM student_ai_memories WHERE owner_id=3") == 0,
+          "memory categories require separate student consent")
+    post_action(student_token, "save_ai_memory", category="learning",
+                memory_text="I prefer a short example before a detailed explanation.",
+                confirm_memory="1")
+    memory_id = db_count("SELECT MAX(id) AS id FROM student_ai_memories WHERE owner_id=3")
+    check(memory_id and db_count("SELECT COUNT(*) AS n FROM student_ai_memories WHERE id=%s AND category='learning'",
+                                 (memory_id,)) == 1,
+          "student can save an explicitly approved learning preference")
+    check("I prefer a short example before a detailed explanation." in request("/?page=ai_study")[1],
+          "student can view their saved memory")
+    request("/?logout=1")
+    student2_token = login("student2@studentlife.test", "student")
+    status, other_student_html = request("/?page=ai_study")
+    check(status == 200 and "I prefer a short example before a detailed explanation." not in other_student_html,
+          "another student cannot view the saved memory")
+    post_action(student2_token, "save_ai_memory_settings", memory_enabled="1",
+                allow_learning="1")
+    post_action(student2_token, "update_ai_memory", memory_id=str(memory_id),
+                category="learning", memory_text="Unauthorized edit", confirm_memory="1")
+    post_action(student2_token, "delete_ai_memory", memory_id=str(memory_id))
+    check(db_count("SELECT COUNT(*) AS n FROM student_ai_memories WHERE id=%s AND owner_id=3 AND memory_text=%s",
+                   (memory_id, "I prefer a short example before a detailed explanation.")) == 1,
+          "another student cannot edit or delete the memory by changing its ID")
+    request("/?logout=1")
+    student_token = login("student1@studentlife.test", "student")
+    status, restored_memory_html = request("/?page=ai_study")
+    check(status == 200 and "I prefer a short example before a detailed explanation." in restored_memory_html,
+          "approved memory persists across sign-in")
+    post_action(student_token, "clear_ai_memory")
+    check(db_count("SELECT COUNT(*) AS n FROM student_ai_memories WHERE owner_id=3") == 0,
+          "student can clear all of their own saved memories")
     upload_document(student_token, "CI lecture.txt",
                     "A sample lecture note about international relations.\nThe core claim is that institutions shape cooperation.".encode())
     document_id = db_count("SELECT MAX(id) AS id FROM student_documents WHERE owner_id=3")
