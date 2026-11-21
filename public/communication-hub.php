@@ -436,7 +436,7 @@ function sl_comms_render(PDO $db, array $user): void
           <?php if($query!==''):?><p class="sc-muted">Search results for “<?=h($query)?>” · <?=count($messages)?> shown</p><?php endif;?>
           </div>
           <?php if($messages&&count($messages)>=50):?><div class="sc-older"><a href="?page=communication&conversation_id=<?=$conversationId?>&before=<?=(int)$messages[0]['id']?>&q=<?=urlencode($query)?>"><?=h(sl_t("communication.earlier"))?></a></div><?php endif;?>
-          <div class="sc-messages" id="scMessages" role="log" aria-live="polite" aria-label="Chat messages"><?php if(!$messages):?><div class="sc-empty"><?=$query?sl_t($query?'communication.no_matches':'communication.start')?></div><?php endif;?>
+          <div class="sc-messages" id="scMessages" role="log" aria-live="polite" aria-label="Chat messages"><?php if(!$messages):?><div class="sc-empty"><?=h(sl_t($query?'communication.no_matches':'communication.start'))?><?php endif;?>
             <?php foreach($messages as $message):?>
               <article class="sc-message <?=(int)$message['sender_id']===$userId?'sc-own':''?>" id="msg-<?=(int)$message['id']?>">
                 <div class="sc-message-meta"><?php if((int)$message['sender_id']!==$userId):?><b><?=h($message['sender'])?></b><?php endif;?><small><?=h($message['created_at'])?><?=!empty($message['edited_at'])?' · edited':''?></small></div>
