@@ -211,6 +211,10 @@ function sl_i18n_phrase_map(): array
         'Very Weak'=>'Очень слабый','Weak'=>'Слабый','Normal'=>'Средний','Strong'=>'Надёжный','Very Strong'=>'Очень надёжный'
     ];
     $extraMore=[
+        'No completed demo assessments yet. Your attempts on this device will appear here.'=>'Вы ещё не проходили демонстрационные тесты. Результаты попыток на этом устройстве появятся здесь.',
+        'High risk'=>'Высокий риск','Critical risk'=>'Критический риск','Message a student'=>'Написать студенту','Search this conversation'=>'Поиск в этой беседе',
+        'Harassment'=>'Оскорбления и преследование','Spam'=>'Спам','Threat'=>'Угрозы','Private information'=>'Личные данные','Other'=>'Другое',
+        'Attach an academic file'=>'Прикрепить учебный файл',
         'English'=>'Английский','🇬🇧 English'=>'🇬🇧 Английский','Courses'=>'Курсы','Course'=>'Курс','Topic'=>'Тема','Communication Inbox'=>'Входящие сообщения',
         'Sample course catalogue for the student dashboard. All instructors and addresses below are fictional.'=>'Пример каталога курсов для панели студента. Все преподаватели и адреса вымышлены.',
         'Create departments, academic terms, course catalogue entries, course sections and student enrolments.'=>'Создавайте кафедры, учебные периоды, курсы, учебные группы и записи о зачислении студентов.',
