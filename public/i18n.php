@@ -417,6 +417,7 @@ function sl_i18n_text(string $text, array $map): string
     foreach($units as $english=>$forms){
         $text=preg_replace_callback('/\\b(\\d+) '.preg_quote($english,'/').'s?\\b/i',function($m)use($forms){$n=(int)$m[1];return $m[1].' '.sl_plural_ru($n,$forms[0],$forms[1],$forms[2]);},$text)??$text;
     }
+    if(preg_match('/^Demo result: (\\d+) \/ (\\d+) auto-scored questions \\((\\d+)%\\)\\.$/',$text,$m))return 'Результат демонстрационного теста: '.$m[1].' из '.$m[2].' вопросов оценено автоматически ('.$m[3].'%).';
     $prefixes=[
         'Search results for “'=>'Результаты поиска: «',
         'Review your answer against: '=>'Сверьте ответ с критериями: ',
@@ -424,7 +425,7 @@ function sl_i18n_text(string $text, array $map): string
         'Demo result: '=>'Результат демонстрационного теста: ',
     ];
     foreach($prefixes as $from=>$to){if(str_starts_with($text,$from)){$text=$to.substr($text,strlen($from));break;}}
-    if(preg_match('/^Demo result: (\\d+) \/ (\\d+) auto-scored questions \\((\\d+)%\\)\\.$/',$text,$m))return 'Результат демонстрационного теста: '.$m[1].' из '.$m[2].' вопросов оценено автоматически ('.$m[3].'%).';
+    if(str_starts_with($text,'Результаты поиска: «')&&str_ends_with($text,'”'))$text=substr($text,0,-strlen('”')).'»';
     return $text;
 }
 
