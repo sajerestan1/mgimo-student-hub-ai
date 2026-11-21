@@ -98,6 +98,150 @@ function sl_t(string $key, array $vars = []): string
     return $value;
 }
 
+function sl_i18n_phrase_map(): array
+{
+    static $map=null;if($map!==null)return $map;
+    $map=[];
+    $catalogue=sl_i18n_catalogue();
+    foreach($catalogue['en'] as $key=>$english){$russian=$catalogue['ru'][$key]??null;if(is_string($english)&&is_string($russian)&&$english!==$russian)$map[$english]=$russian;}
+    $extra=[
+        'ADMINISTRATION'=>'АДМИНИСТРИРОВАНИЕ','ACADEMIC MANAGEMENT'=>'УПРАВЛЕНИЕ ОБУЧЕНИЕМ','COMMUNICATION & RESOURCES'=>'ОБЩЕНИЕ И РЕСУРСЫ','INSIGHTS & CONTROL'=>'АНАЛИТИКА И УПРАВЛЕНИЕ',
+        'Signed in as'=>'Вы вошли как','Menu'=>'Меню','Search StudentLife'=>'Поиск в StudentLife','Show'=>'Показать','Hide'=>'Скрыть','EN'=>'EN','RU'=>'RU',
+        'Total Users'=>'Всего пользователей','Across all accounts'=>'Во всех учётных записях','Course Sections'=>'Учебные группы','active enrolments'=>'активных зачислений',
+        'Class Sessions'=>'Занятия','upcoming ·'=>'предстоящих ·','attendance records'=>'записей посещаемости','PLATFORM CONTROL'=>'УПРАВЛЕНИЕ ПЛАТФОРМОЙ',
+        'Manage Users →'=>'Управление пользователями →','Students'=>'Студенты','Lecturers / Professors'=>'Преподаватели','Administrators'=>'Администраторы',
+        'Create accounts and assign access roles. Public registration remains disabled.'=>'Создавайте учётные записи и назначайте роли. Открытая регистрация отключена.',
+        'ACADEMIC OVERSIGHT'=>'КОНТРОЛЬ УЧЕБНОГО ПРОЦЕССА','Academic Activity'=>'Учебная деятельность','Manage Academics →'=>'Управление обучением →',
+        'Course sections'=>'Учебные группы','Upcoming class sessions'=>'Предстоящие занятия','Attendance records'=>'Записи посещаемости',
+        'Monitor shared institutional courses, enrolments, scheduled classes and recorded attendance.'=>'Отслеживайте общие курсы, зачисления, расписание и посещаемость.',
+        'RECENT REGISTRATIONS'=>'НЕДАВНО СОЗДАННЫЕ УЧЁТНЫЕ ЗАПИСИ','Recently Created Accounts'=>'Недавно созданные учётные записи','View All →'=>'Показать все →',
+        'Name'=>'Имя','Role'=>'Роль','Created'=>'Создано','PROJECT MODULES'=>'РАЗДЕЛЫ ПЛАТФОРМЫ','Administration Shortcuts'=>'Быстрый доступ к администрированию',
+        'Create student, lecturer and admin accounts'=>'Создание учётных записей студентов, преподавателей и администраторов',
+        'Academic Overview'=>'Обзор учебного процесса','Review courses, tasks, timetable and grades'=>'Просмотр курсов, заданий, расписания и оценок',
+        'Plan notices for the community'=>'Подготовка объявлений для сообщества','Review platform activity'=>'Просмотр активности платформы',
+        'Message any active student, lecturer or administrator'=>'Сообщения студентам, преподавателям и администраторам',
+        'Update your profile and sign-in password'=>'Изменение профиля и пароля для входа',
+        'LECTURER WORKSPACE'=>'РАБОЧЕЕ ПРОСТРАНСТВО ПРЕПОДАВАТЕЛЯ','Your teaching assignments, upcoming classes and attendance responsibilities.'=>'Ваши курсы, предстоящие занятия и задачи по учёту посещаемости.',
+        'Assigned sections'=>'Назначенные группы','Enrolled students'=>'Зачисленные студенты','Upcoming sessions'=>'Предстоящие занятия','Sessions needing attendance'=>'Занятия без отметок посещаемости',
+        'Upcoming teaching sessions'=>'Предстоящие занятия','Open timetable →'=>'Открыть расписание →','No upcoming sessions are scheduled for your assigned sections.'=>'Для назначенных вам групп предстоящих занятий нет.',
+        'STUDENT WORKSPACE'=>'РАБОЧЕЕ ПРОСТРАНСТВО СТУДЕНТА','Your academic activity, classes and progress at a glance.'=>'Краткий обзор вашей учёбы, занятий и успеваемости.',
+        'View courses →'=>'К курсам →','Semester average'=>'Средний балл за семестр','View grades →'=>'К оценкам →','Attendance'=>'Посещаемость','View report →'=>'К отчёту →',
+        'Upcoming classes'=>'Предстоящие занятия','prepare("SELECT COUNT(*) FROM tasks WHERE user_id=? AND status'=>'',
+        'ACADEMIC BRIEFING'=>'УЧЕБНАЯ СВОДКА','What needs your attention'=>'Требует внимания','All assignments →'=>'Все задания →',
+        'Check the task details and contact your lecturer if you need clarification on next steps.'=>'Проверьте задание и свяжитесь с преподавателем, если нужны разъяснения.',
+        'No upcoming dated tasks are recorded. Add official deadlines as your lecturers publish them.'=>'Заданий с указанными сроками пока нет. Добавляйте официальные сроки после публикации преподавателями.',
+        'ACADEMIC PERFORMANCE'=>'УЧЕБНЫЕ РЕЗУЛЬТАТЫ','Course results'=>'Результаты по курсам','Open intelligence →'=>'Открыть аналитику →',
+        'Record returned assessments under Grades to see course progress here.'=>'Добавьте результаты оценивания в раздел «Оценки», чтобы видеть прогресс по курсам.',
+        'My upcoming classes'=>'Мои предстоящие занятия','View timetable →'=>'К расписанию →','No upcoming institutional classes are scheduled for your account yet.'=>'Для вашей учётной записи пока нет занятий в расписании.',
+        'Room'=>'Аудитория','Set this week’s focus'=>'Цель на эту неделю','Review courses →'=>'Просмотреть курсы →','Keep deadlines visible'=>'Следите за сроками',
+        'Open assignments →'=>'Открыть задания →','Check your records'=>'Проверьте свои записи','Attendance →'=>'Посещаемость →',
+        'CAMPUS UPDATES'=>'НОВОСТИ КАМПУСА','Recent announcements'=>'Последние объявления','All updates →'=>'Все обновления →',
+        'No new announcements are published.'=>'Новых объявлений нет.','NEXT STEPS'=>'СЛЕДУЮЩИЕ ШАГИ','Student tools'=>'Инструменты студента',
+        'Open inbox'=>'Открыть входящие','Plan a study session'=>'Запланировать занятие','Find or start a study group'=>'Найти или создать учебную группу',
+        'See study recommendations'=>'Посмотреть рекомендации по учёбе','My courses'=>'Мои курсы','Demo data'=>'Демонстрационные данные',
+        'Course workspace →'=>'К курсу →','8 modules'=>'8 модулей','28 resources'=>'28 ресурсов','Fall Semester 2026'=>'Осенний семестр 2026',
+        'DEMO ASSIGNMENTS'=>'ДЕМОНСТРАЦИОННЫЕ ЗАДАНИЯ','Assignments & tasks'=>'Задания и задачи','View tasks →'=>'К заданиям →',
+        'Open'=>'Открыть','Download PDF brief'=>'Скачать задание в PDF','Upload submission'=>'Загрузить работу','Upload file'=>'Загрузить файл',
+        'Your uploaded files'=>'Ваши загруженные файлы','Download'=>'Скачать','Personal tasks'=>'Личные задачи',
+        'No personal tasks yet. Add assignments to keep track of deadlines.'=>'Личных задач пока нет. Добавьте задания, чтобы следить за сроками.',
+        'Task'=>'Задача','Due'=>'Срок','Status'=>'Статус','FIND WHAT YOU NEED'=>'ПОИСК','Search StudentLife'=>'Поиск в StudentLife',
+        'Search your courses, assignments and timetable events.'=>'Ищите курсы, задания и события расписания.','Enter a keyword in the search bar above.'=>'Введите запрос в строке поиска выше.',
+        'No matching courses, assignments or timetable events were found.'=>'Курсы, задания и события расписания по запросу не найдены.',
+        'Type'=>'Тип','Result'=>'Результат','Details'=>'Подробности','ADMINISTRATION · ACCESS CONTROL'=>'АДМИНИСТРИРОВАНИЕ · ДОСТУП',
+        'Create accounts and assign the correct workspace. Only administrators can manage accounts.'=>'Создавайте учётные записи и назначайте рабочие пространства. Управлять учётными записями могут только администраторы.',
+        'Create a new account'=>'Создать учётную запись','Admin only'=>'Только администратор','Workspace role'=>'Роль в системе',
+        'Create account'=>'Создать учётную запись','All registered accounts'=>'Все учётные записи','accounts'=>'учётных записей',
+        'Account'=>'Учётная запись','Role & status'=>'Роль и статус','Administrator actions'=>'Действия администратора',
+        'Account status'=>'Статус учётной записи','Active'=>'Активна','Suspended'=>'Приостановлена','Deactivated'=>'Отключена',
+        'Email verification'=>'Подтверждение почты','Needs verification'=>'Требуется подтверждение','Mark verified by administrator'=>'Подтвердить от имени администратора',
+        'Optional password reset'=>'Сброс пароля (необязательно)','Save account changes'=>'Сохранить изменения учётной записи',
+        'Administrator audit trail'=>'Журнал действий администратора','Latest 15 actions'=>'Последние 15 действий','No administrator actions recorded yet.'=>'Действия администратора пока не зарегистрированы.',
+        'Action'=>'Действие','Demo data setup'=>'Настройка демонстрационных данных','Seed demo data'=>'Добавить демонстрационные данные',
+        'ADMINISTRATION · SHARED ACADEMIC DATA'=>'АДМИНИСТРИРОВАНИЕ · ОБЩИЕ УЧЕБНЫЕ ДАННЫЕ','Academic Management'=>'Управление учебным процессом',
+        'Departments'=>'Факультеты','Academic terms'=>'Учебные периоды','Course catalogue'=>'Каталог курсов','Create department'=>'Создать факультет',
+        'Save department'=>'Сохранить факультет','Create academic term'=>'Создать учебный период','Save term'=>'Сохранить период',
+        'Add course to catalogue'=>'Добавить курс в каталог','Department'=>'Факультет','No department assigned'=>'Факультет не назначен',
+        'Description'=>'Описание','Add catalogue course'=>'Добавить курс в каталог','Open a course section'=>'Открыть учебную группу',
+        'Academic term'=>'Учебный период','Lecturer'=>'Преподаватель','Not assigned'=>'Не назначен','Create course section'=>'Создать учебную группу',
+        'Enrol a student'=>'Зачислить студента','Course section'=>'Учебная группа','Student account'=>'Учётная запись студента','Enrol student'=>'Зачислить студента',
+        'Current enrolments'=>'Текущие зачисления','Student registrations across all shared course sections.'=>'Зачисления студентов во все общие учебные группы.',
+        'Shared course catalogue'=>'Общий каталог курсов','courses'=>'курсов','Code'=>'Код','Credits'=>'Кредиты',
+        'The shared catalogue is empty. Add the first course above.'=>'Общий каталог пуст. Добавьте первый курс выше.',
+        'Course sections & lecturer assignments'=>'Учебные группы и назначения преподавателей','sections'=>'групп','Term / Section'=>'Период / группа',
+        'Enrolled'=>'Зачислено','Capacity'=>'Вместимость','No course sections have been created yet.'=>'Учебные группы ещё не созданы.',
+        'Schedule class sessions'=>'Составить расписание занятий','Save class schedule'=>'Сохранить расписание занятий',
+        'ATTENDANCE INSIGHTS'=>'АНАЛИЗ ПОСЕЩАЕМОСТИ','Attendance Reports'=>'Отчёты о посещаемости',
+        'Attendance records are visible according to your account role.'=>'Записи посещаемости доступны в соответствии с вашей ролью.',
+        'How to read this report'=>'Как читать этот отчёт','Present'=>'Присутствовал','Absent'=>'Отсутствовал','Late'=>'Опоздал',
+        'Recorded sessions'=>'Занятия с отметками','No attendance records have been recorded yet.'=>'Записи посещаемости пока отсутствуют.',
+        'A live summary of academic activity recorded in StudentLife.'=>'Текущая сводка учебной активности в StudentLife.',
+        'Workspace activity by account'=>'Активность в рабочих пространствах','Preview records'=>'Записи предпросмотра',
+        'No active accounts were found.'=>'Активные учётные записи не найдены.','Enrolled sections'=>'Группы, в которые зачислен',
+        'Write an announcement'=>'Создать объявление','Title'=>'Название','Message'=>'Сообщение','Audience'=>'Аудитория','Everyone'=>'Все',
+        'Publish now'=>'Опубликовать','Draft'=>'Черновик','Save announcement'=>'Сохранить объявление','There are no announcements for your account yet.'=>'Для вашей учётной записи пока нет объявлений.',
+        'Add a resource'=>'Добавить ресурс','Link (optional)'=>'Ссылка (необязательно)','Add resource'=>'Добавить ресурс',
+        'No resources are available yet.'=>'Ресурсы пока недоступны.','For everyone'=>'Для всех','Open resource ↗'=>'Открыть ресурс ↗',
+        'Demo resource — no file attached.'=>'Демонстрационный ресурс — файл не прикреплён.','Archive'=>'В архив','Restore'=>'Восстановить',
+        'WORKSPACE'=>'РАБОЧЕЕ ПРОСТРАНСТВО','System Settings'=>'Системные настройки','Settings'=>'Настройки',
+        'Set the institution details shown across the workspace.'=>'Настройте сведения об учебном заведении, отображаемые в системе.',
+        'Choose your workspace language.'=>'Выберите язык интерфейса.','Institution details'=>'Сведения об учебном заведении',
+        'Institution name'=>'Название учебного заведения','Academic year'=>'Учебный год','Support email'=>'Электронная почта поддержки',
+        'Save settings'=>'Сохранить настройки','Account security'=>'Безопасность учётной записи',
+        'StudentLife uses your account email and password. Contact an administrator if you need a password reset.'=>'Для входа используются электронная почта и пароль учётной записи. Для сброса пароля обратитесь к администратору.',
+        'Language'=>'Язык','Language selection applies to the current browser session.'=>'Выбранный язык действует только в текущем сеансе браузера.',
+        'YOUR ACCOUNT'=>'ВАША УЧЁТНАЯ ЗАПИСЬ','My Profile'=>'Мой профиль','Review your account details and update your display name.'=>'Просматривайте данные учётной записи и изменяйте отображаемое имя.',
+        'Display name'=>'Отображаемое имя','Email'=>'Электронная почта','Save profile'=>'Сохранить профиль',
+        'Change password'=>'Изменить пароль','Current password'=>'Текущий пароль','New password'=>'Новый пароль','Confirm new password'=>'Подтвердите новый пароль',
+        'Update password'=>'Обновить пароль','Academic Progress'=>'Успеваемость','Summary of current courses, assignments and attendance.'=>'Сводка по текущим курсам, заданиям и посещаемости.',
+        'Announcements'=>'Объявления','Campus updates and notices for your account.'=>'Новости кампуса и уведомления для вашей учётной записи.',
+        'Keep up with course updates'=>'Следите за обновлениями курсов','Documents & Resources'=>'Документы и ресурсы',
+        'Shared reading and study links for your courses.'=>'Учебные материалы и ссылки для ваших курсов.','Read an academic article'=>'Как читать академическую статью',
+        'Plan an essay'=>'Как спланировать эссе','Use sources carefully'=>'Работайте с источниками внимательно',
+        'Create a practice set'=>'Создать тренировочный набор','No conversations yet.'=>'Бесед пока нет.',
+        'AI Academic Assistant'=>'ИИ-помощник в учёбе','AI Study Companion'=>'Помощник по учёбе с ИИ',
+        'Try asking'=>'Попробуйте спросить','Send question'=>'Отправить вопрос','Your question'=>'Ваш вопрос',
+        'Your course and record context'=>'Контекст курсов и учебных записей','Ask the Study Companion'=>'Спросить учебного помощника',
+        'AI service is not configured.'=>'Сервис ИИ не настроен.','Provider configured'=>'Поставщик ИИ настроен',
+        'Practice a topic'=>'Повторите тему','Plan study time'=>'Запланируйте время для учёбы','Check your records'=>'Проверьте учебные записи',
+        'Grades & Transcript'=>'Оценки и выписка','Quizzes & Exams'=>'Тесты и экзамены','Timetable'=>'Расписание','Library'=>'Библиотека',
+        'Study Groups'=>'Учебные группы','Applications & Certificates'=>'Заявки и справки','Academic Integrity'=>'Академическая добросовестность',
+        'Profile & Settings'=>'Профиль и настройки','Update'=>'Обновить','Save'=>'Сохранить','Cancel'=>'Отмена',
+        'No messages yet.'=>'Сообщений пока нет.','Send message'=>'Отправить сообщение','Reply'=>'Ответить','Edit'=>'Изменить','Delete'=>'Удалить',
+        'Pending'=>'Ожидает рассмотрения','Approved'=>'Одобрено','Rejected'=>'Отклонено','Processing'=>'В обработке',
+        'Very Weak'=>'Очень слабый','Weak'=>'Слабый','Normal'=>'Средний','Strong'=>'Надёжный','Very Strong'=>'Очень надёжный'
+    ];
+    $map=array_merge($map,$extra);return $map;
+}
+
+function sl_i18n_translate_html(string $html): string
+{
+    if(($GLOBALS['sl_language']??'en')!=='ru')return $html;
+    $map=sl_i18n_phrase_map();$parts=preg_split('/(<[^>]*>)/s',$html,-1,PREG_SPLIT_DELIM_CAPTURE);if(!is_array($parts))return $html;
+    $stack=[];$void=['area'=>1,'base'=>1,'br'=>1,'col'=>1,'embed'=>1,'hr'=>1,'img'=>1,'input'=>1,'link'=>1,'meta'=>1,'param'=>1,'source'=>1,'track'=>1,'wbr'=>1];
+    foreach($parts as &$part){
+        if($part==='')continue;
+        if($part[0]==='<'){
+            if(preg_match('/^<\\s*\\//',$part)){if($stack)array_pop($stack);continue;}
+            if(!preg_match('/^<([a-zA-Z0-9]+)/',$part,$tag))continue;
+            $name=strtolower($tag[1]);$blocked=in_array($name,['script','style','textarea'],true);
+            $classes='';if(preg_match('/\\bclass=["\\\']([^"\\\']*)["\\\']/',$part,$cm))$classes=$cm[1];
+            $blocked=$blocked||preg_match('/(?:^|\\s)(?:sc-message-body|ai-message-content|ai-bubble|message-item|notice-card|course-description|resource-description)(?:\\s|$)/',$classes)===1;
+            if(!$blocked&&!in_array($name,['input','img','br','hr','meta','link'],true)){
+                $stack[]=['blocked'=>false];
+            }elseif(!in_array($name,['input','img','br','hr','meta','link'],true))$stack[]=['blocked'=>true];
+            if(!$blocked){
+                $part=preg_replace_callback('/\\b(placeholder|aria-label|title)=["\\\']([^"\\\']*)["\\\']/i',function($m)use($map){$v=html_entity_decode($m[2],ENT_QUOTES|ENT_HTML5,'UTF-8');return $m[1].'="'.$map[$v]??$m[2].'"';},$part)??$part;
+            }
+        }else{
+            $blocked=false;foreach($stack as $entry)if($entry['blocked']){$blocked=true;break;}
+            if($blocked)continue;
+            $decoded=html_entity_decode(trim($part),ENT_QUOTES|ENT_HTML5,'UTF-8');
+            if(isset($map[$decoded]))$part=preg_replace('/^\\s*.*?\\s*$/s',function()use($part,$decoded,$map){preg_match('/^\\s*/',$part,$lead);preg_match('/\\s*$/',$part,$trail);return ($lead[0]??'').htmlspecialchars($map[$decoded],ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').($trail[0]??'');},$part)??$part;
+        }
+    }unset($part);
+    return implode('',$parts);
+}
+
 function sl_plural_ru(int $count, string $one, string $few, string $many): string
 {
     $n=abs($count);$n10=$n%10;$n100=$n%100;
