@@ -235,9 +235,14 @@ def main():
           "student AI context reflects the student's enrollment and timetable")
     check("1 personal grade entries" in html,
           "student AI context excludes a grade linked to another student's personal course")
-    check("Recorded grade review" in html and "PRIV101" in html and "80.0" in html and
-          "Foreign course row" not in html,
-          "grade review shows only this student's recorded marks and sample counts")
+    check("Recorded grade review" in html,
+          "student AI page includes its recorded grade review")
+    check("PRIV101" in html,
+          "grade review identifies the student's own course")
+    check("80.0" in html,
+          "grade review calculates the recorded course average")
+    check("Foreign course row" not in html,
+          "grade review excludes a mark belonging to another student's course")
     post_action(student_token, "save_academic_plan", title="CI improvement plan",
                 course_code="", plan_text="Review lecture notes twice each week and record questions for the next tutorial.")
     check(db_count("SELECT COUNT(*) AS n FROM student_academic_plans WHERE owner_id=3") == 0,
