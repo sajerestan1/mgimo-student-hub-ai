@@ -512,7 +512,7 @@ function sl_i18n_phrase_map(): array
         'Update'=>'Обновить','Choose your section'=>'Выберите свою учебную группу','Enrolled student'=>'Зачисленный студент','Assigned course section'=>'Назначенная учебная группа',
         'Attendance marked'=>'Посещаемость отмечена','LEARNING RESOURCES'=>'УЧЕБНЫЕ МАТЕРИАЛЫ','COMMUNICATION'=>'ОБЩЕНИЕ',
         // Demo course titles, instructors, descriptions, assignments and announcements.
-        'Welcome, Stanley 👋'=>'Добро пожаловать, Стэнли 👋',
+        'Welcome, Stanley 👋'=>'Добро пожаловать, Стэнли 👋','Stanley'=>'Стэнли','Patience'=>'Пейшенс',
         'Welcome,'=>'Добро пожаловать,',
         '10 term credits'=>'10 зачётных единиц за семестр','1 present of 1 recorded'=>'Присутствовал на 1 из 1 занятия',
         '1 overdue task'=>'1 просроченное задание','3 open · 1 overdue'=>'3 открытых · 1 просроченное',
@@ -614,11 +614,11 @@ function sl_i18n_translate_html(string $html): string
             if(!preg_match('/^<([a-zA-Z0-9]+)/',$part,$tag))continue;
             $name=strtolower($tag[1]);$blocked=in_array($name,['script','style','textarea','pre','code'],true);
             $classes='';if(preg_match('/\\bclass=["\\\']([^"\\\']*)["\\\']/',$part,$cm))$classes=$cm[1];
-            $blocked=$blocked||preg_match('/(?:^|\\s)(?:sc-message-body|ai-message-content|ai-bubble|message-item|notice-card|course-description|resource-description|announcement-body|resource-content|user-content|course-title|course-name|student-name|lecturer-name|assignment-title)(?:\\s|$)/',$classes)===1;
+            $blocked=$blocked||preg_match('/(?:^|\\s)(?:sc-message-body|ai-message-content|ai-bubble|message-item|resource-description|resource-content|user-content|student-name)(?:\\s|$)/',$classes)===1;
             $isVoid=isset($void[$name])||preg_match('/\\/\\s*>$/',$part)===1;
             if(!$isVoid)$stack[]=['name'=>$name,'blocked'=>$blocked];
             if(!$blocked){
-                $part=preg_replace_callback('/\\b(placeholder|aria-label|title)=["\\\']([^"\\\']*)["\\\']/i',function($m)use($map){$v=html_entity_decode($m[2],ENT_QUOTES|ENT_HTML5,'UTF-8');$translated=$map[$v]??$v;return $m[1].'="'.htmlspecialchars($translated,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'"';},$part)??$part;
+                $part=preg_replace_callback('/\\b(placeholder|aria-label|title|alt)=["\\\']([^"\\\']*)["\\\']/i',function($m)use($map){$v=html_entity_decode($m[2],ENT_QUOTES|ENT_HTML5,'UTF-8');$translated=$map[$v]??$v;return $m[1].'="'.htmlspecialchars($translated,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'"';},$part)??$part;
             }
         }else{
             $blocked=false;foreach($stack as $entry)if($entry['blocked']){$blocked=true;break;}
