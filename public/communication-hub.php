@@ -231,13 +231,11 @@ function sl_comms_dispatch(PDO $db, string $action): void
                    ->execute([$messageId,$conversationId,$userId,$original,$stored,$mime,$size]);
             }
             $db->prepare("UPDATE sl_conversations SET updated_at=NOW() WHERE id=?")->execute([$conversationId]);
-            if($room['room_type']!=='class'){
-                $notify=$db->prepare("INSERT IGNORE INTO sl_notifications(user_id,conversation_id,message_id)
-                    SELECT m.user_id,?,? FROM sl_conversation_members m
-                    WHERE m.conversation_id=? AND m.user_id<>? AND m.muted_at IS NULL
-                    AND NOT EXISTS (SELECT 1 FROM sl_notifications n WHERE n.user_id=m.user_id AND n.conversation_id=? AND n.read_at IS NULL AND n.created_at>=DATE_SUB(NOW(),INTERVAL 5 MINUTE))");
-                $notify->execute([$conversationId,$messageId,$conversationId,$userId,$conversationId]);
-            }
+            $notify=$db->prepare("INSERT IGNORE INTO sl_notifications(user_id,conversation_id,message_id)
+                SELECT m.user_id,?,? FROM sl_conversation_members m
+                WHERE m.conversation_id=? AND m.user_id<>? AND m.muted_at IS NULL
+                AND NOT EXISTS (SELECT 1 FROM sl_notifications n WHERE n.user_id=m.user_id AND n.conversation_id=? AND n.read_at IS NULL AND n.created_at>=DATE_SUB(NOW(),INTERVAL 5 MINUTE))");
+            $notify->execute([$conversationId,$messageId,$conversationId,$userId,$conversationId]);
             $db->commit();
         }catch(Throwable $e){
             if($db->inTransaction())$db->rollBack();
