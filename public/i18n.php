@@ -493,3 +493,9 @@ function sl_page_label(string $page): string
 {
     return sl_t('page.'.$page);
 }
+
+
+/** Translate static interface copy at render time after page templates are composed. */
+if (!headers_sent() && ob_get_level() === 0) {
+    ob_start('sl_i18n_translate_html');
+}
