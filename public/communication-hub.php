@@ -309,7 +309,7 @@ function sl_comms_render(PDO $db, array $user): void
 {
     $userId=sl_comms_require_student();sl_comms_sync_student($db,$userId);
     $conversationId=(int)($_GET['conversation_id']??0);$room=$conversationId?sl_comms_room($db,$conversationId,$userId):null;
-    if($conversationId&&!$room){http_response_code(404);$conversationId=0;}
+    if($conversationId&&!$room){http_response_code(404);exit('Conversation not found.');}
     $q=$db->prepare("SELECT c.id,c.room_type,c.title,c.updated_at,
         (SELECT COUNT(*) FROM sl_notifications n WHERE n.conversation_id=c.id AND n.user_id=? AND n.read_at IS NULL) AS unread,
         (SELECT body FROM sl_messages m WHERE m.conversation_id=c.id ORDER BY m.id DESC LIMIT 1) AS last_message
