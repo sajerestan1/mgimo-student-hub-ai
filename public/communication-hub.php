@@ -120,7 +120,7 @@ function sl_comms_redirect(int $conversationId = 0): never
 
 function sl_comms_room(PDO $db, int $conversationId, int $userId): ?array
 {
-    $q = $db->prepare("SELECT c.* FROM sl_conversations c
+    $q = $db->prepare("SELECT c.*,m.muted_at FROM sl_conversations c
         JOIN sl_conversation_members m ON m.conversation_id=c.id AND m.user_id=?
         WHERE c.id=?");
     $q->execute([$userId,$conversationId]);
@@ -231,10 +231,13 @@ function sl_comms_dispatch(PDO $db, string $action): void
                    ->execute([$messageId,$conversationId,$userId,$original,$stored,$mime,$size]);
             }
             $db->prepare("UPDATE sl_conversations SET updated_at=NOW() WHERE id=?")->execute([$conversationId]);
-            $notify=$db->prepare("INSERT IGNORE INTO sl_notifications(user_id,conversation_id,message_id)
-                SELECT m.user_id,?,? FROM sl_conversation_members m
-                WHERE m.conversation_id=? AND m.user_id<>? AND m.muted_at IS NULL");
-            $notify->execute([$conversationId,$messageId,$conversationId,$userId]);
+            if($room['room_type']!=='class'){
+                $notify=$db->prepare("INSERT IGNORE INTO sl_notifications(user_id,conversation_id,message_id)
+                    SELECT m.user_id,?,? FROM sl_conversation_members m
+                    WHERE m.conversation_id=? AND m.user_id<>? AND m.muted_at IS NULL
+                    AND NOT EXISTS (SELECT 1 FROM sl_notifications n WHERE n.user_id=m.user_id AND n.conversation_id=? AND n.read_at IS NULL AND n.created_at>=DATE_SUB(NOW(),INTERVAL 5 MINUTE))");
+                $notify->execute([$conversationId,$messageId,$conversationId,$userId,$conversationId]);
+            }
             $db->commit();
         }catch(Throwable $e){
             if($db->inTransaction())$db->rollBack();
@@ -402,7 +405,7 @@ function sl_comms_render(PDO $db, array $user): void
         </nav></aside>
         <section class="sc-panel sc-thread" aria-label="Active conversation">
           <?php if(!$room):?><div class="sc-empty"><h2>Choose a conversation</h2><p>Open a course-section chat, start a private student message, or join a study group.</p></div>
-          <?php else:?><div class="sc-thread-top"><div class="sc-toolbar"><a class="sc-btn" href="?page=communication">← Conversations</a><strong><?=h($room['title'])?></strong><form method="post" style="margin-left:auto"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_mute"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><button class="sc-btn" name="mute" value="1">Mute / unmute</button></form></div>
+          <?php else:?><div class="sc-thread-top"><div class="sc-toolbar"><a class="sc-btn" href="?page=communication">← Conversations</a><strong><?=h($room['title'])?></strong><form method="post" style="margin-left:auto"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_mute"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><?php if($room['muted_at']):?><button class="sc-btn" name="unmute" value="1">Unmute</button><?php else:?><button class="sc-btn" name="mute" value="1">Mute</button><?php endif;?></form></div>
           <?php if($query!==''):?><p class="sc-muted">Search results for “<?=h($query)?>” · <?=count($messages)?> shown</p><?php endif;?>
           </div>
           <?php if($messages&&count($messages)>=50):?><div class="sc-older"><a href="?page=communication&conversation_id=<?=$conversationId?>&before=<?=(int)$messages[0]['id']?>&q=<?=urlencode($query)?>">Load earlier messages</a></div><?php endif;?>
