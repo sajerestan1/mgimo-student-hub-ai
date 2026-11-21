@@ -126,7 +126,7 @@ function sl_i18n_phrase_map(): array
         'Upcoming teaching sessions'=>'Предстоящие занятия','Open timetable →'=>'Открыть расписание →','No upcoming sessions are scheduled for your assigned sections.'=>'Для назначенных вам групп предстоящих занятий нет.',
         'STUDENT WORKSPACE'=>'РАБОЧЕЕ ПРОСТРАНСТВО СТУДЕНТА','Your academic activity, classes and progress at a glance.'=>'Краткий обзор вашей учёбы, занятий и успеваемости.',
         'View courses →'=>'К курсам →','Semester average'=>'Средний балл за семестр','View grades →'=>'К оценкам →','Attendance'=>'Посещаемость','View report →'=>'К отчёту →',
-        'Upcoming classes'=>'Предстоящие занятия','prepare("SELECT COUNT(*) FROM tasks WHERE user_id=? AND status'=>'',
+        'Upcoming classes'=>'Предстоящие занятия',
         'ACADEMIC BRIEFING'=>'УЧЕБНАЯ СВОДКА','What needs your attention'=>'Требует внимания','All assignments →'=>'Все задания →',
         'Check the task details and contact your lecturer if you need clarification on next steps.'=>'Проверьте задание и свяжитесь с преподавателем, если нужны разъяснения.',
         'No upcoming dated tasks are recorded. Add official deadlines as your lecturers publish them.'=>'Заданий с указанными сроками пока нет. Добавляйте официальные сроки после публикации преподавателями.',
@@ -230,13 +230,13 @@ function sl_i18n_translate_html(string $html): string
                 $stack[]=['blocked'=>false];
             }elseif(!in_array($name,['input','img','br','hr','meta','link'],true))$stack[]=['blocked'=>true];
             if(!$blocked){
-                $part=preg_replace_callback('/\\b(placeholder|aria-label|title)=["\\\']([^"\\\']*)["\\\']/i',function($m)use($map){$v=html_entity_decode($m[2],ENT_QUOTES|ENT_HTML5,'UTF-8');return $m[1].'="'.$map[$v]??$m[2].'"';},$part)??$part;
+                $part=preg_replace_callback('/\\b(placeholder|aria-label|title)=["\\\']([^"\\\']*)["\\\']/i',function($m)use($map){$v=html_entity_decode($m[2],ENT_QUOTES|ENT_HTML5,'UTF-8');$translated=$map[$v]??$v;return $m[1].'="'.htmlspecialchars($translated,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'"';},$part)??$part;
             }
         }else{
             $blocked=false;foreach($stack as $entry)if($entry['blocked']){$blocked=true;break;}
             if($blocked)continue;
             $decoded=html_entity_decode(trim($part),ENT_QUOTES|ENT_HTML5,'UTF-8');
-            if(isset($map[$decoded]))$part=preg_replace('/^\\s*.*?\\s*$/s',function()use($part,$decoded,$map){preg_match('/^\\s*/',$part,$lead);preg_match('/\\s*$/',$part,$trail);return ($lead[0]??'').htmlspecialchars($map[$decoded],ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').($trail[0]??'');},$part)??$part;
+            if(isset($map[$decoded]))$part=preg_replace_callback('/^(\\s*)(.*?)(\\s*)$/s',function($m)use($decoded,$map){return $m[1].htmlspecialchars($map[$decoded],ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').$m[3];},$part)??$part;
         }
     }unset($part);
     return implode('',$parts);
