@@ -235,6 +235,19 @@ def main():
           "student AI context reflects the student's enrollment and timetable")
     check("1 personal grade entries" in html,
           "student AI context excludes a grade linked to another student's personal course")
+    check("Recorded grade review" in html and "PRIV101" in html and "80.0" in html and
+          "Foreign course row" not in html,
+          "grade review shows only this student's recorded marks and sample counts")
+    post_action(student_token, "save_academic_plan", title="CI improvement plan",
+                course_code="", plan_text="Review lecture notes twice each week and record questions for the next tutorial.")
+    check(db_count("SELECT COUNT(*) AS n FROM student_academic_plans WHERE owner_id=3") == 0,
+          "academic plan save requires explicit student confirmation")
+    post_action(student_token, "save_academic_plan", title="CI improvement plan",
+                course_code="", plan_text="Review lecture notes twice each week and record questions for the next tutorial.",
+                confirm_plan="1")
+    plan_id = db_count("SELECT MAX(id) AS id FROM student_academic_plans WHERE owner_id=3")
+    check(plan_id and "CI improvement plan" in request("/?page=ai_study")[1],
+          "student can save and view a personal academic improvement plan")
     check("Learn a subject" in html and "Exam preparation" in html and "University guide" in html,
           "student AI page exposes unified academic support modes")
     check("Document output" in html and "Quick summary" in html and
@@ -270,8 +283,17 @@ def main():
     request("/?logout=1")
     student2_token = login("student2@studentlife.test", "student")
     status, other_student_html = request("/?page=ai_study")
-    check(status == 200 and "I prefer a short example before a detailed explanation." not in other_student_html,
-          "another student cannot view the saved memory")
+    check(status == 200 and "I prefer a short example before a detailed explanation." not in other_student_html and
+          "CI improvement plan" not in other_student_html,
+          "another student cannot view the saved memory or improvement plan")
+    post_action(student2_token, "update_academic_plan", plan_id=str(plan_id),
+                course_code="", title="Unauthorized plan change",
+                plan_text="Replace the student's plan", target_date="",
+                status="completed", confirm_plan="1")
+    post_action(student2_token, "delete_academic_plan", plan_id=str(plan_id))
+    check(db_count("SELECT COUNT(*) AS n FROM student_academic_plans WHERE id=%s AND owner_id=3 AND title=%s AND status='active'",
+                   (plan_id, "CI improvement plan")) == 1,
+          "another student cannot edit or delete the plan by changing its ID")
     post_action(student2_token, "save_ai_memory_settings", memory_enabled="1",
                 allow_learning="1")
     post_action(student2_token, "update_ai_memory", memory_id=str(memory_id),
@@ -283,8 +305,20 @@ def main():
     request("/?logout=1")
     student_token = login("student1@studentlife.test", "student")
     status, restored_memory_html = request("/?page=ai_study")
-    check(status == 200 and "I prefer a short example before a detailed explanation." in restored_memory_html,
-          "approved memory persists across sign-in")
+    check(status == 200 and "I prefer a short example before a detailed explanation." in restored_memory_html and
+          "CI improvement plan" in restored_memory_html,
+          "approved memory and improvement plan persist across sign-in")
+    post_action(student_token, "update_academic_plan", plan_id=str(plan_id),
+                course_code="", title="CI improvement plan",
+                plan_text="Review lecture notes twice each week and record questions for the next tutorial.",
+                target_date="", status="completed", confirm_plan="1")
+    check(db_count("SELECT COUNT(*) AS n FROM student_academic_plans WHERE id=%s AND owner_id=3 AND status='completed'",
+                   (plan_id,)) == 1,
+          "student can update and complete their own improvement plan")
+    post_action(student_token, "delete_academic_plan", plan_id=str(plan_id))
+    check(db_count("SELECT COUNT(*) AS n FROM student_academic_plans WHERE id=%s AND owner_id=3",
+                   (plan_id,)) == 0,
+          "student can delete their own improvement plan")
     post_action(student_token, "clear_ai_memory")
     check(db_count("SELECT COUNT(*) AS n FROM student_ai_memories WHERE owner_id=3") == 0,
           "student can clear all of their own saved memories")
