@@ -237,7 +237,7 @@ def main():
           "student AI context excludes a grade linked to another student's personal course")
     check("Recorded grade review" in html,
           "student AI page includes its recorded grade review")
-    check("PRIV101" in html,
+    check("PERS101" in html,
           "grade review identifies the student's own course")
     check("80.0" in html,
           "grade review calculates the recorded course average")
