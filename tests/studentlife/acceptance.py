@@ -537,14 +537,14 @@ def main():
     status, outsider_html = request("/?page=communication")
     outsider_membership = db_count("SELECT COUNT(*) AS n FROM sl_conversation_members WHERE conversation_id=%s AND user_id=%s",
                                   (class_conversation_id, outsider_id))
-    print("COMMUNICATION DEBUG", outsider_id, "identity", "CI Outsider" in outsider_html,
-          "membership", outsider_membership, "enrolments", db_count("SELECT COUNT(*) AS n FROM course_enrolments WHERE student_id=%s", (outsider_id,)))
     status, denied_class = request(f"/?page=communication&conversation_id={class_conversation_id}")
     check(status == 404, "student outside a course section cannot open its class chat")
     status, denied_attachment = request(f"/?page=communication&comms_attachment={attachment_id}")
     check(status == 404 and outsider_id > 0,
           "non-member cannot download a class-chat attachment by guessing its ID")
 
+    request("/?logout=1")
+    second_student_token = login("student2@studentlife.test", "student")
     status, second_student_html = request("/?page=ai_study")
     check(status == 200 and "Own quiz" not in second_student_html and
           "Review CI course notes" not in second_student_html and "CI lecture.txt" not in second_student_html,
