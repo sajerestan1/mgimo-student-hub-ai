@@ -538,6 +538,7 @@ def main():
     outsider_membership = db_count("SELECT COUNT(*) AS n FROM sl_conversation_members WHERE conversation_id=%s AND user_id=%s",
                                   (class_conversation_id, outsider_id))
     status, denied_class = request(f"/?page=communication&conversation_id={class_conversation_id}")
+    print("COMMUNICATION ACCESS CHECK", status, repr(denied_class[:100]))
     check(status == 404, "student outside a course section cannot open its class chat")
     status, denied_attachment = request(f"/?page=communication&comms_attachment={attachment_id}")
     check(status == 404 and outsider_id > 0,
