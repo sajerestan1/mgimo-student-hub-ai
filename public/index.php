@@ -784,7 +784,16 @@ if(isset($_GET['download_submission'])){
  header('Content-Type: '.$file['mime_type']);header('Content-Disposition: attachment; filename="'.$downloadName.'"; filename*=UTF-8\'\''.rawurlencode((string)$file['original_name']));header('Content-Length: '.(int)$file['file_size']);header('Cache-Control: private, no-store');header('X-Content-Type-Options: nosniff');echo $file['file_data'];exit;
 }$isAdmin=($user['role']??'')==='administrator';if($user&&$page==='communication'&&($user['role']??'')!=='student'){http_response_code(403);$page='dashboard';}$adminPages=['users','academic','analytics','risk_radar'];if($user&&in_array($page,$adminPages,true)&&!$isAdmin){http_response_code(403);$page='dashboard';}
 $aiPageRoles=['ai_study'=>'student','ai_teaching'=>'lecturer','risk_radar'=>'administrator'];
-if($user&&isset($aiPageRoles[$page])&&($user['role']??'')!==$aiPageRoles[$page]){http_response_code(403);$page='dashboard';}$err=$_SESSION['err']??'';unset($_SESSION['err']);
+if($user&&isset($aiPageRoles[$page])&&($user['role']??'')!==$aiPageRoles[$page]){http_response_code(403);$page='dashboard';}
+if($user&&$page==='communication'&&isset($_GET['conversation_id'])){
+ $requestedConversation=(int)$_GET['conversation_id'];
+ if($requestedConversation>0){
+  $access=$db->prepare('SELECT 1 FROM sl_conversation_members WHERE conversation_id=? AND user_id=?');
+  $access->execute([$requestedConversation,$uid]);
+  if(!$access->fetchColumn()){http_response_code(404);exit('Conversation not found.');}
+ }
+}
+$err=$_SESSION['err']??'';unset($_SESSION['err']);
 function field($name,$label,$type='text',$extra=''){return '<label>'.$label.'<input name="'.$name.'" type="'.$type.'" '.$extra.'></label>';}
 function nav($p,$label,$icon,$current){return '<a class="nav '.($p===$current?'sel':'').'" href="?page='.$p.'">'.$icon.' &nbsp;'.$label.'</a>';}
 $stats=['open'=>0,'tasks'=>0,'courses'=>0,'avg'=>null];if($user){$q=$db->prepare("SELECT COUNT(*) n,SUM(status='todo') o FROM tasks WHERE user_id=?");$q->execute([$uid]);$r=$q->fetch();$stats['tasks']=(int)$r['n'];$stats['open']=(int)$r['o'];$q=$db->prepare('SELECT COUNT(*) FROM courses WHERE user_id=?');$q->execute([$uid]);$stats['courses']=(int)$q->fetchColumn();$q=$db->prepare('SELECT AVG(score) FROM grades WHERE user_id=?');$q->execute([$uid]);$v=$q->fetchColumn();$stats['avg']=$v===null?'—':number_format((float)$v,1).'%';}
