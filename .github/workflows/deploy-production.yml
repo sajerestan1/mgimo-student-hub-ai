@@ -32,6 +32,8 @@ jobs:
           php -l public/index.php
           php -l public/install.php
           php -l public/academic-intelligence.php
+          php -l public/communication-hub.php
+          php -l public/i18n.php
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -47,11 +49,16 @@ jobs:
         env:
           VITE_BASE44_APP_ID: ${{ secrets.VITE_BASE44_APP_ID }}
 
-      - name: Add the StudentLife PHP app to the deployment
+      - name: Add the complete StudentLife PHP app to the deployment
         run: |
-          cp public/index.php public/install.php public/academic-intelligence.php public/studentlife-sw.js public/sw.js public/.htaccess dist/
+          cp public/index.php public/install.php public/academic-intelligence.php public/communication-hub.php public/i18n.php public/studentlife-sw.js public/sw.js public/.htaccess dist/
           test -s dist/index.php
           test -s dist/.htaccess
+          test -s dist/academic-intelligence.php
+          test -s dist/communication-hub.php
+          test -s dist/i18n.php
+          grep -q "require_once __DIR__.'/i18n.php'" dist/index.php
+          grep -q "require_once __DIR__.'/communication-hub.php'" dist/index.php
 
       - name: Check StudentLife production FTP secrets
         env:
