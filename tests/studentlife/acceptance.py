@@ -534,6 +534,11 @@ def main():
         ("CI Outsider", "outsider@studentlife.test"))
     request("/?logout=1")
     outsider_token = login("outsider@studentlife.test", "student")
+    status, outsider_html = request("/?page=communication")
+    outsider_membership = db_count("SELECT COUNT(*) AS n FROM sl_conversation_members WHERE conversation_id=%s AND user_id=%s",
+                                  (class_conversation_id, outsider_id))
+    print("COMMUNICATION DEBUG", outsider_id, "identity", "CI Outsider" in outsider_html,
+          "membership", outsider_membership, "enrolments", db_count("SELECT COUNT(*) AS n FROM course_enrolments WHERE student_id=%s", (outsider_id,)))
     status, denied_class = request(f"/?page=communication&conversation_id={class_conversation_id}")
     check(status == 404, "student outside a course section cannot open its class chat")
     status, denied_attachment = request(f"/?page=communication&comms_attachment={attachment_id}")
