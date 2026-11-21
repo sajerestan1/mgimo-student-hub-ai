@@ -1028,6 +1028,7 @@ body:has(.login-shell){overflow:hidden}
 .ai-bubble>p,.ai-bubble>ul,.ai-bubble>ol,.ai-bubble>h1,.ai-bubble>h2,.ai-bubble>h3{margin:0 0 12px}
 .ai-bubble>p:last-child,.ai-bubble>ul:last-child,.ai-bubble>ol:last-child{margin-bottom:0}
 .ai-bubble ul,.ai-bubble ol{padding-left:24px}.ai-bubble li{margin:4px 0}
+.ai-message-content{overflow-wrap:anywhere}.ai-message-content h1,.ai-message-content h2,.ai-message-content h3,.ai-message-content h4,.ai-message-content h5,.ai-message-content h6{line-height:1.3;color:#142b4d;margin:18px 0 8px}.ai-message-content h1{font-size:1.42em}.ai-message-content h2{font-size:1.3em}.ai-message-content h3{font-size:1.18em}.ai-message-content h4{font-size:1.1em}.ai-message-content h5,.ai-message-content h6{font-size:1em}.ai-message-content blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid #c99a35;background:#f7f9fc;color:#586b85}.ai-message-content pre{max-width:100%;overflow:auto;padding:13px 15px;border-radius:9px;background:#17243a;color:#f4f6fa;white-space:pre-wrap;overflow-wrap:anywhere}.ai-message-content pre code{padding:0;background:none;color:inherit}.ai-message-content hr{border:0;border-top:1px solid #dfe5ee;margin:18px 0}
 .ai-table-wrap{max-width:100%;overflow-x:auto;margin:12px 0}
 .ai-response-table{border-collapse:collapse;width:100%;min-width:480px;font-size:.94em}
 .ai-response-table th,.ai-response-table td{padding:9px 11px;border:1px solid #dfe5ee;text-align:left;vertical-align:top}
