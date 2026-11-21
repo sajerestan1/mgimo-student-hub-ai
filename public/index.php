@@ -64,6 +64,8 @@ $db->exec("CREATE TABLE IF NOT EXISTS academic_interventions (id BIGINT UNSIGNED
 } catch(Throwable $e){http_response_code(503);exit('Academic database setup failed. Please contact the site administrator.');}
 define('STUDENTLIFE_BOOTSTRAPPED', true);
 require_once __DIR__.'/academic-intelligence.php';
+require_once __DIR__.'/communication-hub.php';
+sl_comms_bootstrap($db);
 function h($s){return htmlspecialchars((string)$s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');}
 function sl_ai_markdown_inline(string $text): string
 {
@@ -193,6 +195,7 @@ $dashboardDemoAssignments=[
  ['key'=>'ir205-treaty-analysis','course'=>'IR205 · International Law','title'=>'Treaty analysis: The Paris Agreement','due'=>'2026-11-30','instructions'=>'Choose one provision of the Paris Agreement and explain its purpose, the obligations it creates, and one practical limit to its implementation. Refer to the treaty text and at least two academic or official sources.']
 ];
 if($_SERVER['REQUEST_METHOD']==='POST'){verify();$a=$_POST['action']??'';
+ if(str_starts_with((string)$a,'communication_')){sl_comms_dispatch($db,(string)$a);}
  if(in_array($a,['save_ai_memory_settings','save_ai_memory','update_ai_memory','delete_ai_memory','clear_ai_memory','save_academic_plan','update_academic_plan','delete_academic_plan','save_personal_goal','update_personal_goal','delete_personal_goal'],true)){
   if(($_SESSION['user']['role']??'')!=='student'){http_response_code(403);exit('Student access required.');}
   $memoryOwner=(int)$_SESSION['user']['id'];
@@ -757,7 +760,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){verify();$a=$_POST['action']??'';
  jump();
 }
 if(isset($_GET['lang'])&&in_array($_GET['lang'],['en','ru'],true)){$_SESSION['lang']=$_GET['lang'];} $language=$_SESSION['lang']??'en';
-$user=$_SESSION['user']??null;$page=$_GET['page']??'dashboard';if(!$user)$page='login';$uid=(int)($user['id']??0);$appName=(string)($db->query("SELECT setting_value FROM app_settings WHERE setting_key='institution_name'")->fetchColumn()?:'StudentLife');
+$user=$_SESSION['user']??null;$page=$_GET['page']??'dashboard';if(!$user)$page='login';$uid=(int)($user['id']??0);if(isset($_GET['comms_attachment']))sl_comms_download($db,$user??[]);$appName=(string)($db->query("SELECT setting_value FROM app_settings WHERE setting_key='institution_name'")->fetchColumn()?:'StudentLife');
 if(isset($_GET['download_assignment'])){
  if(!$user||($user['role']??'')!=='student'){http_response_code(404);exit('Assignment not found.');}
  $requestedKey=(string)$_GET['download_assignment'];$assignment=null;foreach($dashboardDemoAssignments as $candidate){if($candidate['key']===$requestedKey){$assignment=$candidate;break;}}
@@ -779,9 +782,18 @@ if(isset($_GET['download_submission'])){
  if(!$file||!in_array($file['assignment_key'],$validKeys,true)||!in_array($file['mime_type'],$validMimes,true)){http_response_code(404);exit('File not found.');}
  $downloadName=str_replace(["\\","\r","\n",'"'],["_"," "," ","'"],(string)$file['original_name']);if($downloadName==='')$downloadName='assignment-file';
  header('Content-Type: '.$file['mime_type']);header('Content-Disposition: attachment; filename="'.$downloadName.'"; filename*=UTF-8\'\''.rawurlencode((string)$file['original_name']));header('Content-Length: '.(int)$file['file_size']);header('Cache-Control: private, no-store');header('X-Content-Type-Options: nosniff');echo $file['file_data'];exit;
-}$isAdmin=($user['role']??'')==='administrator';$adminPages=['users','academic','analytics','risk_radar'];if($user&&in_array($page,$adminPages,true)&&!$isAdmin){http_response_code(403);$page='dashboard';}
+}if($user&&$page==='communication'&&($user['role']??'')!=='student'){http_response_code(403);$page='dashboard';}$isAdmin=($user['role']??'')==='administrator';$adminPages=['users','academic','analytics','risk_radar'];if($user&&in_array($page,$adminPages,true)&&!$isAdmin){http_response_code(403);$page='dashboard';}
 $aiPageRoles=['ai_study'=>'student','ai_teaching'=>'lecturer','risk_radar'=>'administrator'];
-if($user&&isset($aiPageRoles[$page])&&($user['role']??'')!==$aiPageRoles[$page]){http_response_code(403);$page='dashboard';}$err=$_SESSION['err']??'';unset($_SESSION['err']);
+if($user&&isset($aiPageRoles[$page])&&($user['role']??'')!==$aiPageRoles[$page]){http_response_code(403);$page='dashboard';}
+if($user&&$page==='communication'&&isset($_GET['conversation_id'])){
+ $requestedConversation=(int)$_GET['conversation_id'];
+ if($requestedConversation>0){
+  $access=$db->prepare('SELECT 1 FROM sl_conversation_members WHERE conversation_id=? AND user_id=?');
+  $access->execute([$requestedConversation,$uid]);
+  if(!$access->fetchColumn()){http_response_code(404);exit('Conversation not found.');}
+ }
+}
+$err=$_SESSION['err']??'';unset($_SESSION['err']);
 function field($name,$label,$type='text',$extra=''){return '<label>'.$label.'<input name="'.$name.'" type="'.$type.'" '.$extra.'></label>';}
 function nav($p,$label,$icon,$current){return '<a class="nav '.($p===$current?'sel':'').'" href="?page='.$p.'">'.$icon.' &nbsp;'.$label.'</a>';}
 $stats=['open'=>0,'tasks'=>0,'courses'=>0,'avg'=>null];if($user){$q=$db->prepare("SELECT COUNT(*) n,SUM(status='todo') o FROM tasks WHERE user_id=?");$q->execute([$uid]);$r=$q->fetch();$stats['tasks']=(int)$r['n'];$stats['open']=(int)$r['o'];$q=$db->prepare('SELECT COUNT(*) FROM courses WHERE user_id=?');$q->execute([$uid]);$stats['courses']=(int)$q->fetchColumn();$q=$db->prepare('SELECT AVG(score) FROM grades WHERE user_id=?');$q->execute([$uid]);$v=$q->fetchColumn();$stats['avg']=$v===null?'—':number_format((float)$v,1).'%';}
@@ -1943,8 +1955,10 @@ function downloadTimetableIcs(){const rows=timetableRows();const events=rows.map
 (function(){const status=document.getElementById('timetable-offline-status');if(!status)return;function update(){if(!('serviceWorker'in navigator)){status.textContent='Offline timetable caching is not available in this browser.';return}status.textContent=!navigator.onLine?'Offline · showing the last timetable saved on this device.':navigator.serviceWorker.controller?'Online · this timetable is saved on this device for your next visit.':'Preparing offline timetable cache…'}update();addEventListener('online',update);addEventListener('offline',update);if('serviceWorker'in navigator&&!navigator.serviceWorker.controller){navigator.serviceWorker.addEventListener('controllerchange',function(){if(!sessionStorage.getItem('sl-timetable-reloaded')){sessionStorage.setItem('sl-timetable-reloaded','1');location.reload()}},{once:true})}})();
 </script><?php endif;?><?php foreach($sessions as $ss):?><div class="section card timetable-session" data-course="<?=h($ss['code'].' · '.$ss['title'])?>" data-date="<?=h($ss['session_date'])?>" data-start="<?=h(substr($ss['starts_at'],0,5))?>" data-end="<?=h(substr($ss['ends_at'],0,5))?>" data-room="<?=h($ss['room']?:'Room TBA')?>" data-topic="<?=h($ss['topic']?:'')?>"><div class="head"><div><b><?=h($ss['code'].' · '.$ss['title'])?></b><div class="muted"><?=h($ss['term'].' · Section '.$ss['section_code'])?></div></div><span class="pill"><?=h(date('D, M j, Y',strtotime($ss['session_date'])))?></span></div><p class="muted"><?=h(substr($ss['starts_at'],0,5).'–'.substr($ss['ends_at'],0,5).' · '.($ss['room']?:'Room TBA').' · '.($ss['topic']?:'Class session'))?></p>
 <?php if($role==='lecturer'):?><h3>Class attendance</h3><?php $aq=$db->prepare("SELECT u.id,u.name,ar.status FROM course_enrolments e JOIN users u ON u.id=e.student_id LEFT JOIN attendance_records ar ON ar.session_id=? AND ar.student_id=u.id WHERE e.offering_id=? AND e.status='enrolled' ORDER BY u.name");$aq->execute([$ss['id'],$ss['offering_id']]);foreach($aq as $st):?><form method="post" class="form" style="grid-template-columns:1fr 150px auto;align-items:end"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="mark_attendance"><input type="hidden" name="session_id" value="<?=$ss['id']?>"><input type="hidden" name="student_id" value="<?=$st['id']?>"><label><?=h($st['name'])?><select name="status" required><option value="" <?=$st['status']===null?'selected':''?> disabled>Not recorded — choose status</option><option value="present" <?=$st['status']==='present'?'selected':''?>>Present</option><option value="absent" <?=$st['status']==='absent'?'selected':''?>>Absent</option><option value="late" <?=$st['status']==='late'?'selected':''?>>Late</option></select></label><button class="btn small">Save</button></form><?php endforeach;?><?php else:?> <p class="muted">Lecturer: <?=h($ss['lecturer']?:'Not assigned')?></p><?php $aq=$db->prepare('SELECT status FROM attendance_records WHERE session_id=? AND student_id=?');$aq->execute([$ss['id'],$uid]);$ast=$aq->fetchColumn();?><span class="pill">Attendance: <?=h($ast?:'Not recorded')?></span><?php endif;?></div><?php endforeach;?><?php endif;?><?php endif;?>
-<?php elseif(in_array($page,['quizzes','intelligence','integrity','applications','library','study_groups','notifications','companion','recommendations','inbox'],true)&&((($user['role']??'')==='student')||$page==='inbox')):?>
-<?php if($page==='intelligence'):?>
+<?php elseif(in_array($page,['quizzes','intelligence','integrity','applications','library','study_groups','notifications','companion','recommendations','inbox','communication'],true)&&((($user['role']??'')==='student')||$page==='inbox')):?>
+<?php if($page==='communication'):?>
+<?php sl_comms_render($db,$user);?>
+<?php elseif($page==='intelligence'):?>
 <div class="eyebrow">LEARNING INSIGHTS</div><h1 class="h1">Academic Intelligence</h1><p class="sub">A view of the grades, attendance and tasks recorded in your StudentLife account.</p>
 <?php $gq=$db->prepare("SELECT c.code,c.name,AVG(g.score) AS average,COUNT(g.id) AS results FROM grades g JOIN courses c ON c.id=g.course_id WHERE g.user_id=? GROUP BY c.id ORDER BY average ASC");$gq->execute([$uid]);$intelligenceGrades=$gq->fetchAll();$aq=$db->prepare("SELECT COUNT(*) total,SUM(status='present') present,SUM(status='late') late,SUM(status='absent') absent FROM attendance_records WHERE student_id=?");$aq->execute([$uid]);$intelligenceAttendance=$aq->fetch();$tq=$db->prepare("SELECT COUNT(*) open,SUM(due_date<CURDATE() AND due_date IS NOT NULL) overdue FROM tasks WHERE user_id=? AND status='todo'");$tq->execute([$uid]);$intelligenceTasks=$tq->fetch();?>
 <div class="grid"><div class="card admin-stat"><div class="metriclabel">Recorded average</div><div class="metric"><?=h($stats['avg'])?></div><small>From scores entered in your account</small></div><div class="card admin-stat"><div class="metriclabel">Attendance recorded</div><div class="metric"><?=(int)($intelligenceAttendance['total']??0)?></div><small><?=(int)($intelligenceAttendance['present']??0)?> present · <?=(int)($intelligenceAttendance['late']??0)?> late · <?=(int)($intelligenceAttendance['absent']??0)?> absent</small></div><div class="card admin-stat"><div class="metriclabel">Open tasks</div><div class="metric"><?=(int)($intelligenceTasks['open']??0)?></div><small><?=(int)($intelligenceTasks['overdue']??0)?> overdue</small></div></div>

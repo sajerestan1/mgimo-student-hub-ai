@@ -2,19 +2,20 @@ name: Publish StudentLife PHP to Academic staging
 
 on:
   push:
-    branches: [main, develop, "codex/studentlife-preview", "codex/ai-*"]
+    branches: [main, develop, "codex/studentlife-preview", "codex/ai-*", "codex/communication-hub-preview"]
     paths:
       - "public/index.php"
       - "public/install.php"
       - "public/.htaccess"
       - "public/studentlife-sw.js"
       - "public/academic-intelligence.php"
+      - "public/communication-hub.php"
       - ".github/deploy/**"
       - "tests/studentlife/**"
       - "docs/ADMIN_PHASE_1.md"
       - ".github/workflows/deploy-academic-staging.yml"
   pull_request:
-    branches: [main]
+    branches: [main, "codex/studentlife-preview"]
     paths:
       - "public/index.php"
       - "public/install.php"
@@ -66,6 +67,7 @@ jobs:
         run: |
           php -l public/index.php
           php -l public/academic-intelligence.php
+          php -l public/communication-hub.php
           php -l public/install.php
           php -l tests/studentlife/seed.php
 
@@ -159,7 +161,7 @@ jobs:
         run: |
           mkdir -p studentlife-preview
           mkdir -p .github/deploy
-          cp public/index.php public/install.php public/studentlife-sw.js public/academic-intelligence.php studentlife-preview/
+          cp public/index.php public/install.php public/studentlife-sw.js public/academic-intelligence.php public/communication-hub.php studentlife-preview/
           cp public/.htaccess studentlife-preview/.htaccess
           cat .github/deploy/preview-cpanel-php-config.htaccess >> studentlife-preview/.htaccess
           test -s studentlife-preview/index.php
@@ -167,6 +169,7 @@ jobs:
           test -s studentlife-preview/install.php
           test -s studentlife-preview/studentlife-sw.js
           test -s studentlife-preview/academic-intelligence.php
+          test -s studentlife-preview/communication-hub.php
 
       - name: Publish PHP app to the isolated preview document root
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
