@@ -58,6 +58,32 @@ def upload_document(token, filename, contents):
         return error.code, error.read().decode("utf-8", "replace")
 
 
+
+
+def upload_communication(token, conversation_id, filename, contents):
+    boundary = "StudentLifeMessageBoundary" + uuid.uuid4().hex
+    body = bytearray()
+    fields = (("csrf", token), ("action", "communication_send"),
+              ("conversation_id", str(conversation_id)), ("body", "Shared class note"),
+              ("client_nonce", uuid.uuid4().hex), ("parent_message_id", "0"))
+    for name, value in fields:
+        body.extend(f"--{boundary}\\r\\n".encode())
+        body.extend(f'Content-Disposition: form-data; name="{name}"\\r\\n\\r\\n'.encode())
+        body.extend(value.encode())
+        body.extend(b"\\r\\n")
+    body.extend(f"--{boundary}\\r\\n".encode())
+    body.extend(f'Content-Disposition: form-data; name="attachment"; filename="{filename}"\\r\\n'.encode())
+    body.extend(b"Content-Type: text/plain; charset=utf-8\\r\\n\\r\\n")
+    body.extend(contents)
+    body.extend(f"\\r\\n--{boundary}--\\r\\n".encode())
+    req = urllib.request.Request(BASE + "/", data=bytes(body),
+                                 headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+    try:
+        response = OPENER.open(req)
+        return response.status, response.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as error:
+        return error.code, error.read().decode("utf-8", "replace")
+
 def csrf_token():
     status, html = request("/?page=login")
     check(status == 200, "sign-in page loads")
@@ -438,11 +464,76 @@ def main():
                                      ("Foreign course task",)) == 0,
           "student task action rejects a course outside their enrolments")
 
+
+    status, comm_html = request("/?page=communication")
+    check(status == 200 and "Communication Hub" in comm_html and "class-section" in comm_html,
+          "student communication hub creates a chat for each enrolled course section")
+    class_conversation_id = db_count("SELECT MAX(id) AS id FROM sl_conversations WHERE room_type='class'")
+    post_action(student_token, "communication_send", conversation_id=str(class_conversation_id),
+                body="CI class chat message", parent_message_id="0", client_nonce="a"*32)
+    class_message_id = db_count("SELECT MAX(id) AS id FROM sl_messages WHERE conversation_id=%s AND sender_id=3",
+                                (class_conversation_id,))
+    check(class_message_id and db_count("SELECT COUNT(*) AS n FROM sl_messages WHERE id=%s AND body=%s",
+                                        (class_message_id, "CI class chat message")) == 1,
+          "student message persists in the authorized course-section chat")
+    post_action(student_token, "communication_start_direct", recipient_id="4")
+    direct_id = db_count("SELECT MAX(id) AS id FROM sl_conversations WHERE room_type='direct'")
+    post_action(student_token, "communication_send", conversation_id=str(direct_id),
+                body="CI direct message", parent_message_id="0", client_nonce="b"*32)
+    direct_message_id = db_count("SELECT MAX(id) AS id FROM sl_messages WHERE conversation_id=%s AND sender_id=3",
+                                 (direct_id,))
+    check(db_count("SELECT COUNT(*) AS n FROM sl_conversation_members WHERE conversation_id=%s", (direct_id,)) == 2 and
+          db_count("SELECT COUNT(*) AS n FROM sl_notifications WHERE user_id=4 AND conversation_id=%s AND read_at IS NULL", (direct_id,)) == 1,
+          "direct conversation is private to its two participants and notifies the recipient")
+    post_action(student_token, "communication_send", conversation_id=str(direct_id),
+                body="CI reply", parent_message_id=str(direct_message_id), client_nonce="c"*32)
+    reply_id = db_count("SELECT MAX(id) AS id FROM sl_messages WHERE conversation_id=%s", (direct_id,))
+    check(db_count("SELECT COUNT(*) AS n FROM sl_messages WHERE id=%s AND parent_message_id=%s", (reply_id, direct_message_id)) == 1,
+          "reply references a message in the same conversation")
+    post_action(student_token, "communication_send", conversation_id=str(direct_id),
+                body="Invalid cross-conversation reply", parent_message_id=str(class_message_id), client_nonce="d"*32)
+    check(db_count("SELECT COUNT(*) AS n FROM sl_messages WHERE body=%s", ("Invalid cross-conversation reply",)) == 0,
+          "reply cannot reference a message from another conversation")
+    post_action(student_token, "communication_react", conversation_id=str(direct_id),
+                message_id=str(direct_message_id), reaction="helpful")
+    check(db_count("SELECT COUNT(*) AS n FROM sl_message_reactions WHERE message_id=%s AND user_id=3 AND reaction='helpful'",
+                   (direct_message_id,)) == 1,
+          "student can add a permitted message reaction")
+    post_action(student_token, "communication_react", conversation_id=str(direct_id),
+                message_id=str(direct_message_id), reaction="helpful")
+    check(db_count("SELECT COUNT(*) AS n FROM sl_message_reactions WHERE message_id=%s AND user_id=3 AND reaction='helpful'",
+                   (direct_message_id,)) == 0,
+          "student can remove their own reaction without creating duplicates")
+    status, comm_search = request(f"/?page=communication&conversation_id={direct_id}&q=CI+direct+message")
+    check(status == 200 and "CI direct message" in comm_search,
+          "student can search messages inside an authorized conversation")
+    status, _ = upload_communication(student_token, class_conversation_id, "CI class note.txt",
+                                     b"Private communication attachment sentinel")
+    attachment_id = db_count("SELECT MAX(id) AS id FROM sl_message_attachments WHERE conversation_id=%s",
+                             (class_conversation_id,))
+    status, downloaded = request(f"/?page=communication&comms_attachment={attachment_id}")
+    check(attachment_id and status == 200 and "Private communication attachment sentinel" in downloaded,
+          "authorized class-chat member can download a validated private attachment")
+
     request("/?logout=1")
     second_student_token = login("student2@studentlife.test", "student")
     status, private_owner_html = request(f"/?page=ai_study&conversation_id={private_conversation}")
     check(status == 200 and "PRIVATE_CONTEXT_SENTINEL" in private_owner_html,
           "second student can read their own AI conversation")
+
+    status, denied_class = request(f"/?page=communication&conversation_id={class_conversation_id}")
+    check(status == 404, "student outside a course section cannot open its class chat")
+    status, direct_html = request(f"/?page=communication&conversation_id={direct_id}")
+    check(status == 200 and "CI direct message" in direct_html and "CI reply" in direct_html,
+          "direct conversation history persists for the other authorized participant")
+    post_action(second_student_token, "communication_edit", conversation_id=str(direct_id),
+                message_id=str(direct_message_id), body="Unauthorized message alteration")
+    check(db_count("SELECT COUNT(*) AS n FROM sl_messages WHERE id=%s AND sender_id=3 AND body=%s",
+                   (direct_message_id, "CI direct message")) == 1,
+          "a participant cannot edit another participant's message")
+    status, denied_attachment = request(f"/?page=communication&comms_attachment={attachment_id}")
+    check(status == 404, "non-member cannot download a class-chat attachment by guessing its ID")
+
     status, second_student_html = request("/?page=ai_study")
     check(status == 200 and "Own quiz" not in second_student_html and
           "Review CI course notes" not in second_student_html and "CI lecture.txt" not in second_student_html,
