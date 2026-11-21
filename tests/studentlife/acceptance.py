@@ -466,7 +466,7 @@ def main():
 
 
     status, comm_html = request("/?page=communication")
-    check(status == 200 and "Communication Hub" in comm_html and "class-section" in comm_html,
+    check(status == 200 and "Communication Hub" in comm_html and "Class ·" in comm_html,
           "student communication hub creates a chat for each enrolled course section")
     class_conversation_id = db_count("SELECT MAX(id) AS id FROM sl_conversations WHERE room_type='class'")
     post_action(student_token, "communication_send", conversation_id=str(class_conversation_id),
