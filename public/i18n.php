@@ -211,6 +211,25 @@ function sl_i18n_phrase_map(): array
         'Very Weak'=>'Очень слабый','Weak'=>'Слабый','Normal'=>'Средний','Strong'=>'Надёжный','Very Strong'=>'Очень надёжный'
     ];
     $extraMore=[
+        'English'=>'Английский','🇬🇧 English'=>'🇬🇧 Английский','Courses'=>'Курсы','Course'=>'Курс','Topic'=>'Тема','Communication Inbox'=>'Входящие сообщения',
+        'Sample course catalogue for the student dashboard. All instructors and addresses below are fictional.'=>'Пример каталога курсов для панели студента. Все преподаватели и адреса вымышлены.',
+        'Create departments, academic terms, course catalogue entries, course sections and student enrolments.'=>'Создавайте кафедры, учебные периоды, курсы, учебные группы и записи о зачислении студентов.',
+        'Add at least one catalogue course and one academic term first.'=>'Сначала добавьте хотя бы один курс в каталог и один учебный период.',
+        'Create a single session or repeat it weekly through the selected end date (maximum 60 sessions).'=>'Создайте одно занятие или повторяйте его еженедельно до выбранной даты (не более 60 занятий).',
+        'No course sections have been assigned to your lecturer account yet. Please contact the administrator.'=>'К вашей учётной записи преподавателя пока не привязаны учебные группы. Обратитесь к администратору.',
+        'For each reading, note its main claim, the evidence it uses and one point you want to discuss.'=>'Для каждого текста запишите основной тезис, приведённые доказательства и один вопрос для обсуждения.',
+        'Add personal courses and record returned marks to build this view.'=>'Добавьте личные курсы и внесённые оценки, чтобы сформировать эту сводку.',
+        'Active students with at least one active course enrolment'=>'Активные студенты, зачисленные хотя бы на один курс',
+        'Requiring attention'=>'Требуют внимания','Moderate, high or critical attendance signal'=>'Умеренный, высокий или критический риск по посещаемости',
+        'Attendance below configured high threshold'=>'Посещаемость ниже установленного порога высокого риска',
+        'Attendance below configured critical threshold'=>'Посещаемость ниже установленного порога критического риска',
+        'Data limits'=>'Ограничения данных','EARLY WARNING'=>'РАННЕЕ ПРЕДУПРЕЖДЕНИЕ','Students requiring review'=>'Студенты, требующие проверки',
+        'Print risk report'=>'Распечатать отчёт о рисках','Risk'=>'Риск','Recorded / scheduled'=>'Отмечено / запланировано','Rules: moderate below'=>'Правила: умеренный риск ниже',
+        'CONFIGURATION'=>'НАСТРОЙКА','Attendance thresholds'=>'Пороговые значения посещаемости','Save risk rules'=>'Сохранить правила оценки рисков',
+        'DEPARTMENT INTELLIGENCE'=>'АНАЛИТИКА ПО КАФЕДРАМ','Attendance by department'=>'Посещаемость по кафедрам','Marked records'=>'Отмеченные записи',
+        'COURSE CONCERNS'=>'РИСКИ ПО КУРСАМ','Attendance by course'=>'Посещаемость по курсам','ATTENDANCE TREND'=>'ДИНАМИКА ПОСЕЩАЕМОСТИ',
+        'Recorded attendance over time'=>'Посещаемость за период','Month'=>'Месяц','Marked sessions'=>'Отмеченные занятия','Rate'=>'Показатель',
+        'Quizzes & exams'=>'Тесты и экзамены','Documents & resources'=>'Документы и ресурсы','Applications & certificates'=>'Заявки и справки'
         'Learn · Teach · Achieve'=>'Учись · Преподавай · Достигай','Sign out ↗'=>'Выйти ↗','Welcome,'=>'Добро пожаловать,',
         'My Profile & Password'=>'Мой профиль и пароль','Class'=>'Занятие','Date'=>'Дата','Time'=>'Время','Active courses'=>'Активные курсы',
         'Due Nov 23'=>'Срок: 23 ноября','Teaching sections'=>'Учебные группы преподавателя','Personal courses'=>'Личные курсы','Tasks'=>'Задания','Grades'=>'Оценки','Events'=>'События','Course activity'=>'Активность по курсам',
@@ -398,6 +417,14 @@ function sl_i18n_text(string $text, array $map): string
     foreach($units as $english=>$forms){
         $text=preg_replace_callback('/\\b(\\d+) '.preg_quote($english,'/').'s?\\b/i',function($m)use($forms){$n=(int)$m[1];return $m[1].' '.sl_plural_ru($n,$forms[0],$forms[1],$forms[2]);},$text)??$text;
     }
+    $prefixes=[
+        'Search results for “'=>'Результаты поиска: «',
+        'Review your answer against: '=>'Сверьте ответ с критериями: ',
+        'Your lowest recorded course average is'=>'Самый низкий средний балл по вашим курсам:',
+        'Demo result: '=>'Результат демонстрационного теста: ',
+    ];
+    foreach($prefixes as $from=>$to){if(str_starts_with($text,$from)){$text=$to.substr($text,strlen($from));break;}}
+    if(preg_match('/^Demo result: (\\d+) \/ (\\d+) auto-scored questions \\((\\d+)%\\)\\.$/',$text,$m))return 'Результат демонстрационного теста: '.$m[1].' из '.$m[2].' вопросов оценено автоматически ('.$m[3].'%).';
     return $text;
 }
 
