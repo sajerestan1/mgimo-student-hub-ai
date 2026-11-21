@@ -20,6 +20,7 @@ try {
  $db->exec("CREATE TABLE IF NOT EXISTS email_verification_tokens (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, user_id INT UNSIGNED NOT NULL, token_hash CHAR(64) NOT NULL UNIQUE, expires_at DATETIME NOT NULL, used_at DATETIME NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(user_id), FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
  $db->exec("CREATE TABLE IF NOT EXISTS admin_audit (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, actor_id INT UNSIGNED NOT NULL, action VARCHAR(60) NOT NULL, target_user_id INT UNSIGNED NULL, details VARCHAR(500) NOT NULL DEFAULT '', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(actor_id), INDEX(target_user_id), INDEX(created_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
  $db->exec("CREATE TABLE IF NOT EXISTS student_messages (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, sender_id INT UNSIGNED NOT NULL, recipient_id INT UNSIGNED NOT NULL, subject VARCHAR(180) NOT NULL, body TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, read_at DATETIME NULL, INDEX(recipient_id,created_at), INDEX(sender_id,created_at), CONSTRAINT fk_student_messages_sender FOREIGN KEY(sender_id) REFERENCES users(id) ON DELETE CASCADE, CONSTRAINT fk_student_messages_recipient FOREIGN KEY(recipient_id) REFERENCES users(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+ $db->exec("CREATE TABLE IF NOT EXISTS student_assignment_submissions (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, assignment_key VARCHAR(64) NOT NULL, owner_id INT UNSIGNED NOT NULL, original_name VARCHAR(180) NOT NULL, mime_type VARCHAR(80) NOT NULL, file_size INT UNSIGNED NOT NULL, file_data MEDIUMBLOB NOT NULL, uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(owner_id,assignment_key,uploaded_at), FOREIGN KEY(owner_id) REFERENCES users(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
  $db->exec("CREATE TABLE IF NOT EXISTS study_groups (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, owner_id INT UNSIGNED NOT NULL, course_code VARCHAR(40) NOT NULL DEFAULT '', title VARCHAR(140) NOT NULL, purpose VARCHAR(500) NOT NULL DEFAULT '', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX(owner_id), CONSTRAINT fk_study_groups_owner FOREIGN KEY(owner_id) REFERENCES users(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
  $db->exec("CREATE TABLE IF NOT EXISTS study_group_members (group_id BIGINT UNSIGNED NOT NULL, user_id INT UNSIGNED NOT NULL, joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(group_id,user_id), INDEX(user_id), CONSTRAINT fk_group_members_group FOREIGN KEY(group_id) REFERENCES study_groups(id) ON DELETE CASCADE, CONSTRAINT fk_group_members_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
  $db->exec("CREATE TABLE IF NOT EXISTS ai_conversations (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, owner_id INT UNSIGNED NOT NULL, workspace_role VARCHAR(24) NOT NULL, course_code VARCHAR(40) NOT NULL DEFAULT '', title VARCHAR(180) NOT NULL, support_mode VARCHAR(24) NOT NULL DEFAULT 'general', document_id BIGINT UNSIGNED NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, INDEX(owner_id,workspace_role,updated_at), FOREIGN KEY(owner_id) REFERENCES users(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
@@ -172,6 +173,11 @@ if(!empty($_SESSION['user']['id'])){
  $_SESSION['user']['role']=$account['role'];
 }
 $uid=(int)($_SESSION['user']['id']??0);
+$dashboardDemoAssignments=[
+ ['key'=>'ir101-policy-brief','course'=>'IR101 · Introduction to International Relations','title'=>'Policy brief: Managing regional water security','due'=>'2026-11-23','instructions'=>'Write a concise policy brief that defines a regional water-security problem, compares two policy options, and recommends one course of action. Support the recommendation with at least three credible sources. Include a short executive summary and a references section.'],
+ ['key'=>'econ101-data-exercise','course'=>'ECON101 · Principles of Economics','title'=>'Data exercise: Inflation and food prices','due'=>'2026-11-24','instructions'=>'Use a public economic dataset to describe recent food-price inflation in one country. Include a small table or chart, explain two possible causes, and distinguish observed data from your interpretation. Cite the dataset and any additional sources.'],
+ ['key'=>'ir205-treaty-analysis','course'=>'IR205 · International Law','title'=>'Treaty analysis: The Paris Agreement','due'=>'2026-11-30','instructions'=>'Choose one provision of the Paris Agreement and explain its purpose, the obligations it creates, and one practical limit to its implementation. Refer to the treaty text and at least two academic or official sources.']
+];
 if($_SERVER['REQUEST_METHOD']==='POST'){verify();$a=$_POST['action']??'';
  if($a==='save_risk_rules'){
   if(($_SESSION['user']['role']??'')!=='administrator'){http_response_code(403);exit('Administrator access required.');}
@@ -586,6 +592,39 @@ if($_SERVER['REQUEST_METHOD']==='POST'){verify();$a=$_POST['action']??'';
   jump('academic');
  }
  if($a==='create_user'){if(($_SESSION['user']['role']??'')!=='administrator'){http_response_code(403);exit('Administrator access required.');}$name=trim($_POST['name']??'');$email=strtolower(trim($_POST['email']??''));$role=$_POST['role']??'student';$password=$_POST['new_password']??'';if($name!==''&&filter_var($email,FILTER_VALIDATE_EMAIL)&&in_array($role,['student','lecturer','administrator'],true)&&strlen($password)>=12){try{$q=$db->prepare('INSERT INTO users(name,email,password_hash,role,account_status,email_verified) VALUES(?,?,?,?,?,0)');$q->execute([$name,$email,password_hash($password,PASSWORD_DEFAULT),$role,'pending']);$newId=(int)$db->lastInsertId();$raw=bin2hex(random_bytes(32));$ins=$db->prepare('INSERT INTO email_verification_tokens(user_id,token_hash,expires_at) VALUES(?,?,DATE_ADD(NOW(),INTERVAL 24 HOUR))');$ins->execute([$newId,hash('sha256',$raw)]);$scheme=(!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')?'https':'http';$url=$scheme.'://'.$_SERVER['HTTP_HOST'].strtok($_SERVER['REQUEST_URI'],'?').'?verify='.urlencode($raw);$from=$c['mail_from']??('no-reply@'.($_SERVER['HTTP_HOST']??'localhost'));$sent=mail($email,'Verify your StudentLife account',"Hello {$name},\\n\\nVerify your email within 24 hours using this link:\\n{$url}\\n\\nIf you did not expect this invitation, ignore this email.","From: StudentLife <{$from}>\\r\\nContent-Type: text/plain; charset=UTF-8");$audit=$db->prepare('INSERT INTO admin_audit(actor_id,action,target_user_id,details) VALUES(?,?,?,?)');$audit->execute([$uid,'account_invited',$newId,'Invited '.$role.' account for '.$email]);$_SESSION['notice']=$sent?'Invitation created. A verification link was emailed; the account remains pending until verified.':'Account created but email delivery failed. Configure mail_from/hosting mail delivery, then resend the verification invitation.';}catch(PDOException $ex){$_SESSION['err']='Could not create account. Check whether the email address is already registered.';}}else{$_SESSION['err']='Enter a name, valid email, supported role and password of at least 12 characters.';}jump('users');}
+ if($a==='upload_assignment'){
+  if(($_SESSION['user']['role']??'')!=='student'){http_response_code(403);exit('Student access required.');}
+  $assignmentKey=trim((string)($_POST['assignment_key']??''));$assignment=null;
+  foreach($dashboardDemoAssignments as $candidate){if($candidate['key']===$assignmentKey){$assignment=$candidate;break;}}
+  if(!$assignment){http_response_code(404);exit('Assignment not found.');}
+  $upload=$_FILES['assignment_file']??null;$maxBytes=8*1024*1024;
+  $failUpload=static function(string $message){$_SESSION['err']=$message;header('Location: ?page=dashboard#dashboard-assignments');exit;};
+  if(!$upload||!isset($upload['error'])||$upload['error']!==UPLOAD_ERR_OK){$failUpload('Choose a PDF or image file to upload.');}
+  if((int)$upload['size']<1||(int)$upload['size']>$maxBytes){$failUpload('Files must be smaller than 8 MB.');}
+  if(!is_uploaded_file((string)$upload['tmp_name'])){$failUpload('The uploaded file could not be verified. Please try again.');}
+  $mimeDetector=function_exists('finfo_open')?finfo_open(FILEINFO_MIME_TYPE):false;
+  $mime=$mimeDetector?finfo_file($mimeDetector,(string)$upload['tmp_name']):'';
+  if($mimeDetector)finfo_close($mimeDetector);
+  $allowedMimes=['application/pdf'=>'pdf','image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp','image/gif'=>'gif'];
+  if(!isset($allowedMimes[$mime])){$failUpload('Upload a PDF, JPG, PNG, WEBP or GIF file.');}
+  if($mime==='application/pdf'){
+   $pdfHeader=file_get_contents((string)$upload['tmp_name'],false,null,0,5);
+   if($pdfHeader!=='%PDF-'){$failUpload('The selected PDF file is invalid.');}
+  }else{
+   $imageInfo=@getimagesize((string)$upload['tmp_name']);
+   if(!$imageInfo||($imageInfo['mime']??'')!==$mime||(int)$imageInfo[0]>12000||(int)$imageInfo[1]>12000||(int)$imageInfo[0]*(int)$imageInfo[1]>40000000){$failUpload('The selected image could not be verified or is too large to process.');}
+  }
+  $storedName=str_replace('\\','/',(string)($upload['name']??'assignment.'.$allowedMimes[$mime]));$storedName=basename($storedName);$storedName=preg_replace('/[\\x00-\\x1F\\x7F]/u','',$storedName)??'';$storedName=mb_substr($storedName,0,180);
+  if($storedName==='')$storedName='assignment.'.$allowedMimes[$mime];
+  $fileBytes=file_get_contents((string)$upload['tmp_name']);
+  if(!is_string($fileBytes)||(int)strlen($fileBytes)!==(int)$upload['size']){$failUpload('The file could not be read completely. Please upload it again.');}
+  $countQ=$db->prepare('SELECT COUNT(*) FROM student_assignment_submissions WHERE owner_id=? AND assignment_key=?');$countQ->execute([$uid,$assignmentKey]);
+  if((int)$countQ->fetchColumn()>=5){$failUpload('You can keep up to five uploaded versions for this assignment.');}
+  $save=$db->prepare('INSERT INTO student_assignment_submissions(assignment_key,owner_id,original_name,mime_type,file_size,file_data) VALUES(?,?,?,?,?,?)');
+  $save->bindValue(1,$assignmentKey);$save->bindValue(2,$uid,PDO::PARAM_INT);$save->bindValue(3,$storedName);$save->bindValue(4,$mime);$save->bindValue(5,(int)strlen($fileBytes),PDO::PARAM_INT);$save->bindParam(6,$fileBytes,PDO::PARAM_LOB);$save->execute();
+  $_SESSION['notice']='Your assignment file was uploaded.';
+  header('Location: ?page=dashboard#dashboard-assignments');exit;
+ }
  if($a==='task'){$title=trim($_POST['title']??'');if($title!==''){$q=$db->prepare('INSERT INTO tasks(user_id,title,course,due_date,priority) VALUES(?,?,?,?,?)');$q->execute([$uid,$title,trim($_POST['course']??''),$_POST['due_date']?:null,($_POST['priority']??'')==='high'?'high':'normal']);}jump('tasks');}
  if($a==='toggle'){$q=$db->prepare("UPDATE tasks SET status=? WHERE id=? AND user_id=?");$q->execute([($_POST['status']??'')==='done'?'done':'todo',(int)$_POST['id'],$uid]);jump('tasks');}
  if($a==='del'){$q=$db->prepare('DELETE FROM tasks WHERE id=? AND user_id=?');$q->execute([(int)$_POST['id'],$uid]);jump('tasks');}
@@ -595,7 +634,29 @@ if($_SERVER['REQUEST_METHOD']==='POST'){verify();$a=$_POST['action']??'';
  jump();
 }
 if(isset($_GET['lang'])&&in_array($_GET['lang'],['en','ru'],true)){$_SESSION['lang']=$_GET['lang'];} $language=$_SESSION['lang']??'en';
-$user=$_SESSION['user']??null;$page=$_GET['page']??'dashboard';if(!$user)$page='login';$uid=(int)($user['id']??0);$appName=(string)($db->query("SELECT setting_value FROM app_settings WHERE setting_key='institution_name'")->fetchColumn()?:'StudentLife');$isAdmin=($user['role']??'')==='administrator';$adminPages=['users','academic','analytics','risk_radar'];if($user&&in_array($page,$adminPages,true)&&!$isAdmin){http_response_code(403);$page='dashboard';}
+$user=$_SESSION['user']??null;$page=$_GET['page']??'dashboard';if(!$user)$page='login';$uid=(int)($user['id']??0);$appName=(string)($db->query("SELECT setting_value FROM app_settings WHERE setting_key='institution_name'")->fetchColumn()?:'StudentLife');
+if(isset($_GET['download_assignment'])){
+ if(!$user||($user['role']??'')!=='student'){http_response_code(404);exit('Assignment not found.');}
+ $requestedKey=(string)$_GET['download_assignment'];$assignment=null;foreach($dashboardDemoAssignments as $candidate){if($candidate['key']===$requestedKey){$assignment=$candidate;break;}}
+ if(!$assignment){http_response_code(404);exit('Assignment not found.');}
+ $pdfLines=['StudentLife - DEMO assignment brief','Course: '.$assignment['course'],'Assignment: '.$assignment['title'],'Due date: '.$assignment['due'],'','Instructions:'];
+ foreach(explode("\n",wordwrap($assignment['instructions'],88,"\n",true)) as $line)$pdfLines[]=$line;
+ $pdfLines[]='';$pdfLines[]='Submission format: PDF or a clear photo (JPG, PNG, WEBP or GIF).';$pdfLines[]='This is fictional demonstration material.';
+ $stream="BT\n/F1 11 Tf\n54 756 Td\n14 TL\n";
+ foreach($pdfLines as $index=>$line){$line=function_exists('iconv')?(iconv('UTF-8','Windows-1252//TRANSLIT',$line)?:$line):$line;$line=str_replace(["\\","(",")"],["\\\\","\\(","\\)"],$line);if($index>0)$stream.="T*\n";$stream.="(".$line.") Tj\n";}
+ $stream.="ET";
+ $objects=[1=>'<< /Type /Catalog /Pages 2 0 R >>',2=>'<< /Type /Pages /Kids [3 0 R] /Count 1 >>',3=>'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',4=>'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',5=>"<< /Length ".strlen($stream)." >>\nstream\n".$stream."\nendstream"];
+ $pdf="%PDF-1.4\n";$offsets=[0];foreach($objects as $number=>$object){$offsets[$number]=strlen($pdf);$pdf.=$number." 0 obj\n".$object."\nendobj\n";}$xref=strlen($pdf);$pdf.="xref\n0 6\n0000000000 65535 f \n";for($number=1;$number<=5;$number++)$pdf.=sprintf("%010d 00000 n \n",$offsets[$number]);$pdf.="trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n".$xref."\n%%EOF";
+ header('Content-Type: application/pdf');header('Content-Disposition: attachment; filename="'.$assignment['key'].'-brief.pdf"');header('Content-Length: '.strlen($pdf));header('Cache-Control: private, no-store');header('X-Content-Type-Options: nosniff');echo $pdf;exit;
+}
+if(isset($_GET['download_submission'])){
+ if(!$user||($user['role']??'')!=='student'){http_response_code(404);exit('File not found.');}
+ $fileQ=$db->prepare('SELECT id,assignment_key,original_name,mime_type,file_size,file_data FROM student_assignment_submissions WHERE id=? AND owner_id=?');$fileQ->execute([(int)$_GET['download_submission'],$uid]);$file=$fileQ->fetch();
+ $validKeys=array_column($dashboardDemoAssignments,'key');$validMimes=['application/pdf','image/jpeg','image/png','image/webp','image/gif'];
+ if(!$file||!in_array($file['assignment_key'],$validKeys,true)||!in_array($file['mime_type'],$validMimes,true)){http_response_code(404);exit('File not found.');}
+ $downloadName=str_replace(["\\","\r","\n",'"'],["_"," "," ","'"],(string)$file['original_name']);if($downloadName==='')$downloadName='assignment-file';
+ header('Content-Type: '.$file['mime_type']);header('Content-Disposition: attachment; filename="'.$downloadName.'"; filename*=UTF-8\'\''.rawurlencode((string)$file['original_name']));header('Content-Length: '.(int)$file['file_size']);header('Cache-Control: private, no-store');header('X-Content-Type-Options: nosniff');echo $file['file_data'];exit;
+}$isAdmin=($user['role']??'')==='administrator';$adminPages=['users','academic','analytics','risk_radar'];if($user&&in_array($page,$adminPages,true)&&!$isAdmin){http_response_code(403);$page='dashboard';}
 $aiPageRoles=['ai_study'=>'student','ai_teaching'=>'lecturer','risk_radar'=>'administrator'];
 if($user&&isset($aiPageRoles[$page])&&($user['role']??'')!==$aiPageRoles[$page]){http_response_code(403);$page='dashboard';}$err=$_SESSION['err']??'';unset($_SESSION['err']);
 function field($name,$label,$type='text',$extra=''){return '<label>'.$label.'<input name="'.$name.'" type="'.$type.'" '.$extra.'></label>';}
@@ -1637,7 +1698,25 @@ $dashboardDemoCourses=[
 <small class="muted" style="display:block;margin-top:10px">Fall Semester 2026</small>
 </article>
 <?php endforeach;?>
-</div></section><section class="card feature-card"><div class="head"><h2>My assignments & tasks</h2><a class="text-link" href="?page=tasks">View tasks →</a></div><?php $q=$db->prepare("SELECT title,course,due_date,status,priority FROM tasks WHERE user_id=? ORDER BY status,due_date IS NULL,due_date LIMIT 6");$q->execute([$uid]);$myTasks=$q->fetchAll();if(!$myTasks):?><div class="empty">No personal tasks yet. Add assignments to keep track of deadlines.</div><?php else:?><table class="table"><tr><th>Task</th><th>Due</th><th>Status</th></tr><?php foreach($myTasks as $mt):?><tr><td><b><?=h($mt['title'])?></b><br><span class="muted"><?=h($mt['course']?:'General')?></span></td><td><?=h($mt['due_date']?:'—')?></td><td><span class="pill"><?=h(ucfirst($mt['status']))?></span></td></tr><?php endforeach;?></table><?php endif;?></section></div>
+</div></section><section class="card feature-card" id="dashboard-assignments"><div class="head"><div><div class="section-kicker">DEMO ASSIGNMENTS</div><h2>Assignments & tasks</h2></div><a class="text-link" href="?page=tasks">View tasks →</a></div>
+<p class="muted" style="margin-top:0">Download each sample brief as a PDF. Upload your response as a PDF or image (JPG, PNG, WEBP or GIF), up to 8 MB. Your files are private to your account.</p>
+<?php foreach($dashboardDemoAssignments as $assignment):?>
+<article style="padding:12px 0;border-top:1px solid #edf0f4">
+<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b><?=h($assignment['title'])?></b><small style="display:block;margin-top:4px"><?=h($assignment['course'])?> · Due <?=h(date('M j, Y',strtotime($assignment['due'])))?></small></div><span class="pill">Open</span></div>
+<p style="font-size:12px;line-height:1.5;color:#667085;margin:8px 0"><?=h($assignment['instructions'])?></p>
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><a class="btn soft small" href="?download_assignment=<?=h($assignment['key'])?>">Download PDF brief</a></div>
+<form method="post" enctype="multipart/form-data" class="form" style="grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px;align-items:end">
+<input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="upload_assignment"><input type="hidden" name="assignment_key" value="<?=h($assignment['key'])?>">
+<label class="wide" style="grid-column:1/-1">Upload submission<input type="file" name="assignment_file" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,application/pdf,image/jpeg,image/png,image/webp,image/gif" required></label>
+<button class="btn small" style="grid-column:1/-1;justify-self:start">Upload file</button>
+</form>
+<?php $submissionQ=$db->prepare('SELECT id,original_name,file_size,uploaded_at FROM student_assignment_submissions WHERE owner_id=? AND assignment_key=? ORDER BY uploaded_at DESC LIMIT 5');$submissionQ->execute([$uid,$assignment['key']]);$submissionRows=$submissionQ->fetchAll();if($submissionRows):?>
+<div style="margin-top:10px"><b style="font-size:11px">Your uploaded files</b><?php foreach($submissionRows as $submission):?><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;border-top:1px solid #edf0f4;padding:7px 0;font-size:11px"><span style="min-width:0;overflow-wrap:anywhere"><?=h($submission['original_name'])?> · <?=h(number_format((int)$submission['file_size']/1024,0))?> KB</span><a class="text-link" href="?download_submission=<?=(int)$submission['id']?>">Download</a></div><?php endforeach;?></div>
+<?php endif;?>
+</article>
+<?php endforeach;?>
+<div style="margin-top:16px;padding-top:12px;border-top:1px solid #dfe5ee"><div class="head"><h3 style="margin:0">Personal tasks</h3></div><?php $q=$db->prepare("SELECT title,course,due_date,status,priority FROM tasks WHERE user_id=? ORDER BY status,due_date IS NULL,due_date LIMIT 6");$q->execute([$uid]);$myTasks=$q->fetchAll();if(!$myTasks):?><div class="empty">No personal tasks yet. Add assignments to keep track of deadlines.</div><?php else:?><table class="table"><tr><th>Task</th><th>Due</th><th>Status</th></tr><?php foreach($myTasks as $mt):?><tr><td><b><?=h($mt['title'])?></b><br><span class="muted"><?=h($mt['course']?:'General')?></span></td><td><?=h($mt['due_date']?:'—')?></td><td><span class="pill"><?=h(ucfirst($mt['status']))?></span></td></tr><?php endforeach;?></table><?php endif;?></div>
+</section></div>
 <?php endif;?>
 <?php elseif($page==='search'):?><div class="eyebrow">FIND WHAT YOU NEED</div><h1 class="h1">Search StudentLife</h1><p class="sub">Search your courses, assignments and timetable events.</p><?php $term=trim($_GET['q']??'');if($term===''):?><div class="card empty">Enter a keyword in the search bar above.</div><?php else:$like='%'.$term.'%';?><div class="card"><h2>Search results for “<?=h($term)?>”</h2><?php $q=$db->prepare('SELECT id,name AS title,code AS detail,"Course" AS kind FROM courses WHERE user_id=? AND (name LIKE ? OR code LIKE ?) LIMIT 20');$q->execute([$uid,$like,$like]);$results=$q->fetchAll();$q=$db->prepare('SELECT id,title,course AS detail,"Task" AS kind FROM tasks WHERE user_id=? AND (title LIKE ? OR course LIKE ?) LIMIT 20');$q->execute([$uid,$like,$like]);$results=array_merge($results,$q->fetchAll());$q=$db->prepare('SELECT id,title,location AS detail,"Timetable" AS kind FROM events WHERE user_id=? AND (title LIKE ? OR location LIKE ?) LIMIT 20');$q->execute([$uid,$like,$like]);$results=array_merge($results,$q->fetchAll());$q=$db->prepare("SELECT c.id,c.title,CONCAT(c.code,' · ',o.section_code) AS detail,'Course' AS kind FROM course_enrolments e JOIN course_offerings o ON o.id=e.offering_id JOIN academic_courses c ON c.id=o.course_id WHERE e.student_id=? AND e.status='enrolled' AND (c.title LIKE ? OR c.code LIKE ?) GROUP BY c.id,o.id LIMIT 20");$q->execute([$uid,$like,$like]);$results=array_merge($results,$q->fetchAll());$q=$db->prepare("SELECT id,title,description AS detail,'Library' AS kind FROM resource_library WHERE status='active' AND (audience='all' OR audience='student') AND (title LIKE ? OR description LIKE ?) LIMIT 20");$q->execute([$like,$like]);$results=array_merge($results,$q->fetchAll());$q=$db->prepare("SELECT id,title,body AS detail,'Announcement' AS kind FROM announcements WHERE status='published' AND (audience='all' OR audience='student') AND (title LIKE ? OR body LIKE ?) LIMIT 20");$q->execute([$like,$like]);$results=array_merge($results,$q->fetchAll());$q=$db->prepare("SELECT id,subject AS title,body AS detail,'Message' AS kind FROM student_messages WHERE (sender_id=? OR recipient_id=?) AND (subject LIKE ? OR body LIKE ?) LIMIT 20");$q->execute([$uid,$uid,$like,$like]);$results=array_merge($results,$q->fetchAll());if(!$results):?><div class="empty">No matching courses, assignments or timetable events were found.</div><?php else:?><table class="table"><tr><th>Type</th><th>Result</th><th>Details</th></tr><?php foreach($results as $result):?><tr><td><span class="pill"><?=h($result['kind'])?></span></td><td><b><?=h($result['title'])?></b></td><td><?=h($result['detail']?:'—')?></td></tr><?php endforeach;?></table><?php endif;?></div><?php endif;?>
 <?php elseif($page==='users'&&$isAdmin):?>
