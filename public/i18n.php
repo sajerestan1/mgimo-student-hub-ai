@@ -300,6 +300,24 @@ function sl_i18n_phrase_map(): array
     $map=array_merge($map,$extra);return $map;
 }
 
+function sl_i18n_text(string $text, array $map): string
+{
+    if(isset($map[$text]))return $map[$text];
+    if(preg_match('/^\\d{4}-\\d{2}-\\d{2}$/',$text))return sl_format_date($text,'ru');
+    $units=[
+        'student'=>['студент','студента','студентов'],'lecturer'=>['преподаватель','преподавателя','преподавателей'],
+        'admin'=>['администратор','администратора','администраторов'],'course'=>['курс','курса','курсов'],
+        'credit'=>['зачётная единица','зачётные единицы','зачётных единиц'],'module'=>['модуль','модуля','модулей'],
+        'resource'=>['ресурс','ресурса','ресурсов'],'question'=>['вопрос','вопроса','вопросов'],
+        'minute'=>['минута','минуты','минут'],'unread'=>['непрочитанное сообщение','непрочитанных сообщения','непрочитанных сообщений'],
+        'active enrolment'=>['активное зачисление','активных зачисления','активных зачислений']
+    ];
+    foreach($units as $english=>$forms){
+        $text=preg_replace_callback('/\\b(\\d+) '.preg_quote($english,'/').'s?\\b/i',function($m)use($forms){$n=(int)$m[1];return $m[1].' '.sl_plural_ru($n,$forms[0],$forms[1],$forms[2]);},$text)??$text;
+    }
+    return $text;
+}
+
 function sl_i18n_translate_html(string $html): string
 {
     if(($GLOBALS['sl_language']??'en')!=='ru')return $html;
@@ -322,8 +340,8 @@ function sl_i18n_translate_html(string $html): string
         }else{
             $blocked=false;foreach($stack as $entry)if($entry['blocked']){$blocked=true;break;}
             if($blocked)continue;
-            $decoded=html_entity_decode(trim($part),ENT_QUOTES|ENT_HTML5,'UTF-8');
-            if(isset($map[$decoded]))$part=preg_replace_callback('/^(\\s*)(.*?)(\\s*)$/s',function($m)use($decoded,$map){return $m[1].htmlspecialchars($map[$decoded],ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').$m[3];},$part)??$part;
+            $decoded=html_entity_decode(trim($part),ENT_QUOTES|ENT_HTML5,'UTF-8');$translated=sl_i18n_text($decoded,$map);
+            if($translated!==$decoded)$part=preg_replace_callback('/^(\\s*)(.*?)(\\s*)$/s',function($m)use($translated){return $m[1].htmlspecialchars($translated,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').$m[3];},$part)??$part;
         }
     }unset($part);
     return implode('',$parts);
