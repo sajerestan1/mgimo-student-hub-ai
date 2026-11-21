@@ -233,7 +233,7 @@ function sl_i18n_phrase_map(): array
         'DEPARTMENT INTELLIGENCE'=>'АНАЛИТИКА ПО КАФЕДРАМ','Attendance by department'=>'Посещаемость по кафедрам','Marked records'=>'Отмеченные записи',
         'COURSE CONCERNS'=>'РИСКИ ПО КУРСАМ','Attendance by course'=>'Посещаемость по курсам','ATTENDANCE TREND'=>'ДИНАМИКА ПОСЕЩАЕМОСТИ',
         'Recorded attendance over time'=>'Посещаемость за период','Month'=>'Месяц','Marked sessions'=>'Отмеченные занятия','Rate'=>'Показатель',
-        'Quizzes & exams'=>'Тесты и экзамены','Documents & resources'=>'Документы и ресурсы','Applications & certificates'=>'Заявки и справки'
+        'Quizzes & exams'=>'Тесты и экзамены','Documents & resources'=>'Документы и ресурсы','Applications & certificates'=>'Заявки и справки',
         'Learn · Teach · Achieve'=>'Учись · Преподавай · Достигай','Sign out ↗'=>'Выйти ↗','Welcome,'=>'Добро пожаловать,',
         'My Profile & Password'=>'Мой профиль и пароль','Class'=>'Занятие','Date'=>'Дата','Time'=>'Время','Active courses'=>'Активные курсы',
         'Due Nov 23'=>'Срок: 23 ноября','Teaching sections'=>'Учебные группы преподавателя','Personal courses'=>'Личные курсы','Tasks'=>'Задания','Grades'=>'Оценки','Events'=>'События','Course activity'=>'Активность по курсам',
