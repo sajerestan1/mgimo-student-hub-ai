@@ -42,7 +42,7 @@ function sl_i18n_catalogue(): array
             'communication.earlier'=>'Load earlier messages','communication.no_matches'=>'No messages match your search.','communication.start'=>'No messages yet. Start the conversation.',
             'communication.removed'=>'Message removed','communication.edit'=>'Save edit','communication.remove'=>'Remove message','communication.report'=>'Report',
             'communication.type_message'=>'Type a message…','communication.attach'=>'Attach a file','communication.attach_help'=>'Attach PDF, TXT, DOCX, PPTX, PNG, JPG or WebP (up to 10 MB).',
-            'page.dashboard'=>'Dashboard','page.users'=>'User & Role Management','page.academic'=>'Academic Management','page.announcements'=>'Announcements','page.documents'=>'Documents & Resources','page.reports'=>'Attendance Reports','page.analytics'=>'Reports & Analytics','page.settings'=>'System Settings','page.tasks'=>'Assignments & Tasks','page.courses'=>'My Courses','page.teaching_courses'=>'My Courses','page.grades'=>'Grades & Transcript','page.timetable'=>'Timetable','page.profile'=>'Profile & Settings','page.progress'=>'Academic Progress','page.quizzes'=>'Quizzes & Exams','page.intelligence'=>'Academic Intelligence','page.integrity'=>'Academic Integrity','page.applications'=>'Applications & Certificates','page.library'=>'Library','page.study_groups'=>'Study Groups','page.notifications'=>'Notifications','page.companion'=>'Study Companion','page.recommendations'=>'Study Recommendations','page.inbox'=>'Inbox','page.risk_radar'=>'Academic Risk Radar','page.ai_study'=>'AI Academic Assistant','page.ai_teaching'=>'AI Teaching Assistant',
+            'page.dashboard'=>'Dashboard','page.communication'=>'Communication Hub','page.users'=>'User & Role Management','page.academic'=>'Academic Management','page.announcements'=>'Announcements','page.documents'=>'Documents & Resources','page.reports'=>'Attendance Reports','page.analytics'=>'Reports & Analytics','page.settings'=>'System Settings','page.tasks'=>'Assignments & Tasks','page.courses'=>'My Courses','page.teaching_courses'=>'My Courses','page.grades'=>'Grades & Transcript','page.timetable'=>'Timetable','page.profile'=>'Profile & Settings','page.progress'=>'Academic Progress','page.quizzes'=>'Quizzes & Exams','page.intelligence'=>'Academic Intelligence','page.integrity'=>'Academic Integrity','page.applications'=>'Applications & Certificates','page.library'=>'Library','page.study_groups'=>'Study Groups','page.notifications'=>'Notifications','page.companion'=>'Study Companion','page.recommendations'=>'Study Recommendations','page.inbox'=>'Inbox','page.risk_radar'=>'Academic Risk Radar','page.ai_study'=>'AI Academic Assistant','page.ai_teaching'=>'AI Teaching Assistant',
         ],
         'ru' => [
             'common.search'=>'Поиск','common.language'=>'Язык','common.sign_in'=>'Войти','common.sign_out'=>'Выйти',
@@ -81,7 +81,7 @@ function sl_i18n_catalogue(): array
             'communication.earlier'=>'Загрузить предыдущие сообщения','communication.no_matches'=>'Сообщений по вашему запросу нет.','communication.start'=>'Сообщений пока нет. Начните общение.',
             'communication.removed'=>'Сообщение удалено','communication.edit'=>'Сохранить','communication.remove'=>'Удалить сообщение','communication.report'=>'Пожаловаться',
             'communication.type_message'=>'Введите сообщение…','communication.attach'=>'Прикрепить файл','communication.attach_help'=>'Можно прикрепить PDF, TXT, DOCX, PPTX, PNG, JPG или WebP (до 10 МБ).',
-            'page.dashboard'=>'Главная','page.users'=>'Пользователи и роли','page.academic'=>'Управление учебным процессом','page.announcements'=>'Объявления','page.documents'=>'Документы и ресурсы','page.reports'=>'Отчёты о посещаемости','page.analytics'=>'Отчёты и аналитика','page.settings'=>'Системные настройки','page.tasks'=>'Задания','page.courses'=>'Мои курсы','page.teaching_courses'=>'Мои курсы','page.grades'=>'Оценки и выписка','page.timetable'=>'Расписание','page.profile'=>'Профиль и настройки','page.progress'=>'Успеваемость','page.quizzes'=>'Тесты и экзамены','page.intelligence'=>'Академическая аналитика','page.integrity'=>'Академическая добросовестность','page.applications'=>'Заявки и справки','page.library'=>'Библиотека','page.study_groups'=>'Учебные группы','page.notifications'=>'Уведомления','page.companion'=>'Планировщик занятий','page.recommendations'=>'Рекомендации по учёбе','page.inbox'=>'Входящие','page.risk_radar'=>'Индикатор академических рисков','page.ai_study'=>'ИИ-помощник в учёбе','page.ai_teaching'=>'ИИ-помощник преподавателя',
+            'page.dashboard'=>'Главная','page.communication'=>'Центр общения','page.users'=>'Пользователи и роли','page.academic'=>'Управление учебным процессом','page.announcements'=>'Объявления','page.documents'=>'Документы и ресурсы','page.reports'=>'Отчёты о посещаемости','page.analytics'=>'Отчёты и аналитика','page.settings'=>'Системные настройки','page.tasks'=>'Задания','page.courses'=>'Мои курсы','page.teaching_courses'=>'Мои курсы','page.grades'=>'Оценки и выписка','page.timetable'=>'Расписание','page.profile'=>'Профиль и настройки','page.progress'=>'Успеваемость','page.quizzes'=>'Тесты и экзамены','page.intelligence'=>'Академическая аналитика','page.integrity'=>'Академическая добросовестность','page.applications'=>'Заявки и справки','page.library'=>'Библиотека','page.study_groups'=>'Учебные группы','page.notifications'=>'Уведомления','page.companion'=>'Планировщик занятий','page.recommendations'=>'Рекомендации по учёбе','page.inbox'=>'Входящие','page.risk_radar'=>'Индикатор академических рисков','page.ai_study'=>'ИИ-помощник в учёбе','page.ai_teaching'=>'ИИ-помощник преподавателя',
         ],
     ];
     return $catalogue;
@@ -326,14 +326,18 @@ function sl_i18n_translate_html(string $html): string
     foreach($parts as &$part){
         if($part==='')continue;
         if($part[0]==='<'){
-            if(preg_match('/^<\\s*\\//',$part)){if($stack)array_pop($stack);continue;}
+            if(preg_match('/^<\\s*\\/([a-zA-Z0-9]+)/',$part,$closing)){
+                for($i=count($stack)-1;$i>=0;$i--){
+                    if($stack[$i]['name']===strtolower($closing[1])){$stack=array_slice($stack,0,$i);break;}
+                }
+                continue;
+            }
             if(!preg_match('/^<([a-zA-Z0-9]+)/',$part,$tag))continue;
-            $name=strtolower($tag[1]);$blocked=in_array($name,['script','style','textarea'],true);
+            $name=strtolower($tag[1]);$blocked=in_array($name,['script','style','textarea','pre','code'],true);
             $classes='';if(preg_match('/\\bclass=["\\\']([^"\\\']*)["\\\']/',$part,$cm))$classes=$cm[1];
-            $blocked=$blocked||preg_match('/(?:^|\\s)(?:sc-message-body|ai-message-content|ai-bubble|message-item|notice-card|course-description|resource-description)(?:\\s|$)/',$classes)===1;
-            if(!$blocked&&!in_array($name,['input','img','br','hr','meta','link'],true)){
-                $stack[]=['blocked'=>false];
-            }elseif(!in_array($name,['input','img','br','hr','meta','link'],true))$stack[]=['blocked'=>true];
+            $blocked=$blocked||preg_match('/(?:^|\\s)(?:sc-message-body|ai-message-content|ai-bubble|message-item|notice-card|course-description|resource-description|announcement-body|resource-content|user-content|course-title|course-name|student-name|lecturer-name|assignment-title)(?:\\s|$)/',$classes)===1;
+            $isVoid=isset($void[$name])||preg_match('/\\/\\s*>$/',$part)===1;
+            if(!$isVoid)$stack[]=['name'=>$name,'blocked'=>$blocked];
             if(!$blocked){
                 $part=preg_replace_callback('/\\b(placeholder|aria-label|title)=["\\\']([^"\\\']*)["\\\']/i',function($m)use($map){$v=html_entity_decode($m[2],ENT_QUOTES|ENT_HTML5,'UTF-8');$translated=$map[$v]??$v;return $m[1].'="'.htmlspecialchars($translated,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'"';},$part)??$part;
             }
