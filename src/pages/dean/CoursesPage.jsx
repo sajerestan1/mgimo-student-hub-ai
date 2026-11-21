@@ -24,7 +24,7 @@ const COLUMNS = [
     ),
   },
   { key: 'faculty_code', label: 'Faculty' },
-  { key: 'professor', label: 'Instructor', render: (row) => <span className="text-mutedink">{row.professor}</span> },
+  { key: 'professor', label: 'Instructor', render: (row) => <div><p className="text-mutedink">{row.professor}</p>{row.professor_email && <a className="mt-0.5 block text-[11px] text-brand hover:underline" href={`mailto:${row.professor_email}`}>{row.professor_email}</a>}</div> },
   { key: 'enrolled', label: 'Enrolled', align: 'right' },
   {
     key: 'avgGrade',
@@ -99,7 +99,7 @@ export default function CoursesPage() {
               <DeanToolbar
                 query={query}
                 onQuery={setQuery}
-                placeholder="Search code, title or instructor"
+                placeholder="Search code, title, professor or email"
                 filters={[
                   {
                     label: 'All faculties',

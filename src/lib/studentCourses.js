@@ -11,7 +11,7 @@ export async function loadStudentCourses(userId) {
     const context = await loadStudentPortal();
     const courses = (context.courses || []).map((c) => ({
       id: c.id, code: c.code, title: c.title, name: c.title, status: 'published',
-      credits: 6, level: 'intermediate', professor_id: 'prof-demo',
+      credits: c.credits || 4, level: c.level || 'intermediate', professor_id: c.professorId, professor_email: c.professorEmail, description: c.description, semester: c.semester,
       progress: c.progress, weighted: c.weighted,
     }));
     return { student: context.profile, courses, courseIds: courses.map((c) => c.id), enrolments: courses.length, reason: 'ok' };
@@ -44,7 +44,13 @@ export async function loadStudentCourses(userId) {
   const courses = list(await base44.entities.Course.filter({ id: { $in: courseIds }, status: { $ne: 'archived' } }, { limit: 100 }));
   return { student, courses, courseIds, enrolments: enrolments.length, reason: courses.some((course) => course.status === 'published') ? 'ok' : 'no_published_courses' };
 }
-export const shortDate = (value, options, language = 'en-GB') => value ? new Date(value).toLocaleDateString(language, options || { day: 'numeric', month: 'short' }) : '—';
+export const shortDate = (value, options, language = 'en-GB') => {
+  if (!value) return '—';
+  const raw = String(value);
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(raw);
+  const date = new Date(dateOnly ? `${raw}T12:00:00` : raw);
+  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString(language, options || { day: 'numeric', month: 'short' });
+};
 export async function openPrivateFile(uri) {
   if (!uri) return;
   if (uri.startsWith('http')) { window.open(uri, '_blank', 'noopener'); return; }

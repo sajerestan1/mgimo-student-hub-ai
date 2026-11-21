@@ -1,6 +1,7 @@
 import { base44 } from '@/api/base44Client';
 import { getDemoUser } from '@/lib/demoAuth';
 import { MODULE_PATHS as P } from '@/lib/moduleRoutes';
+import { DEMO_INSTITUTION } from '@/lib/demoInstitutionData';
 
 /**
  * The student portal reads one authorised academic context, resolved on the
@@ -25,54 +26,83 @@ export function loadStudentPortal({ fresh = false } = {}) {
     const profile = {
       id: user.id, full_name: user.full_name, email: user.email,
       student_number: second ? 'DEMO-STU-002' : 'DEMO-STU-001',
-      faculty: second ? 'School of International Economic Relations' : 'School of International Relations',
-      program: second ? 'International Economics' : 'International Relations',
-      year: 1, group: second ? 'IER-1A' : 'IR-1A'
+      faculty: 'School of International Relations',
+      program: 'International Relations',
+      year: second ? 2 : 1, group: second ? 'IR-2A' : 'IR-1A'
     };
-    const courseSeeds = [
-      { id: 'course-ir201', code: 'IR-201', title: 'Theory of International Relations', weighted: second ? 84 : 76, progress: 72, professor: 'Dr. Elena Petrova' },
-      { id: 'course-ie201', code: 'IE-201', title: 'World Economy', weighted: second ? 78 : 89, progress: 64, professor: 'Dr. Andrei Volkov' },
-      { id: 'course-law201', code: 'LW-201', title: 'Public International Law', weighted: second ? 91 : 82, progress: 81, professor: 'Dr. Marina Kravtsova' },
+    const courseSeeds = DEMO_INSTITUTION.courses;
+    const courses = courseSeeds.map((course, index) => {
+      const professor = DEMO_INSTITUTION.professors.find((item) => item.id === course.professor_id);
+      const weighted = (second ? [86, 79, 88, 82, 91, 77, 84, 89, 81, 85] : [78, 84, 82, 75, 87, 80, 73, 88, 85, 81])[index];
+      const progress = 52 + ((index * 7 + (second ? 9 : 3)) % 45);
+      return {
+        id: course.id, code: course.code, title: course.title, description: course.description,
+        credits: course.credits, level: course.level, semester: course.semester,
+        professor: professor?.full_name || 'Course instructor',
+        professorId: professor?.id, professorEmail: professor?.email,
+        weighted, progress, graded: 1, missing: 0, awaiting: 0, weightScored: 100,
+        letter: weighted >= 90 ? 'A' : weighted >= 80 ? 'B' : weighted >= 70 ? 'C' : 'D',
+        moduleProgress: { completed: Math.floor(progress / 25), total: 8, percent: progress },
+        completion: 'in_progress',
+        rows: [{ id: `demo-grade-${course.id}-1`, kind: 'exam', title: 'Midterm examination', categoryLabel: 'Exam', status: 'graded', score: weighted, max: 100, percent: weighted, feedback: 'Good analysis. Continue building your evidence.', gradedAt: '2026-11-13', late: false }],
+      };
+    });
+    const assignmentTitles = [
+      ['Comparative policy brief', 'Seminar presentation', 'Reading response'],
+      ['Conference position paper', 'Draft resolution', 'Negotiation reflection'],
+      ['Diplomatic case analysis', 'Protocol exercise', 'Mission briefing'],
+      ['Trade history essay', 'Primary-source review', 'Comparative data note'],
+      ['Decolonisation timeline', 'Historical argument essay', 'Archive source critique'],
+      ['Treaty compliance memo', 'Verification case study', 'Arms-control presentation'],
+      ['Security risk assessment', 'Alliance case brief', 'Threat analysis'],
+      ['Diplomatic vocabulary portfolio', 'Russian correspondence exercise', 'Oral briefing'],
+      ['Regional actor profile', 'Eurasia policy memo', 'Border dispute analysis'],
+      ['Theory comparison essay', 'Concept map', 'Research question proposal'],
     ];
-    const courses = courseSeeds.map((course) => ({
-      ...course, credits: 6, graded: 1, missing: 0, awaiting: 0, weightScored: 100,
-      letter: course.weighted >= 90 ? 'A' : course.weighted >= 80 ? 'B' : course.weighted >= 70 ? 'C' : 'D',
-      moduleProgress: { completed: Math.floor(course.progress / 25), total: 4, percent: course.progress },
-      completion: 'in_progress',
-      rows: [{ id: `demo-grade-${course.id}-1`, kind: 'exam', title: 'Midterm examination', categoryLabel: 'Exam', status: 'graded', score: course.weighted, max: 100, percent: course.weighted, feedback: 'Good analysis. Continue building your evidence.', gradedAt: '2026-11-13', late: false }],
-    }));
-    const assignments = [
-      { id: 'as-1', title: 'Comparative foreign policy analysis', courseCode: 'IR-201', dueDate: '2026-11-20', state: 'pending' },
-      { id: 'as-2', title: 'Global trade indicators report', courseCode: 'IE-201', dueDate: '2026-11-12', state: 'overdue' },
-      { id: 'as-3', title: 'Case brief: treaty interpretation', courseCode: 'LW-201', dueDate: '2026-11-25', state: 'pending' },
-    ];
+    const assignments = courses.flatMap((course, index) => assignmentTitles[index].map((title, itemIndex) => ({
+      id: `as-${index + 1}-${itemIndex + 1}`, title, courseCode: course.code,
+      dueDate: itemIndex === 0 ? '2026-11-23' : itemIndex === 1 ? '2026-11-24' : '2026-11-17',
+      state: itemIndex === 2 ? 'overdue' : 'pending',
+    })));
     const visibleAssignments = assignments.map((a) => demoSubmissions.some((s) => s.assignment_id === a.id && s.student_id === profile.id) ? { ...a, state: 'submitted' } : a);
+    const materials = DEMO_INSTITUTION.courses.flatMap((course) => Array.from({ length: 28 }, (_, index) => ({
+      id: `mat-${course.id}-${index + 1}`,
+      title: [`Lecture ${index + 1}: ${course.title}`, `Seminar reading ${index + 1}`, `Case study ${index + 1}`, `Study guide ${index + 1}`][index % 4],
+      courseCode: course.code, courseId: course.id, type: ['lecture', 'reading', 'case study', 'study guide'][index % 4],
+      publishedDate: `2026-11-${String(1 + (index % 19)).padStart(2, '0')}`,
+    })));
+    const modules = DEMO_INSTITUTION.courses.flatMap((course) => Array.from({ length: 8 }, (_, index) => ({
+      id: `mod-${course.id}-${index + 1}`, courseId: course.id, courseCode: course.code,
+      title: ['Foundations and key concepts', 'Historical background', 'Core frameworks', 'Comparative cases', 'Research methods', 'Applied analysis', 'Seminar and discussion', 'Review and assessment'][index],
+      order: index + 1,
+    })));
+    const quizzes = DEMO_INSTITUTION.courses.map((course, index) => ({
+      id: `quiz-${course.id}`, title: `${course.code} — Module ${index + 4}`, courseCode: course.code,
+      state: 'pending', availableUntil: '2026-11-28', attempts: 1, attemptLimit: 3,
+    }));
     return Promise.resolve({
-      linked: true, profile, courses, assignments: visibleAssignments,
-      quizzes: [{ id: 'quiz-1', title: 'IR Theory — Module 4', courseCode: 'IR-201', state: 'pending', availableUntil: '2026-11-22', attempts: 1, attemptLimit: 3 }],
-      materials: [{ id: 'mat-1', title: 'Lecture 8: International institutions', courseCode: 'IR-201', courseId: 'course-ir201', type: 'lecture', publishedDate: '2026-11-14' }],
-      announcements: [{ id: 'ann-1', title: 'Fall semester examination schedule', body: 'The examination timetable is available in the student portal.', author: 'Academic Affairs', date: '2026-11-14' }],
+      linked: true, profile, courses, assignments: visibleAssignments, quizzes, materials, modules,
+      announcements: [
+        { id: 'ann-1', title: 'Fall semester examination schedule', body: 'The examination timetable is available in the student portal.', author: 'Academic Affairs', date: '2026-11-14' },
+        { id: 'ann-2', title: 'Seminar presentation sign-up', body: 'Students should confirm their seminar presentation slot with the course instructor.', author: 'Academic Affairs', date: '2026-11-16' },
+        { id: 'ann-3', title: 'Library research support', body: 'Subject librarians are available for help with academic databases and citation styles.', author: 'Library Services', date: '2026-11-18' },
+      ],
       recentGrades: courses.map((course) => ({ courseCode: course.code, title: 'Midterm examination', score: course.weighted, max: 100, feedback: 'Good analysis. Strengthen your use of primary sources.', gradedAt: '2026-11-13' })),
-      // Attendance totals and breakdown are generated from the same register rows.
       attendance: {
         overall: second ? 93 : 88,
-        held: 16,
-        byCourse: [
-          { code: 'IR-201', present: second ? 9 : 8, late: 1, excused: 0, absent: second ? 0 : 1, total: second ? 10 : 10, rate: second ? 100 : 90 },
-          { code: 'IE-201', present: second ? 8 : 8, late: 1, excused: 0, absent: 1, total: 10, rate: 90 },
-          { code: 'LW-201', present: second ? 7 : 4, late: second ? 1 : 0, excused: 0, absent: 1, total: second ? 9 : 5, rate: second ? 89 : 80 },
-        ],
+        held: 80,
+        byCourse: courses.map((course, index) => ({ code: course.code, present: 8 + ((index + (second ? 1 : 0)) % 3), late: index % 4 === 0 ? 1 : 0, excused: 0, absent: 1, total: 10, rate: 80 + ((index * 3 + (second ? 7 : 2)) % 20) })),
       },
-      sessions: [
-        { id: 's1', date: todayISO(), start: '10:00', end: '11:30', courseCode: 'IR-201', courseTitle: 'Theory of International Relations', room: 'Room 304', kind: 'lecture' },
-        { id: 's2', date: todayISO(), start: '14:00', end: '15:30', courseCode: 'IE-201', courseTitle: 'World Economy', room: 'Room 218', kind: 'seminar' },
-        { id: 's3', date: tomorrowISO(), start: '11:00', end: '12:30', courseCode: 'LW-201', courseTitle: 'Public International Law', room: 'Room 212', kind: 'lecture' },
-      ],
+      sessions: courses.slice(0, 5).map((course, index) => ({
+        id: `session-${course.id}`, date: index < 3 ? todayISO() : tomorrowISO(),
+        start: ['09:00', '11:00', '13:00', '14:00', '16:00'][index], end: ['10:30', '12:30', '14:30', '15:30', '17:30'][index],
+        courseCode: course.code, courseTitle: course.title, room: `Room ${210 + index}`, kind: index % 2 ? 'seminar' : 'lecture',
+      })),
       summary: {
-        average: second ? 84.3 : 82.3,
+        average: +(courses.reduce((sum, course) => sum + course.weighted, 0) / courses.length).toFixed(1),
         averageLetter: second ? 'B+' : 'B',
         courseCount: courses.length,
-        credits: courses.reduce((sum, course) => sum + 6, 0),
+        credits: courses.reduce((sum, course) => sum + course.credits, 0),
         pending: visibleAssignments.filter((row) => row.state === 'pending').length,
         overdue: visibleAssignments.filter((row) => row.state === 'overdue').length,
         awaiting: 0,
