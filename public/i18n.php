@@ -312,7 +312,7 @@ function sl_i18n_phrase_map(): array
         'Next review date (optional)'=>'Дата следующей проверки (необязательно)','Goal title'=>'Название цели','What is one next step or follow-up?'=>'Каков следующий шаг?',
         'Next step or follow-up'=>'Следующий шаг','Next review date'=>'Дата следующей проверки','Study document'=>'Учебный документ',
         'Course section (optional)'=>'Учебная группа (необязательно)','Follow-up action'=>'Последующее действие','Evidence and notes'=>'Подтверждения и заметки',
-        'Follow-up date'=>'Дата следующего контакта','Enrolled student'=>'Зачисленный студент','Assigned course section'=>'Назначенная учебная группа'
+        'Follow-up date'=>'Дата следующего контакта','Enrolled student'=>'Зачисленный студент','Assigned course section'=>'Назначенная учебная группа',
         'Attendance marked'=>'Посещаемость отмечена','COMMUNICATION'=>'ОБЩЕНИЕ','LEARNING RESOURCES'=>'УЧЕБНЫЕ МАТЕРИАЛЫ',
         'Language preference'=>'Язык интерфейса','Your language preference is saved to your account.'=>'Язык интерфейса сохранён в вашей учётной записи.',
         'Account basics'=>'Основные сведения об учётной записи','Keep your sign-in private'=>'Защитите данные для входа',
