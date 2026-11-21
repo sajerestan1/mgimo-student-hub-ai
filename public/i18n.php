@@ -511,6 +511,10 @@ function sl_i18n_phrase_map(): array
         'No interventions have been recorded.'=>'Меры поддержки пока не зафиксированы.','Open'=>'Открыто','In progress'=>'В процессе','Closed'=>'Закрыто',
         'Update'=>'Обновить','Choose your section'=>'Выберите свою учебную группу','Enrolled student'=>'Зачисленный студент','Assigned course section'=>'Назначенная учебная группа',
         'Attendance marked'=>'Посещаемость отмечена','LEARNING RESOURCES'=>'УЧЕБНЫЕ МАТЕРИАЛЫ','COMMUNICATION'=>'ОБЩЕНИЕ',
+        '[DEMO]'=>'[ДЕМО]','DEMO'=>'ДЕМО','Foundation'=>'Базовый уровень','Intermediate'=>'Средний уровень','Advanced'=>'Продвинутый уровень',
+        'High priority'=>'Высокий приоритет','Normal priority'=>'Обычный приоритет','Low priority'=>'Низкий приоритет',
+        'Due Nov 23, 2026'=>'Срок сдачи: 23 ноября 2026 г.','Due Nov 24, 2026'=>'Срок сдачи: 24 ноября 2026 г.',
+        'No file chosen'=>'Файл не выбран','File upload'=>'Загрузка файла','Upload file'=>'Загрузить файл',
         // Demo course titles, instructors, descriptions, assignments and announcements.
         'Welcome, Stanley 👋'=>'Добро пожаловать, Стэнли 👋','Stanley'=>'Стэнли','Patience'=>'Пейшенс',
         'Welcome,'=>'Добро пожаловать,',
@@ -573,6 +577,17 @@ function sl_i18n_phrase_map(): array
 function sl_i18n_text(string $text, array $map): string
 {
     if(isset($map[$text]))return $map[$text];
+    // Translate known interface phrases inside mixed labels such as course codes + level,
+    // dates + status, and demo titles + metadata. User-authored content remains excluded
+    // by the HTML translator's protected content containers.
+    static $phrasePattern=null;
+    if($phrasePattern===null){
+        $keys=array_keys($map);
+        usort($keys,static fn($a,$b)=>strlen($b)<=>strlen($a));
+        $phrasePattern='/(?<![\\p{L}\\p{N}])(?:'.implode('|',array_map(static fn($key)=>preg_quote($key,'/'),$keys)).')(?![\\p{L}\\p{N}])/u';
+    }
+    $replaced=preg_replace_callback($phrasePattern,static fn($m)=>$map[$m[0]]??$m[0],$text);
+    if(is_string($replaced))$text=$replaced;
     if(preg_match('/^\\d{4}-\\d{2}-\\d{2}$/',$text))return sl_format_date($text,'ru');
     $units=[
         'student'=>['студент','студента','студентов'],'lecturer'=>['преподаватель','преподавателя','преподавателей'],
