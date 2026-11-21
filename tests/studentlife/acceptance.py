@@ -265,6 +265,27 @@ def main():
           "AI response headings and emphasis render as safe formatted HTML without raw hashes")
     check("Memory and Personalization" in html and "No memories saved" in html,
           "student memory controls start empty and private")
+    check("Goals and follow-ups" in html and "No personal goals saved yet" in html and
+          "Personal support" in html and "Goals stay private unless you check Share with AI" in html,
+          "personal support and private goal controls are available to students")
+    post_action(student_token, "save_personal_goal", category="career", title="CI career goal",
+                details="Update my CV and review progress next week.", review_date="",
+                confirm_goal="1", share_with_ai="1")
+    check(db_count("SELECT COUNT(*) AS n FROM student_personal_goals WHERE owner_id=3") == 0,
+          "sharing a personal goal with AI requires separate consent")
+    post_action(student_token, "save_personal_goal", category="career", title="CI career goal",
+                details="Update my CV and review progress next week.", review_date="",
+                confirm_goal="1", share_with_ai="1", confirm_share="1")
+    shared_goal_id = db_count("SELECT MAX(id) AS id FROM student_personal_goals WHERE owner_id=3")
+    check(shared_goal_id and db_count("SELECT COUNT(*) AS n FROM student_personal_goals WHERE id=%s AND owner_id=3 AND share_with_ai=1",
+                                      (shared_goal_id,)) == 1,
+          "student can save an AI-shared goal after separate consent")
+    post_action(student_token, "save_personal_goal", category="study_habits", title="CI private goal",
+                details="Set aside two short study blocks this week.", review_date="", confirm_goal="1")
+    private_goal_id = db_count("SELECT MAX(id) AS id FROM student_personal_goals WHERE owner_id=3")
+    check(private_goal_id and db_count("SELECT COUNT(*) AS n FROM student_personal_goals WHERE id=%s AND owner_id=3 AND share_with_ai=0",
+                                       (private_goal_id,)) == 1,
+          "personal goals are private by default")
     post_action(student_token, "save_ai_memory", category="learning",
                 memory_text="I prefer a short example before a detailed explanation.",
                 confirm_memory="1")
@@ -289,8 +310,16 @@ def main():
     student2_token = login("student2@studentlife.test", "student")
     status, other_student_html = request("/?page=ai_study")
     check(status == 200 and "I prefer a short example before a detailed explanation." not in other_student_html and
-          "CI improvement plan" not in other_student_html,
-          "another student cannot view the saved memory or improvement plan")
+          "CI improvement plan" not in other_student_html and "CI career goal" not in other_student_html and
+          "CI private goal" not in other_student_html,
+          "another student cannot view saved memory, plan or personal goals")
+    post_action(student2_token, "update_personal_goal", goal_id=str(shared_goal_id),
+                category="career", title="Unauthorized goal edit", details="Change another student's goal.",
+                review_date="", status="completed", confirm_goal="1")
+    post_action(student2_token, "delete_personal_goal", goal_id=str(shared_goal_id))
+    check(db_count("SELECT COUNT(*) AS n FROM student_personal_goals WHERE id=%s AND owner_id=3 AND title=%s AND share_with_ai=1",
+                   (shared_goal_id, "CI career goal")) == 1,
+          "another student cannot edit or delete a goal by changing its ID")
     post_action(student2_token, "update_academic_plan", plan_id=str(plan_id),
                 course_code="", title="Unauthorized plan change",
                 plan_text="Replace the student's plan", target_date="",
@@ -311,8 +340,19 @@ def main():
     student_token = login("student1@studentlife.test", "student")
     status, restored_memory_html = request("/?page=ai_study")
     check(status == 200 and "I prefer a short example before a detailed explanation." in restored_memory_html and
-          "CI improvement plan" in restored_memory_html,
-          "approved memory and improvement plan persist across sign-in")
+          "CI improvement plan" in restored_memory_html and "CI career goal" in restored_memory_html and
+          "CI private goal" in restored_memory_html,
+          "approved memory, improvement plan and personal goals persist across sign-in")
+    post_action(student_token, "update_personal_goal", goal_id=str(shared_goal_id),
+                category="career", title="CI career goal", details="Update my CV and review progress next week.",
+                review_date="", status="in_progress", confirm_goal="1")
+    check(db_count("SELECT COUNT(*) AS n FROM student_personal_goals WHERE id=%s AND owner_id=3 AND status='in_progress' AND share_with_ai=0",
+                   (shared_goal_id,)) == 1,
+          "student can update a goal and revoke AI sharing")
+    post_action(student_token, "delete_personal_goal", goal_id=str(shared_goal_id))
+    post_action(student_token, "delete_personal_goal", goal_id=str(private_goal_id))
+    check(db_count("SELECT COUNT(*) AS n FROM student_personal_goals WHERE owner_id=3") == 0,
+          "student can delete their own personal goals")
     post_action(student_token, "update_academic_plan", plan_id=str(plan_id),
                 course_code="", title="CI improvement plan",
                 plan_text="Review lecture notes twice each week and record questions for the next tutorial.",
