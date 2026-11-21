@@ -80,6 +80,24 @@ function sl_t(string $key, array $vars = []): string
     return $value;
 }
 
+function sl_plural_ru(int $count, string $one, string $few, string $many): string
+{
+    $n=abs($count);$n10=$n%10;$n100=$n%100;
+    return ($n10===1&&$n100!==11)?$one:(($n10>=2&&$n10<=4&&($n100<12||$n100>14))?$few:$many);
+}
+
+function sl_format_date(string $date, ?string $language = null): string
+{
+    $language=$language??($GLOBALS['sl_language']??'en');
+    $timestamp=strtotime($date);
+    if($timestamp===false)return $date;
+    if($language==='ru'){
+        $months=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+        return date('j',$timestamp).' '.$months[(int)date('n',$timestamp)-1].' '.date('Y',$timestamp).' г.';
+    }
+    return date('F j, Y',$timestamp);
+}
+
 function sl_language_normalize(mixed $language): string
 {
     return in_array($language, ['en', 'ru'], true) ? $language : 'en';
