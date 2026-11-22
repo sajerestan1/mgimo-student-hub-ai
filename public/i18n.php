@@ -1063,7 +1063,7 @@ function sl_i18n_translate_html(string $html): string
 (function(){
   const map={$json};
   const keys=Object.keys(map).sort((a,b)=>b.length-a.length);
-  const escapeRegExp=s=>Array.from(s).map(ch=>'\\^$.*+?()[]{}|'.includes(ch)?'\\'+ch:ch).join('');
+    const slash=String.fromCharCode(92);const regexSpecial='^$.*+?()[]{}|'+slash;const escapeRegExp=s=>Array.from(s).map(ch=>regexSpecial.includes(ch)?slash+ch:ch).join('');
   const pattern=keys.length?new RegExp('(?<![\\\\p{L}\\\\p{N}])(?:'+keys.map(escapeRegExp).join('|')+')(?![\\\\p{L}\\\\p{N}])','gu'):null;
   const blocked='.sc-message-body,.ai-message-content,.ai-bubble,.message-item,.resource-description,.resource-content,.user-content,.student-name,[data-user-content],script,style,textarea,pre,code';
   function translate(value){
