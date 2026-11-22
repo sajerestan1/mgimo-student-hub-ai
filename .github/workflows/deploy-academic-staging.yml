@@ -9,6 +9,7 @@ on:
       - "public/.htaccess"
       - "public/studentlife-sw.js"
       - "public/academic-intelligence.php"
+      - "public/ai-learning-features.php"
       - "public/communication-hub.php"
       - "public/i18n.php"
       - "public/demo-seed-expansion.php"
@@ -24,6 +25,7 @@ on:
       - "public/.htaccess"
       - "public/studentlife-sw.js"
       - "public/academic-intelligence.php"
+      - "public/ai-learning-features.php"
       - "public/communication-hub.php"
       - "public/i18n.php"
       - ".github/deploy/**"
@@ -59,7 +61,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
-          extensions: pdo_mysql
+          extensions: pdo_mysql, zip
           coverage: none
 
       - name: Set up Python
@@ -71,6 +73,7 @@ jobs:
         run: |
           php -l public/index.php
           php -l public/academic-intelligence.php
+          php -l public/ai-learning-features.php
           php -l public/communication-hub.php
           php -l public/i18n.php
           php -l public/demo-seed-expansion.php
@@ -133,9 +136,12 @@ jobs:
       - name: Prepare staging payload
         run: |
           mkdir -p academic-staging
-          cp public/index.php public/academic-intelligence.php public/studentlife-sw.js academic-staging/
+          cp public/index.php public/ai-learning-features.php public/academic-intelligence.php public/communication-hub.php public/i18n.php public/studentlife-sw.js academic-staging/
           test -s academic-staging/index.php
+          test -s academic-staging/ai-learning-features.php
           test -s academic-staging/academic-intelligence.php
+          test -s academic-staging/communication-hub.php
+          test -s academic-staging/i18n.php
           test -s academic-staging/studentlife-sw.js
 
       - name: Publish only index.php to Academic homepage
@@ -167,13 +173,14 @@ jobs:
         run: |
           mkdir -p studentlife-preview
           mkdir -p .github/deploy
-          cp public/index.php public/install.php public/studentlife-sw.js public/academic-intelligence.php public/communication-hub.php public/i18n.php public/demo-seed-expansion.php studentlife-preview/
+          cp public/index.php public/install.php public/studentlife-sw.js public/ai-learning-features.php public/academic-intelligence.php public/communication-hub.php public/i18n.php public/demo-seed-expansion.php studentlife-preview/
           cp public/.htaccess studentlife-preview/.htaccess
           cat .github/deploy/preview-cpanel-php-config.htaccess >> studentlife-preview/.htaccess
           test -s studentlife-preview/index.php
           test -s studentlife-preview/.htaccess
           test -s studentlife-preview/install.php
           test -s studentlife-preview/studentlife-sw.js
+          test -s studentlife-preview/ai-learning-features.php
           test -s studentlife-preview/academic-intelligence.php
           test -s studentlife-preview/communication-hub.php
           test -s studentlife-preview/i18n.php

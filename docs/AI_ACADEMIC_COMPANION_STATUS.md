@@ -1,8 +1,16 @@
 # StudentLife AI Academic Companion audit and implementation
 
-Audit date: 2026-11-17  
-Application reviewed: standalone PHP/MySQL app in `public/`  
-Feature branch: `codex/ai-academic-companion`
+Audit date: 2026-11-22
+Application reviewed: standalone PHP/MySQL app in `public/`
+Working copy: local Preview workspace; these changes are not pushed
+
+## Current AI Learning Centre status (2026-11-22)
+
+Phases 1–6 have been implemented in the local Preview working tree. The Preview website has not been updated with these local changes. The deployment workflow must package `public/ai-learning-features.php` with the PHP entry point; this dependency is now included in its syntax checks and staging/Preview payloads.
+
+Students have an AI Learning Centre with nine labeled tools. The AI Study Planner and AI Study Roadmap use owner-scoped roadmap/task tables and available academic context. AI Exam Preparation stores generated practice sets and attempts separately from official grades, supports timed mock exams and revision mode, and checks answers in practice mode. AI Chat uses the existing conversation/message tables and supports changing the private document context on a saved conversation. English and Russian interface strings are provided through the existing translation system.
+
+AI generation still requires the administrator-configured HTTPS provider. If it is unavailable, generation stays disabled or returns a clear error. No paid provider was added. Essay, oral and case-study responses are not automatically scored; the interface provides suggested answers and explanations for self-review.
 
 ## Existing behavior found
 
@@ -34,21 +42,20 @@ Feature branch: `codex/ai-academic-companion`
 
 - PDF text extraction requires the host's `pdftotext` binary and Office extraction requires PHP ZipArchive and DOM. If those are unavailable, the app refuses the upload with a clear error. Scanned-image OCR and reliable page-number citations are unavailable. The existing Documents & Resources page still stores shared links and descriptions only.
 - The Applications & Certificates page sends an internal request to an administrator. It does not maintain application status, issue certificates, or expose policy documents to the AI. The assistant can guide users to that page but must not claim to submit, approve, or check a request.
-- Exam dates and institution grading rules are not present in the AI context. The assistant must not invent them or calculate an official GPA.
-- Existing quiz scaffolds generate local reflection prompts. AI-generated mock exams and saved practice results are not implemented. Practice marks must not be written as official grades.
+- Official examination dates and institution grading rules are not present in the academic database. Students provide an exam date for a personal roadmap; it is labeled as student-supplied and never changes university records. The assistant must not invent dates or calculate an official GPA.
+- AI practice question sets and attempts are stored in dedicated tables and never written to official grades. Objective questions are automatically scored; written answers require student self-review.
 - AI mode selection does not create new role permissions. Student, lecturer, and administrator data retrieval remains governed by the existing backend scope.
 - Feature branches run CI only. Merging into `codex/studentlife-preview` triggers the isolated preview deployment; Academic staging and production remain separate.
 
 ## Automated verification
 
-The existing MariaDB integration suite covers AI mode persistence, conversation rename/delete ownership, confirmed task creation, rejection of a task for an un-enrolled course, private text upload outside the web root, document deletion ownership, and separation between the two CI student accounts.
+The MariaDB integration suite covers AI mode persistence, conversation rename/delete ownership, confirmed task creation, rejection of a task for an un-enrolled course, private document storage, document deletion ownership, and separation between the two CI student accounts. It now also checks Learning Centre routing and labels, Russian labels, dynamic extraction for supported TXT, DOCX, PPTX and PDF formats, PPTX slide order, owner-scoped roadmap and exam-set reads, task progress updates, immediate practice feedback, attempt scoring/persistence, and no-provider behavior.
 
-Status: GitHub Actions run 88 completed successfully on 2026-11-17. PHP syntax, Python test syntax, disposable MariaDB setup, and the academic acceptance suite passed. The tests use fictional `studentlife.test` accounts and do not contact the configured external AI provider.
+Historical status: GitHub Actions run 88 completed successfully on 2026-11-17. The new local changes have not yet run through PHP lint or the MariaDB acceptance suite. JavaScript syntax, static route/ownership checks, and `git diff --check` passed locally. This workspace has no PHP runtime, so runtime verification must happen in the repository workflow before Preview publication. Tests use fictional `studentlife.test` accounts and do not contact the configured external AI provider.
 
 ## Deployment and remaining work
 
-- Branch isolation: `codex/ai-academic-companion`, based on the preview branch.
-- Preview status: deployed from commit `8cc5d882c20ca549e28c649819a76d738fca86d5`. GitHub Actions run 89 passed the MariaDB acceptance suite and the preview upload step.
-- Production status: untouched. The Academic staging job was skipped.
-- The preview login page loaded after deployment. The previously signed-in browser session had expired, so the updated AI page, a new live provider request, Stanley/Patience account separation, and the 360px layout still need a fresh signed-in browser check.
-- Document analysis, saved mock-exam results, complete language localization, and application status integration remain future work because the PHP database and routes do not currently support them.
+- The currently deployed Preview is the earlier release. It does not include the Phase 1–6 local changes yet.
+- Production remains untouched. No changes were pushed or deployed as part of this work.
+- Before Preview publication, run the GitHub workflow and visually check student, lecturer and administrator roles, English/Russian switching, document extraction for every format the host advertises, and the 360px mobile layout.
+- OCR for scanned PDFs, automatic grading of written exam responses, and application status integration remain outside the implemented scope.

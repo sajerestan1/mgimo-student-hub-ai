@@ -56,7 +56,7 @@ function sl_ai_provider_ready(): bool
 }
 
 /** OpenAI-compatible HTTPS endpoint. No network request is made unless the host supplies all three settings. */
-function sl_ai_complete(array $messages): array
+function sl_ai_complete(array $messages, int $maxTokens = 1400): array
 {
     $config = sl_ai_provider_config();
     if ($config['endpoint'] === '' || $config['api_key'] === '' || $config['model'] === '') {
@@ -66,7 +66,7 @@ function sl_ai_complete(array $messages): array
         'model' => $config['model'],
         'messages' => $messages,
         'temperature' => 0.2,
-        'max_tokens' => 1400,
+        'max_tokens' => max(1, min(6000, $maxTokens)),
     ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     if (!is_string($payload)) return ['ok' => false, 'error' => 'The AI request could not be prepared.'];
 
@@ -111,7 +111,7 @@ function sl_ai_complete(array $messages): array
     }
     $answer = trim((string)$answer);
     if ($answer === '') return ['ok' => false, 'error' => 'The AI service returned no answer.'];
-    return ['ok' => true, 'answer' => mb_substr($answer, 0, 12000)];
+    return ['ok' => true, 'answer' => mb_substr($answer, 0, min(60000, max(12000, $maxTokens * 8)))];
 }
 
 function sl_ai_all(PDO $db, string $sql, array $params = []): array

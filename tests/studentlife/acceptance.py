@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Black-box acceptance tests for the StudentLife PHP/MySQL application."""
 import http.cookiejar
+import io
+import json
 import os
 import re
 import sys
@@ -8,6 +10,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+import zipfile
 from datetime import date, timedelta
 from pathlib import Path
 import pymysql
@@ -56,6 +59,45 @@ def upload_document(token, filename, contents):
         return response.status, response.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as error:
         return error.code, error.read().decode("utf-8", "replace")
+
+def office_fixture(extension):
+    output = io.BytesIO()
+    with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
+        if extension == "docx":
+            archive.writestr("word/document.xml",
+                             '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>DOCX_EXTRACTION_SENTINEL</w:t></w:r></w:p></w:body></w:document>')
+        elif extension == "pptx":
+            archive.writestr("ppt/presentation.xml",
+                             '<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><p:sldIdLst><p:sldId id="256" r:id="rId2"/><p:sldId id="257" r:id="rId1"/></p:sldIdLst></p:presentation>')
+            archive.writestr("ppt/_rels/presentation.xml.rels",
+                             '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide2.xml"/></Relationships>')
+            for number in (1, 2):
+                archive.writestr(f"ppt/slides/slide{number}.xml",
+                                 '<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>SLIDE_%s_SENTINEL</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>' % number)
+        else:
+            raise ValueError(f"No Office fixture for {extension}")
+    return output.getvalue()
+
+def pdf_fixture():
+    stream = b"BT /F1 18 Tf 72 720 Td (PDF_EXTRACTION_SENTINEL) Tj ET"
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n" + stream + b"\nendstream",
+    ]
+    data = bytearray(b"%PDF-1.4\n")
+    offsets = [0]
+    for number, body in enumerate(objects, 1):
+        offsets.append(len(data))
+        data.extend(f"{number} 0 obj\n".encode() + body + b"\nendobj\n")
+    xref = len(data)
+    data.extend(f"xref\n0 {len(offsets)}\n0000000000 65535 f \n".encode())
+    for offset in offsets[1:]:
+        data.extend(f"{offset:010d} 00000 n \n".encode())
+    data.extend(f"trailer\n<< /Size {len(offsets)} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode())
+    return bytes(data)
 
 
 
@@ -255,8 +297,22 @@ def main():
     request("/?logout=1")
     student_token = login("student1@studentlife.test", "student")
     status, html = request("/?page=ai_study")
-    check(status == 200 and "AI Academic Assistant" in html and "AI service is not configured" in html,
+    check(status == 200 and "AI Chat — Chat with AI" in html and "AI service is not configured" in html,
           "student AI workspace uses the requested name and clearly reports provider status")
+    required_ai_tools = ["AI Homework Assistant", "AI Study Planner", "AI Grade Evaluator",
+                         "AI Plagiarism Checker", "AI Study Companion", "AI Lecture Summariser",
+                         "AI Study Roadmap", "AI Exam Preparation", "AI Chat"]
+    check(all(tool in html for tool in required_ai_tools) and html.count("AI POWERED") >= 10,
+          "student AI Learning Centre exposes all nine labeled tools")
+    status, hub_html = request("/?page=ai_learning_centre")
+    check(status == 200 and "id=\"ai-study-roadmap\"" in hub_html and
+          "id=\"ai-exam-preparation\"" in hub_html and "AI Chat — Chat with AI" in hub_html,
+          "AI Learning Centre routes to planner, exam preparation and permanent chat")
+    status, russian_html = request("/?page=ai_learning_centre&lang=ru")
+    check(status == 200 and "ИИ-планировщик занятий" in russian_html and
+          "ИИ-подготовка к экзаменам" in russian_html,
+          "student AI tools have Russian labels")
+    request("/?page=ai_learning_centre&lang=en")
     check("1 enrolled course sections" in html and "3 upcoming class sessions" in html,
           "student AI context reflects the student's enrollment and timetable")
     check("1 personal grade entries" in html,
@@ -267,8 +323,82 @@ def main():
           "grade review identifies the student's own course")
     check("80.0" in html,
           "grade review calculates the recorded course average")
+    check("AI Grade Evaluator" in html and "ai-grade-calculator-form" in html,
+          "AI Grade Evaluator offers a weight-based, non-official score estimate")
     check("Foreign course row" not in html,
           "grade review excludes a mark belonging to another student's course")
+    check(db_count("SELECT COUNT(*) AS n FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name IN ('student_ai_roadmaps','student_ai_roadmap_tasks','student_ai_exam_sets','student_ai_exam_attempts')") == 4,
+          "AI roadmap and exam persistence tables are created")
+    roadmap_count_before = db_count("SELECT COUNT(*) AS n FROM student_ai_roadmaps WHERE owner_id=3")
+    status, provider_error = post_action(student_token, "generate_ai_roadmap")
+    check(status == 200 and "AI is not connected. The roadmap was not generated." in provider_error and
+          db_count("SELECT COUNT(*) AS n FROM student_ai_roadmaps WHERE owner_id=3") == roadmap_count_before,
+          "roadmap generation reports missing provider and does not invent or save output")
+    exam_count_before = db_count("SELECT COUNT(*) AS n FROM student_ai_exam_sets WHERE owner_id=3")
+    status, provider_error = post_action(student_token, "generate_ai_exam_set")
+    check(status == 200 and "AI is not connected. Practice questions were not generated." in provider_error and
+          db_count("SELECT COUNT(*) AS n FROM student_ai_exam_sets WHERE owner_id=3") == exam_count_before,
+          "exam generation reports missing provider and does not save fake questions")
+    request("/?page=ai_study")
+    private_roadmap_id = db_execute(
+        "INSERT INTO student_ai_roadmaps(owner_id,course_code,title,objective,target_date,input_json,sequence_json) VALUES(4,'PRIV101','PRIVATE_ROADMAP_SENTINEL','Private plan','2099-01-01','{}','{}')")
+    status, private_plan_html = request(f"/?page=ai_study&roadmap_id={private_roadmap_id}")
+    check(status == 200 and "PRIVATE_ROADMAP_SENTINEL" not in private_plan_html,
+          "student cannot read another student's AI roadmap")
+    private_exam_id = db_execute(
+        "INSERT INTO student_ai_exam_sets(owner_id,title,questions_json) VALUES(4,'PRIVATE_EXAM_SENTINEL','[]')")
+    status, private_exam_html = request(f"/?page=ai_study&exam_set_id={private_exam_id}")
+    check(status == 200 and "PRIVATE_EXAM_SENTINEL" not in private_exam_html,
+          "student cannot read another student's AI practice set")
+    status, denied_answer = post_action(student_token, "check_ai_exam_answer",
+                                        set_id=str(private_exam_id), question_index="0", answer="0")
+    check(status == 404 and "Practice question not found" in denied_answer,
+          "per-question feedback checks practice set ownership")
+    roadmap_id = db_execute(
+        "INSERT INTO student_ai_roadmaps(owner_id,course_code,title,objective,target_date,input_json,sequence_json) VALUES(3,'PERS101','CI Roadmap','Review policy models','2099-01-10',%s,%s)",
+        (json.dumps({"available_days": ["fri", "sat"], "session_minutes": 45,
+                     "daily_minutes": 90}),
+         json.dumps({"recommended_next_topic": "Policy models"})))
+    task_id = db_execute(
+        "INSERT INTO student_ai_roadmap_tasks(roadmap_id,owner_id,task_date,title,details,topic,task_type,duration_minutes) VALUES(%s,3,'2099-01-02','Review policy models','Read the lecture notes','Policy models','study',30)",
+        (roadmap_id,))
+    post_action(student_token, "update_ai_roadmap_task", roadmap_id=str(roadmap_id),
+                task_id=str(task_id), task_date="2099-01-03", duration_minutes="30",
+                status="completed", title="Review policy models", details="Read the lecture notes")
+    check(db_count("SELECT COUNT(*) AS n FROM student_ai_roadmap_tasks WHERE id=%s AND owner_id=3 AND status='completed' AND task_date='2099-01-03'",
+                   (task_id,)) == 1,
+          "student can complete and reschedule an owned roadmap task")
+    status, roadmap_html = request(f"/?page=ai_study&roadmap_id={roadmap_id}")
+    check(status == 200 and "Policy models" in roadmap_html and "100%" in roadmap_html,
+          "saved roadmap shows its next topic and task progress")
+    own_exam_questions = [
+        {"type": "multiple_choice", "prompt": "Which option is correct?", "topic": "Policy models",
+         "difficulty": "easy", "options": ["A", "B"], "correct_index": 0, "correct_answer": "A",
+         "accepted_answers": [], "suggested_answer": "A", "explanation": "A follows the lecture.",
+         "grading_guidance": "Select A."},
+        {"type": "essay", "prompt": "Explain the model.", "topic": "Policy models",
+         "difficulty": "medium", "options": [], "correct_index": 0, "correct_answer": "A model explanation",
+         "accepted_answers": [], "suggested_answer": "Explain its assumptions.",
+         "explanation": "Use the lecture's assumptions.", "grading_guidance": "Self-review."},
+    ]
+    own_exam_id = db_execute(
+        "INSERT INTO student_ai_exam_sets(owner_id,course_code,title,topic,mode,duration_minutes,questions_json) VALUES(3,'PERS101','CI Practice','Policy models','practice',20,%s)",
+        (json.dumps(own_exam_questions),))
+    status, immediate_feedback = post_action(student_token, "check_ai_exam_answer",
+                                             set_id=str(own_exam_id), question_index="0", answer="0")
+    check(status == 200 and '"correct":true' in immediate_feedback,
+          "practice mode returns immediate feedback for an owned question")
+    status, written_feedback = post_action(student_token, "check_ai_exam_answer",
+                                           set_id=str(own_exam_id), question_index="1",
+                                           answer="A policy model explains assumptions.")
+    check(status == 200 and '"correct":null' in written_feedback,
+          "written practice answers are returned for self-review, not auto-scored")
+    status, result_html = request("/", {"csrf": student_token, "action": "submit_ai_exam_attempt",
+                                        "set_id": str(own_exam_id), "answer[0]": "0"})
+    check(status == 200 and "Practice score: 100.0%" in result_html and
+          db_count("SELECT COUNT(*) AS n FROM student_ai_exam_attempts WHERE set_id=%s AND owner_id=3 AND scored_count=1 AND question_count=2",
+                   (own_exam_id,)) == 1,
+          "practice results persist while leaving written questions outside the objective score")
     post_action(student_token, "save_academic_plan", title="CI improvement plan",
                 course_code="", plan_text="Review lecture notes twice each week and record questions for the next tutorial.")
     check(db_count("SELECT COUNT(*) AS n FROM student_academic_plans WHERE owner_id=3") == 0,
@@ -401,6 +531,32 @@ def main():
     check(document_id and stored_name.endswith(".txt") and private_file.is_file() and
           "CI lecture.txt" in request("/?page=ai_study")[1],
           "student text upload is extracted and stored outside the public directory")
+    _, upload_page = request("/?page=ai_study")
+    formats_match = re.search(r"This server can extract these formats:\s*([^.<]+)\.", upload_page)
+    advertised_formats = {item.strip().lower() for item in formats_match.group(1).split(",")} if formats_match else set()
+    check(not (advertised_formats & {"doc", "ppt"}),
+          "legacy DOC/PPT formats are not advertised in CI without extraction fixtures")
+    fixtures = {"docx": ("CI lecture.docx", office_fixture("docx"), "DOCX_EXTRACTION_SENTINEL"),
+                "pptx": ("CI lecture.pptx", office_fixture("pptx"), "SLIDE_"),
+                "pdf": ("CI lecture.pdf", pdf_fixture(), "PDF_EXTRACTION_SENTINEL")}
+    for extension, (filename, contents, sentinel) in fixtures.items():
+        if extension not in advertised_formats:
+            continue
+        upload_status, upload_result = upload_document(student_token, filename, contents)
+        uploaded_id = db_count("SELECT MAX(id) AS id FROM student_documents WHERE owner_id=3 AND extension=%s",
+                               (extension,))
+        extracted_text = db_count("SELECT extracted_text FROM student_documents WHERE id=%s AND owner_id=3",
+                                  (uploaded_id,)) if uploaded_id else ""
+        check(upload_status == 200 and uploaded_id and sentinel in extracted_text,
+              f"advertised {extension.upper()} upload extracts readable text")
+        if extension == "pptx" and uploaded_id:
+            slide_two, slide_one = extracted_text.find("[Slide 2]"), extracted_text.find("[Slide 1]")
+            check(slide_two >= 0 and slide_one >= 0 and slide_two < slide_one,
+                  "PPTX extraction preserves presentation slide order")
+    status, attached_chat_html = request(f"/?page=ai_study&conversation_id={own_conversation}")
+    check(status == 200 and 'name="document_id"' in attached_chat_html and
+          f'value="{document_id}"' in attached_chat_html,
+          "saved academic chats can select an owner-private uploaded document")
     status, own_html = request(f"/?page=ai_study&conversation_id={own_conversation}")
     check(status == 200 and 'option value="planner" selected' in own_html,
           "student conversation remembers its selected support mode")
