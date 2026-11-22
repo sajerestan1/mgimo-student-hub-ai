@@ -860,21 +860,24 @@ function sl_i18n_translate_html(string $html): string
     const element=node.nodeType===1?node:node.parentElement;
     return !element||element.closest(blocked)||element.isContentEditable;
   }
+  function translateAttributes(el){
+    if(excluded(el))return;
+    for(const attr of ['placeholder','aria-label','aria-description','title','alt']){
+      if(el.hasAttribute(attr)){const old=el.getAttribute(attr),next=translate(old);if(next!==old)el.setAttribute(attr,next);}
+    }
+    if((el.tagName==='BUTTON'||(el.tagName==='INPUT'&&/^(submit|button|reset)$/i.test(el.type)))&&el.hasAttribute('value')){
+      const old=el.value,next=translate(old);if(next!==old)el.value=next;
+    }
+  }
   function visit(root){
     if(!root)return;
-    if(root.nodeType===3){if(!excluded(root)){const next=translate(root.nodeValue||'');if(next!==(root.nodeValue||''))root.nodeValue=next;}return;}
+    if(root.nodeType===3){if(!excluded(root)){const old=root.nodeValue||'',next=translate(old);if(next!==old)root.nodeValue=next;}return;}
     if(root.nodeType!==1&&root!==document)return;
     if(root.nodeType===1&&excluded(root))return;
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
-    let node;while((node=walker.nextNode())){if(!excluded(node)){const next=translate(node.nodeValue||'');if(next!==(node.nodeValue||''))node.nodeValue=next;}}
-    if(root.nodeType===1){
-      for(const attr of ['placeholder','aria-label','aria-description','title','alt']){
-        if(root.hasAttribute(attr)){const next=translate(root.getAttribute(attr));if(next!==root.getAttribute(attr))root.setAttribute(attr,next);}
-      }
-      if((root.tagName==='BUTTON'||(root.tagName==='INPUT'&&/^(submit|button|reset)$/i.test(root.type)))&&root.hasAttribute('value')){
-        const next=translate(root.value);if(next!==root.value)root.value=next;
-      }
-    }
+    let node;while((node=walker.nextNode())){if(!excluded(node)){const old=node.nodeValue||'',next=translate(old);if(next!==old)node.nodeValue=next;}}
+    if(root.nodeType===1)translateAttributes(root);
+    if(root.querySelectorAll)root.querySelectorAll('*').forEach(translateAttributes);
   }
   visit(document.documentElement);
   const observer=new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(visit)));
