@@ -208,7 +208,44 @@ function sl_i18n_phrase_map(): array
         'Profile & Settings'=>'Профиль и настройки','Update'=>'Обновить','Save'=>'Сохранить','Cancel'=>'Отмена',
         'No messages yet.'=>'Сообщений пока нет.','Send message'=>'Отправить сообщение','Reply'=>'Ответить','Edit'=>'Изменить','Delete'=>'Удалить',
         'Pending'=>'Ожидает рассмотрения','Approved'=>'Одобрено','Rejected'=>'Отклонено','Processing'=>'В обработке',
-        'Very Weak'=>'Очень слабый','Weak'=>'Слабый','Normal'=>'Средний','Strong'=>'Надёжный','Very Strong'=>'Очень надёжный'
+        'Very Weak'=>'Очень слабый','Weak'=>'Слабый','Normal'=>'Средний','Strong'=>'Надёжный','Very Strong'=>'Очень надёжный',
+        'COURSE TEACHING SUPPORT'=>'ПОДДЕРЖКА ПРЕПОДАВАНИЯ ПО КУРСАМ',
+        'Check assigned courses and authorised class attendance, then ask for teaching support.'=>'Проверьте назначенные курсы и подтверждённые данные посещаемости, затем запросите поддержку в преподавании.',
+        'Check assigned courses and authorized class attendance, then ask for teaching support.'=>'Проверьте назначенные курсы и подтверждённые данные посещаемости, затем запросите поддержку в преподавании.',
+        '4 assigned course groups · 6 enrolled-student attendance summaries · 1 upcoming class session. Course-linked gradebooks and assignment submissions are not stored in this app.'=>'4 назначенные учебные группы · 6 сводок посещаемости студентов · 1 предстоящее занятие. Оценки по курсам и отправленные задания в этом приложении не хранятся.',
+        'Ask for announcement or assignment wording. Confirm course dates and assessment instructions before publishing.'=>'Запросите формулировку объявления или задания. Перед публикацией проверьте даты занятий и инструкции по оцениванию.',
+        'Summarize attendance in my assigned courses.'=>'Сделайте сводку посещаемости по назначенным мне курсам.',
+        'Which enrolled students have repeated recorded absences?'=>'У каких зачисленных студентов неоднократно отмечалось отсутствие?',
+        'Draft a clear announcement for my course.'=>'Подготовьте понятный текст объявления для моего курса.',
+        'What course data is unavailable?'=>'Какие данные о курсе недоступны?',
+        'Ask a question about records available to your role. Answers will cite the supplied context and identify missing data.'=>'Задайте вопрос о записях, доступных вашей роли. В ответе будут указаны использованные данные и недостающая информация.',
+        'PROVIDER CONFIGURED'=>'ПОСТАВЩИК НАСТРОЕН',
+        'Ask the Teaching Assistant'=>'Спросить помощника преподавателя',
+        'Month'=>'Месяц','Day'=>'День','Year'=>'Год',
+        'Date of next contact'=>'Дата следующего контакта',
+        'Due date'=>'Срок сдачи',
+        'Only tasks you add here appear in your list. Confirm official deadlines and requirements with your lecturer.'=>'Здесь отображаются только добавленные вами задачи. Уточняйте официальные сроки и требования у преподавателя.',
+        'My classes attendance'=>'Посещаемость на моих занятиях',
+        'Send a private message to any active student, lecturer or administrator account and review your replies.'=>'Отправляйте личные сообщения активным учётным записям студентов, преподавателей и администраторов и просматривайте ответы.',
+        'Messages stay inside this StudentLife preview. They do not send email or create notifications outside the app.'=>'Сообщения остаются в тестовой версии StudentLife. Они не отправляются по электронной почте и не создают уведомлений за пределами приложения.',
+        'Start with the abstract and conclusion. Identify the question, the author’s claim, the evidence and any limits in the argument.'=>'Начните с аннотации и заключения. Определите вопрос, тезис автора, доказательства и ограничения аргументации.',
+        'Turn the prompt into a question, build a point-by-point outline and attach a source to each key claim before drafting.'=>'Преобразуйте тему в вопрос, составьте подробный план и подберите источник для каждого основного тезиса перед написанием текста.',
+        'Keep full source details as you read. Mark direct quotations clearly and explain how each source supports your own point.'=>'Записывайте полные сведения об источниках во время чтения. Отмечайте прямые цитаты и объясняйте, как каждый источник подтверждает вашу мысль.',
+        'Check the room and start time, review the previous topic and bring any reading or materials listed by your lecturer.'=>'Проверьте аудиторию и время начала, повторите предыдущую тему и возьмите материалы, указанные преподавателем.',
+        'Sample notice for lecturers: review your assigned groups and class sessions for the current term.'=>'Образец объявления для преподавателей: проверьте назначенные группы и занятия на текущий семестр.',
+        'Teacher coordination session'=>'Совещание преподавателей',
+        'User & Role Management'=>'Управление пользователями и ролями',
+        'Leave blank to keep current password'=>'Оставьте поле пустым, чтобы сохранить текущий пароль',
+        'Enter full name'=>'Введите полное имя',
+        'verified'=>'подтверждена',
+        'Nov 17, 2026'=>'17 ноября 2026 г.','Nov 18, 2026'=>'18 ноября 2026 г.','Nov 19, 2026'=>'19 ноября 2026 г.','Nov 20, 2026'=>'20 ноября 2026 г.','Nov 21, 2026'=>'21 ноября 2026 г.','Nov 22, 2026'=>'22 ноября 2026 г.','Nov 23, 2026'=>'23 ноября 2026 г.','Nov 24, 2026'=>'24 ноября 2026 г.','Nov 25, 2026'=>'25 ноября 2026 г.','Nov 26, 2026'=>'26 ноября 2026 г.','Nov 27, 2026'=>'27 ноября 2026 г.','Nov 28, 2026'=>'28 ноября 2026 г.','Nov 29, 2026'=>'29 ноября 2026 г.','Nov 30, 2026'=>'30 ноября 2026 г.',
+        'Active students'=>'Активные студенты',
+        'Enrolments'=>'Зачисления',
+        '1 open · 1 overdue'=>'1 открытое · 1 просроченное',
+        'Email verified'=>'Электронная почта подтверждена',
+        'Created'=>'Создано',
+        'Choose a new password you do not use on other sites. Administrators can also reset another account’s password under Users & Roles.'=>'Выберите новый пароль, который не используете на других сайтах. Администраторы также могут сбросить пароль другой учётной записи в разделе «Пользователи и роли».',
+        'Your email and role identify this account and can’t be changed from this form. Use a display name you recognise on class records.'=>'Электронная почта и роль определяют эту учётную запись и не могут быть изменены в этой форме. Укажите имя, по которому вас будут узнавать в учебных записях.'
     ];
     $extraMore=[
         'No completed demo assessments yet. Your attempts on this device will appear here.'=>'Вы ещё не проходили демонстрационные тесты. Результаты попыток на этом устройстве появятся здесь.',
@@ -633,7 +670,13 @@ function sl_i18n_translate_html(string $html): string
             $isVoid=isset($void[$name])||preg_match('/\\/\\s*>$/',$part)===1;
             if(!$isVoid)$stack[]=['name'=>$name,'blocked'=>$blocked];
             if(!$blocked){
-                $part=preg_replace_callback('/\\b(placeholder|aria-label|title|alt)=["\\\']([^"\\\']*)["\\\']/i',function($m)use($map){$v=html_entity_decode($m[2],ENT_QUOTES|ENT_HTML5,'UTF-8');$translated=$map[$v]??$v;return $m[1].'="'.htmlspecialchars($translated,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'"';},$part)??$part;
+                // Translate visible and accessible interface attributes as well as text nodes.
+                $part=preg_replace_callback('/\\b(placeholder|aria-label|aria-description|title|alt)=["\\\']([^"\\\']*)["\\\']/i',function($m)use($map){$v=html_entity_decode($m[2],ENT_QUOTES|ENT_HTML5,'UTF-8');$translated=$map[$v]??$v;return $m[1].'="'.htmlspecialchars($translated,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'"';},$part)??$part;
+                // Button-like input values are interface labels; ordinary input values may be user data.
+                $isButtonValue=$name==='button'||($name==='input'&&preg_match('/\\btype=["\\\'](?:submit|button|reset)["\\\']/i',$part)===1);
+                if($isButtonValue){
+                    $part=preg_replace_callback('/\\bvalue=["\\\']([^"\\\']*)["\\\']/i',function($m)use($map){$v=html_entity_decode($m[1],ENT_QUOTES|ENT_HTML5,'UTF-8');$translated=$map[$v]??$v;return 'value="'.htmlspecialchars($translated,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'"';},$part)??$part;
+                }
             }
         }else{
             $blocked=false;foreach($stack as $entry)if($entry['blocked']){$blocked=true;break;}
