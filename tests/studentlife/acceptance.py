@@ -345,13 +345,14 @@ def main():
           "student AI context reflects the student's enrollment and timetable")
     check("1 personal grade entries" in html,
           "student AI context excludes a grade linked to another student's personal course")
-    check("Recorded grade review" in html,
-          "student AI page includes its recorded grade review")
-    check("PERS101" in html,
+    grade_status, grade_html = request("/?page=ai_study&workspace=other&tool=grades")
+    check(grade_status == 200 and "Recorded grade review" in grade_html,
+          "AI Grade Evaluator includes the student's recorded grade review")
+    check("PERS101" in grade_html,
           "grade review identifies the student's own course")
-    check("80.0" in html,
+    check("80.0" in grade_html,
           "grade review calculates the recorded course average")
-    check("AI Grade Evaluator" in html and "ai-grade-calculator-form" in html,
+    check("AI Grade Evaluator" in grade_html and "ai-grade-calculator-form" in grade_html,
           "AI Grade Evaluator offers a weight-based, non-official score estimate")
     estimate_status, estimate_html = post_action(student_token, "calculate_ai_grade_estimate",
                                                  course_code="PERS101", completed_weight="50",
