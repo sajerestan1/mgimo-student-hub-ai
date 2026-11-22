@@ -292,7 +292,7 @@ function sl_i18n_phrase_map(): array
         'Save class schedule'=>'Сохранить расписание занятий','No course sections have been created yet.'=>'Учебные группы ещё не созданы.',
         'Add at least one catalogue course and one academic term first.'=>'Сначала добавьте хотя бы один курс в каталог и один учебный период.',
         'No — normal account'=>'Нет — обычная учётная запись','Yes — demo account'=>'Да — демонстрационная учётная запись',
-        'Seed demo data'=>'Добавить демонстрационные данные'
+        'Seed demo data'=>'Добавить демонстрационные данные',
         'English'=>'Английский','🇬🇧 English'=>'🇬🇧 Английский','Courses'=>'Курсы','Course'=>'Курс','Topic'=>'Тема','Communication Inbox'=>'Входящие сообщения',
         'Sample course catalogue for the student dashboard. All instructors and addresses below are fictional.'=>'Пример каталога курсов для панели студента. Все преподаватели и адреса вымышлены.',
         'Create departments, academic terms, course catalogue entries, course sections and student enrolments.'=>'Создавайте кафедры, учебные периоды, курсы, учебные группы и записи о зачислении студентов.',
