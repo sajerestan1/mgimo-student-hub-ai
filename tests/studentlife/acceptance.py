@@ -454,22 +454,26 @@ def main():
                 course_code="", plan_text="Review lecture notes twice each week and record questions for the next tutorial.",
                 confirm_plan="1")
     plan_id = db_count("SELECT MAX(id) AS id FROM student_academic_plans WHERE owner_id=3")
-    check(plan_id and "CI improvement plan" in request("/?page=ai_study")[1],
+    _, homework_html = request("/?page=ai_study&workspace=other&tool=homework")
+    check(plan_id and "CI improvement plan" in homework_html,
           "student can save and view a personal academic improvement plan")
-    check("Learn a subject" in html and "Exam preparation" in html and "University guide" in html,
+    _, chat_html = request("/?page=ai_study&workspace=chat")
+    check("Learn a subject" in chat_html and "Exam preparation" in chat_html and "University guide" in chat_html,
           "student AI page exposes unified academic support modes")
-    check("Document output" in html and "Quick summary" in html and
-          "Flashcards" in html and "Multiple-choice practice" in html,
+    check("Document output" in chat_html and "Quick summary" in chat_html and
+          "Flashcards" in chat_html and "Multiple-choice practice" in chat_html,
           "student can choose useful outputs for a selected lecture document")
-    status, formatted_html = request(f"/?page=ai_study&conversation_id={formatted_conversation}")
+    status, formatted_html = request(f"/?page=ai_study&workspace=chat&conversation_id={formatted_conversation}")
     check(status == 200 and "<h4>Revision plan</h4>" in formatted_html and
           "<strong>Review this topic</strong>" in formatted_html and "#### " not in formatted_html and
           "<script>alert(1)</script>" not in formatted_html,
           "AI response headings and emphasis render as safe formatted HTML without raw hashes")
-    check("Memory and Personalization" in html and "No memories saved" in html,
+    _, library_html = request("/?page=ai_study&workspace=library")
+    _, companion_html = request("/?page=ai_study&workspace=other&tool=companion")
+    check("Memory and Personalization" in library_html and "No memories saved" in library_html,
           "student memory controls start empty and private")
-    check("Goals and follow-ups" in html and "No personal goals saved yet" in html and
-          "Personal support" in html and "Goals stay private unless you check Share with AI" in html,
+    check("Goals and follow-ups" in companion_html and "No personal goals saved yet" in companion_html and
+          "Personal support" in companion_html and "Goals stay private unless you check Share with AI" in companion_html,
           "personal support and private goal controls are available to students")
     post_action(student_token, "save_personal_goal", category="career", title="CI career goal",
                 details="Update my CV and review progress next week.", review_date="",
@@ -507,14 +511,16 @@ def main():
     check(memory_id and db_count("SELECT COUNT(*) AS n FROM student_ai_memories WHERE id=%s AND category='learning'",
                                  (memory_id,)) == 1,
           "student can save an explicitly approved learning preference")
-    check("I prefer a short example before a detailed explanation." in request("/?page=ai_study")[1],
+    check("I prefer a short example before a detailed explanation." in request("/?page=ai_study&workspace=library")[1],
           "student can view their saved memory")
     request("/?logout=1")
     student2_token = login("student2@studentlife.test", "student")
-    status, other_student_html = request("/?page=ai_study")
+    status, other_student_html = request("/?page=ai_study&workspace=library")
+    _, other_homework_html = request("/?page=ai_study&workspace=other&tool=homework")
+    _, other_companion_html = request("/?page=ai_study&workspace=other&tool=companion")
     check(status == 200 and "I prefer a short example before a detailed explanation." not in other_student_html and
-          "CI improvement plan" not in other_student_html and "CI career goal" not in other_student_html and
-          "CI private goal" not in other_student_html,
+          "CI improvement plan" not in other_homework_html and "CI career goal" not in other_companion_html and
+          "CI private goal" not in other_companion_html,
           "another student cannot view saved memory, plan or personal goals")
     status, other_notifications = request("/?page=notifications")
     check(status == 200 and "CI AI reminder task" not in other_notifications and
@@ -550,10 +556,12 @@ def main():
           "another student cannot edit or delete the memory by changing its ID")
     request("/?logout=1")
     student_token = login("student1@studentlife.test", "student")
-    status, restored_memory_html = request("/?page=ai_study")
+    status, restored_memory_html = request("/?page=ai_study&workspace=library")
+    _, restored_homework_html = request("/?page=ai_study&workspace=other&tool=homework")
+    _, restored_companion_html = request("/?page=ai_study&workspace=other&tool=companion")
     check(status == 200 and "I prefer a short example before a detailed explanation." in restored_memory_html and
-          "CI improvement plan" in restored_memory_html and "CI career goal" in restored_memory_html and
-          "CI private goal" in restored_memory_html,
+          "CI improvement plan" in restored_homework_html and "CI career goal" in restored_companion_html and
+          "CI private goal" in restored_companion_html,
           "approved memory, improvement plan and personal goals persist across sign-in")
     post_action(student_token, "update_personal_goal", goal_id=str(shared_goal_id),
                 category="career", title="CI career goal", details="Update my CV and review progress next week.",
@@ -585,9 +593,9 @@ def main():
     stored_name = db_count("SELECT stored_name FROM student_documents WHERE id=%s", (document_id,))
     private_file = Path(__file__).resolve().parents[2] / "studentlife-private-documents" / stored_name
     check(document_id and stored_name.endswith(".txt") and private_file.is_file() and
-          "CI lecture.txt" in request("/?page=ai_study")[1],
+          "CI lecture.txt" in request("/?page=ai_study&workspace=lecture")[1],
           "student text upload is extracted and stored outside the public directory")
-    _, upload_page = request("/?page=ai_study")
+    _, upload_page = request("/?page=ai_study&workspace=lecture")
     formats_match = re.search(r"This server can extract these formats:\s*([^.<]+)\.", upload_page)
     advertised_formats = {item.strip().lower() for item in formats_match.group(1).split(",")} if formats_match else set()
     check(not (advertised_formats & {"doc", "ppt"}),
@@ -609,14 +617,14 @@ def main():
             slide_two, slide_one = extracted_text.find("[Slide 2]"), extracted_text.find("[Slide 1]")
             check(slide_two >= 0 and slide_one >= 0 and slide_two < slide_one,
                   "PPTX extraction preserves presentation slide order")
-    status, attached_chat_html = request(f"/?page=ai_study&conversation_id={own_conversation}")
+    status, attached_chat_html = request(f"/?page=ai_study&workspace=chat&conversation_id={own_conversation}")
     check(status == 200 and 'name="document_id"' in attached_chat_html and
           f'value="{document_id}"' in attached_chat_html,
           "saved academic chats can select an owner-private uploaded document")
-    status, own_html = request(f"/?page=ai_study&conversation_id={own_conversation}")
+    status, own_html = request(f"/?page=ai_study&workspace=chat&conversation_id={own_conversation}")
     check(status == 200 and 'option value="planner" selected' in own_html,
           "student conversation remembers its selected support mode")
-    status, private_html = request(f"/?page=ai_study&conversation_id={private_conversation}")
+    status, private_html = request(f"/?page=ai_study&workspace=chat&conversation_id={private_conversation}")
     check(status == 200 and "PRIVATE_CONTEXT_SENTINEL" not in private_html,
           "student cannot read another student's AI conversation")
     status, _ = post_action(student_token, "rename_ai_conversation",
@@ -729,7 +737,7 @@ def main():
 
     request("/?logout=1")
     second_student_token = login("student2@studentlife.test", "student")
-    status, private_owner_html = request(f"/?page=ai_study&conversation_id={private_conversation}")
+    status, private_owner_html = request(f"/?page=ai_study&workspace=chat&conversation_id={private_conversation}")
     check(status == 200 and "PRIVATE_CONTEXT_SENTINEL" in private_owner_html,
           "second student can read their own AI conversation")
 
@@ -757,7 +765,7 @@ def main():
 
     request("/?logout=1")
     second_student_token = login("student2@studentlife.test", "student")
-    status, second_student_html = request("/?page=ai_study")
+    status, second_student_html = request("/?page=ai_study&workspace=lecture")
     check(status == 200 and "Own quiz" not in second_student_html and
           "Review CI course notes" not in second_student_html and "CI lecture.txt" not in second_student_html,
           "second student cannot see the first student's grade, task or private document")
