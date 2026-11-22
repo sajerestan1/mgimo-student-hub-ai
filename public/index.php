@@ -2299,7 +2299,7 @@ resultsCount();renderList();
 <?php
 $aiRole=(string)$user['role'];$aiReady=sl_ai_provider_ready();$aiConversationId=(int)($_GET['conversation_id']??0);$selectedConversation=null;
 $aiSelectedTool=(string)($_GET['tool']??'');$aiToolTitles=['homework'=>'AI Homework Assistant','planner'=>'AI Study Planner','grades'=>'AI Grade Evaluator','plagiarism'=>'AI Plagiarism Checker','companion'=>'AI Study Companion','lecture'=>'AI Lecture Summariser','roadmap'=>'AI Study Roadmap','exam'=>'AI Exam Preparation','chat'=>'AI Chat'];
-$aiWorkspace=(string)($_GET['workspace']??'');$aiToolWorkspace=['lecture'=>'lecture','chat'=>'chat','homework'=>'other','grades'=>'other','plagiarism'=>'other','companion'=>'other','planner'=>'roadmap','roadmap'=>'roadmap','exam'=>'exam'];
+$aiWorkspace=(string)($_GET['workspace']??'');if($aiWorkspace===''&&isset($_GET['roadmap_id']))$aiWorkspace='roadmap';elseif($aiWorkspace===''&&isset($_GET['exam_set_id']))$aiWorkspace='exam';$aiToolWorkspace=['lecture'=>'lecture','chat'=>'chat','homework'=>'other','grades'=>'other','plagiarism'=>'other','companion'=>'other','planner'=>'roadmap','roadmap'=>'roadmap','exam'=>'exam'];
 if(!in_array($aiWorkspace,['overview','lecture','chat','roadmap','exam','other','library'],true))$aiWorkspace=$aiToolWorkspace[$aiSelectedTool]??'overview';
 if($aiWorkspace==='other'&&!in_array($aiSelectedTool,['homework','grades','plagiarism','companion','planner'],true))$aiSelectedTool='homework';
 $aiGradeEstimate=$_SESSION['ai_grade_estimate']??null;unset($_SESSION['ai_grade_estimate']);
