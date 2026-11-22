@@ -6,19 +6,40 @@ if (!defined('STUDENTLIFE_BOOTSTRAPPED')) {
     exit('Not found.');
 }
 
-/** Provider settings come from the host environment or a protected PHP file outside the web root. */
-function sl_ai_provider_config(): array
+/** Read provider settings from the host environment or the protected PHP file outside the web root. */
+function sl_ai_provider_file_settings(): array
 {
-    $settings = [];
     $configFile = dirname(__DIR__).'/studentlife-ai-secrets.php';
-    if (is_file($configFile) && is_readable($configFile)) {
+    if (!is_link($configFile) && is_file($configFile) && is_readable($configFile)) {
         try {
             $loaded = require $configFile;
-            if (is_array($loaded)) $settings = $loaded;
-        } catch (Throwable $e) {
-            $settings = [];
-        }
+            return is_array($loaded) ? $loaded : [];
+        } catch (Throwable $e) { return []; }
     }
+    return [];
+}
+
+/** Write provider credentials outside the document root with owner-only file permissions. */
+function sl_ai_provider_store_file(array $settings): bool
+{
+    $configDir = dirname(__DIR__);
+    $configFile = $configDir.'/studentlife-ai-secrets.php';
+    if (!is_dir($configDir) || !is_writable($configDir) || is_link($configFile)) return false;
+    $temporaryFile = @tempnam($configDir, '.studentlife-ai-');
+    if (!is_string($temporaryFile) || $temporaryFile === '') return false;
+    $source = "<?php\nreturn ".var_export($settings, true).";\n";
+    $written = @file_put_contents($temporaryFile, $source, LOCK_EX);
+    if ($written !== strlen($source) || !@chmod($temporaryFile, 0600) || !@rename($temporaryFile, $configFile)) {
+        @unlink($temporaryFile);
+        return false;
+    }
+    @chmod($configFile, 0600);
+    return true;
+}
+
+function sl_ai_provider_config(): array
+{
+    $settings = sl_ai_provider_file_settings();
 
     $endpoint = trim((string)(getenv('STUDENTLIFE_AI_ENDPOINT') ?: ($settings['endpoint'] ?? '')));
     $apiKey = trim((string)(getenv('STUDENTLIFE_AI_API_KEY') ?: ($settings['api_key'] ?? '')));
