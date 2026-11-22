@@ -234,6 +234,16 @@ function sl_i18n_phrase_map(): array
         'Check the room and start time, review the previous topic and bring any reading or materials listed by your lecturer.'=>'Проверьте аудиторию и время начала, повторите предыдущую тему и возьмите материалы, указанные преподавателем.',
         'Sample notice for lecturers: review your assigned groups and class sessions for the current term.'=>'Образец объявления для преподавателей: проверьте назначенные группы и занятия на текущий семестр.',
         'Teacher coordination session'=>'Совещание преподавателей',
+        'User & Role Management'=>'Управление пользователями и ролями',
+        'Leave blank to keep current password'=>'Оставьте поле пустым, чтобы сохранить текущий пароль',
+        'Enter full name'=>'Введите полное имя',
+        'verified'=>'подтверждена',
+        'Nov 17, 2026'=>'17 ноября 2026 г.','Nov 18, 2026'=>'18 ноября 2026 г.','Nov 19, 2026'=>'19 ноября 2026 г.','Nov 20, 2026'=>'20 ноября 2026 г.','Nov 21, 2026'=>'21 ноября 2026 г.','Nov 22, 2026'=>'22 ноября 2026 г.','Nov 23, 2026'=>'23 ноября 2026 г.','Nov 24, 2026'=>'24 ноября 2026 г.','Nov 25, 2026'=>'25 ноября 2026 г.','Nov 26, 2026'=>'26 ноября 2026 г.','Nov 27, 2026'=>'27 ноября 2026 г.','Nov 28, 2026'=>'28 ноября 2026 г.','Nov 29, 2026'=>'29 ноября 2026 г.','Nov 30, 2026'=>'30 ноября 2026 г.',
+        'Active students'=>'Активные студенты',
+        'Enrolments'=>'Зачисления',
+        '1 open · 1 overdue'=>'1 открытое · 1 просроченное',
+        'Email verified'=>'Электронная почта подтверждена',
+        'Created'=>'Создано'
         'Choose a new password you do not use on other sites. Administrators can also reset another account’s password under Users & Roles.'=>'Выберите новый пароль, который не используете на других сайтах. Администраторы также могут сбросить пароль другой учётной записи в разделе «Пользователи и роли».',
         'Your email and role identify this account and can’t be changed from this form. Use a display name you recognise on class records.'=>'Электронная почта и роль определяют эту учётную запись и не могут быть изменены в этой форме. Укажите имя, по которому вас будут узнавать в учебных записях.'
     ];
