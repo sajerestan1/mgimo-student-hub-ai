@@ -243,7 +243,7 @@ function sl_i18n_phrase_map(): array
         'Enrolments'=>'Зачисления',
         '1 open · 1 overdue'=>'1 открытое · 1 просроченное',
         'Email verified'=>'Электронная почта подтверждена',
-        'Created'=>'Создано'
+        'Created'=>'Создано',
         'Choose a new password you do not use on other sites. Administrators can also reset another account’s password under Users & Roles.'=>'Выберите новый пароль, который не используете на других сайтах. Администраторы также могут сбросить пароль другой учётной записи в разделе «Пользователи и роли».',
         'Your email and role identify this account and can’t be changed from this form. Use a display name you recognise on class records.'=>'Электронная почта и роль определяют эту учётную запись и не могут быть изменены в этой форме. Укажите имя, по которому вас будут узнавать в учебных записях.'
     ];
