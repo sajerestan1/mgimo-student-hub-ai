@@ -7,7 +7,7 @@ declare(strict_types=1);
  */
 function sl_seed_demo_workspace_expansion(PDO $db, int $adminId, int $lecturerId, array $studentIds, array $offeringIds): void
 {
-    $workspaceUsers = $db->query("SELECT id,role FROM users WHERE account_status='active' AND role IN ('student','lecturer','administrator') ORDER BY id")->fetchAll(PDO::FETCH_ASSOC);
+    $workspaceUsers = $db->query("SELECT id,role FROM users WHERE account_status='active' AND is_demo=1 AND role IN ('student','lecturer','administrator') ORDER BY id")->fetchAll(PDO::FETCH_ASSOC);
 
     // Give administrators visible sample work as well as the shared institutional records.
     foreach ($workspaceUsers as $user) {
@@ -113,7 +113,7 @@ function sl_seed_demo_workspace_expansion(PDO $db, int $adminId, int $lecturerId
         $q->execute([(int)$studentId,$goalTitle]);
         if (!$q->fetchColumn()) {
             $q=$db->prepare("INSERT INTO student_personal_goals(owner_id,category,title,details,review_date,status,share_with_ai) VALUES(?,?,?,?,?,'active',0)");
-            $q->execute([(int)$studentId,'academic',$goalTitle,'Fictional preview goal: plan reading, attend classes and review notes each week.','2026-12-15']);
+            $q->execute([(int)$studentId,'study_habits',$goalTitle,'Fictional preview goal: plan reading, attend classes and review notes each week.','2026-12-15']);
         }
         $planTitle='[DEMO] IR101 revision plan';
         $q=$db->prepare('SELECT id FROM student_academic_plans WHERE owner_id=? AND title=?');
@@ -136,8 +136,16 @@ function sl_seed_demo_workspace_expansion(PDO $db, int $adminId, int $lecturerId
     // A lecturer-authored class-channel announcement gives enrolled students a sample discussion thread.
     if (function_exists('sl_comms_room_by_key') && function_exists('sl_comms_add_member') && !empty($offeringIds['IR101'])) {
         $offeringId=(int)$offeringIds['IR101'];
-        $roomId=sl_comms_room_by_key($db,'class','offering:'.$offeringId,'IR101 · Introduction to International Relations · Demo discussion',$lecturerId,$offeringId);
-        sl_comms_add_member($db,$roomId,$lecturerId,'lecturer');
+        // Preserve an existing class-room title and membership. Create only when absent.
+        $roomLookup=$db->prepare('SELECT id FROM sl_conversations WHERE room_key=? LIMIT 1');
+        $roomLookup->execute(['offering:'.$offeringId]);
+        $roomId=(int)$roomLookup->fetchColumn();
+        if (!$roomId) $roomId=sl_comms_room_by_key($db,'class','offering:'.$offeringId,'IR101 · Introduction to International Relations · Demo discussion',$lecturerId,$offeringId);
+        // Only add the lecturer actually assigned to this offering.
+        $assigned=$db->prepare("SELECT u.id FROM course_offerings o JOIN users u ON u.id=o.lecturer_id WHERE o.id=? AND u.role='lecturer' AND u.account_status='active' AND u.is_demo=1");
+        $assigned->execute([$offeringId]);
+        $assignedLecturer=(int)$assigned->fetchColumn();
+        if ($assignedLecturer) sl_comms_add_member($db,$roomId,$assignedLecturer,'lecturer');
         foreach ($studentIds as $studentId) sl_comms_add_member($db,$roomId,(int)$studentId,'member');
         $nonce=substr(hash('sha256','studentlife-demo-ir101-welcome'),0,32);
         $q=$db->prepare('SELECT id FROM sl_messages WHERE sender_id=? AND client_nonce=?');
