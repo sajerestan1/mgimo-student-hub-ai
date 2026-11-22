@@ -103,11 +103,11 @@ function sl_comms_bootstrap(PDO $db): void
     foreach ($statements as $sql) $db->exec($sql);
 }
 
-function sl_comms_require_student(): int
+function sl_comms_require_user(): int
 {
-    if (($_SESSION['user']['role'] ?? '') !== 'student' || empty($_SESSION['user']['id'])) {
+    if (!in_array(($_SESSION['user']['role'] ?? ''), ['student','lecturer','administrator'], true) || empty($_SESSION['user']['id'])) {
         http_response_code(403);
-        exit('Student access required.');
+        exit('Sign in with an active university account to use communications.');
     }
     return (int)$_SESSION['user']['id'];
 }
@@ -124,13 +124,75 @@ function sl_comms_room(PDO $db, int $conversationId, int $userId): ?array
         JOIN sl_conversation_members m ON m.conversation_id=c.id AND m.user_id=?
         WHERE c.id=?");
     $q->execute([$userId,$conversationId]);
-    return $q->fetch() ?: null;
+    $room=$q->fetch();
+    if(!$room)return null;
+    if($room['room_type']==='direct'){
+        $partner=$db->prepare('SELECT user_id FROM sl_conversation_members WHERE conversation_id=? AND user_id<>? LIMIT 1');
+        $partner->execute([$conversationId,$userId]);$partnerId=(int)$partner->fetchColumn();
+        if(!$partnerId||!sl_comms_can_direct($db,$userId,$partnerId)){
+            $db->prepare('DELETE FROM sl_conversation_members WHERE conversation_id=? AND user_id=?')->execute([$conversationId,$userId]);
+            return null;
+        }
+    }
+    return $room;
 }
 
 function sl_comms_add_member(PDO $db, int $conversationId, int $userId, string $role = 'member'): void
 {
     $q=$db->prepare("INSERT IGNORE INTO sl_conversation_members(conversation_id,user_id,member_role) VALUES(?,?,?)");
     $q->execute([$conversationId,$userId,$role]);
+}
+
+function sl_comms_can_direct(PDO $db, int $senderId, int $recipientId): bool
+{
+    $q=$db->prepare("SELECT id,role FROM users WHERE id IN (?,?) AND account_status='active'");
+    $q->execute([$senderId,$recipientId]);$accounts=[];
+    foreach($q->fetchAll() as $account)$accounts[(int)$account['id']]=$account['role'];
+    if(!isset($accounts[$senderId],$accounts[$recipientId]))return false;
+    $senderRole=$accounts[$senderId];$recipientRole=$accounts[$recipientId];
+    if($senderRole==='administrator')return true;
+    if($recipientRole==='administrator')return true;
+    if($senderRole==='student'&&$recipientRole==='lecturer'){
+        $check=$db->prepare("SELECT 1 FROM course_enrolments e JOIN course_offerings o ON o.id=e.offering_id
+          WHERE e.student_id=? AND e.status='enrolled' AND o.status='open' AND o.lecturer_id=? LIMIT 1");
+    }elseif($senderRole==='lecturer'&&$recipientRole==='student'){
+        $check=$db->prepare("SELECT 1 FROM course_enrolments e JOIN course_offerings o ON o.id=e.offering_id
+          WHERE e.student_id=? AND e.status='enrolled' AND o.status='open' AND o.lecturer_id=? LIMIT 1");
+        $check->execute([$recipientId,$senderId]);return (bool)$check->fetchColumn();
+    }elseif($senderRole==='student'&&$recipientRole==='student'){
+        $check=$db->prepare("SELECT 1 FROM course_enrolments a JOIN course_enrolments b ON b.offering_id=a.offering_id
+          JOIN course_offerings o ON o.id=a.offering_id WHERE a.student_id=? AND b.student_id=?
+          AND a.status='enrolled' AND b.status='enrolled' AND o.status='open'
+          UNION SELECT 1 FROM study_group_members a JOIN study_group_members b ON b.group_id=a.group_id
+          WHERE a.user_id=? AND b.user_id=? LIMIT 1");
+        $check->execute([$senderId,$recipientId,$senderId,$recipientId]);return (bool)$check->fetchColumn();
+    }else{return false;}
+    $check->execute([$senderId,$recipientId]);return (bool)$check->fetchColumn();
+}
+
+function sl_comms_contact_query(PDO $db, int $userId): PDOStatement
+{
+    $roleQ=$db->prepare('SELECT role FROM users WHERE id=?');$roleQ->execute([$userId]);$role=(string)$roleQ->fetchColumn();
+    if($role==='administrator'){
+        return $db->prepare("SELECT id,name,role FROM users WHERE account_status='active' AND id<>? ORDER BY role,name LIMIT 300");
+    }
+    if($role==='lecturer'){
+        return $db->prepare("SELECT DISTINCT u.id,u.name,u.role FROM users u WHERE u.account_status='active' AND u.id<>?
+          AND (u.role='administrator' OR (u.role='student' AND EXISTS (
+            SELECT 1 FROM course_enrolments e JOIN course_offerings o ON o.id=e.offering_id
+            WHERE e.student_id=u.id AND e.status='enrolled' AND o.status='open' AND o.lecturer_id=?
+          ))) ORDER BY u.role,u.name LIMIT 300");
+    }
+    return $db->prepare("SELECT DISTINCT u.id,u.name,u.role FROM users u WHERE u.account_status='active' AND u.id<>?
+      AND (u.role='administrator' OR (u.role='lecturer' AND EXISTS (
+        SELECT 1 FROM course_enrolments e JOIN course_offerings o ON o.id=e.offering_id
+        WHERE e.student_id=? AND e.status='enrolled' AND o.status='open' AND o.lecturer_id=u.id
+      )) OR (u.role='student' AND (EXISTS (
+        SELECT 1 FROM course_enrolments a JOIN course_enrolments b ON b.offering_id=a.offering_id
+        JOIN course_offerings o ON o.id=a.offering_id WHERE a.student_id=? AND b.student_id=u.id
+          AND a.status='enrolled' AND b.status='enrolled' AND o.status='open'
+      ) OR EXISTS (SELECT 1 FROM study_group_members a JOIN study_group_members b ON b.group_id=a.group_id WHERE a.user_id=? AND b.user_id=u.id))))
+      ORDER BY u.role,u.name LIMIT 300");
 }
 
 function sl_comms_room_by_key(PDO $db, string $type, string $key, string $title, int $creator, ?int $sourceId = null): int
@@ -143,7 +205,8 @@ function sl_comms_room_by_key(PDO $db, string $type, string $key, string $title,
 
 function sl_comms_sync_student(PDO $db, int $userId): void
 {
-    $classQ=$db->prepare("SELECT DISTINCT o.id,c.code,c.title,o.section_code,t.name AS term_name
+    $roleQ=$db->prepare('SELECT role FROM users WHERE id=? AND account_status=\'active\'');$roleQ->execute([$userId]);$role=(string)$roleQ->fetchColumn();
+    $classQ=$db->prepare("SELECT DISTINCT o.id,o.lecturer_id,c.code,c.title,o.section_code,t.name AS term_name
         FROM course_enrolments e
         JOIN course_offerings o ON o.id=e.offering_id
         JOIN academic_courses c ON c.id=o.course_id
@@ -158,6 +221,49 @@ function sl_comms_sync_student(PDO $db, int $userId): void
         $db->prepare("INSERT IGNORE INTO sl_conversation_members(conversation_id,user_id,member_role)
             SELECT ?,e.student_id,'member' FROM course_enrolments e
             WHERE e.offering_id=? AND e.status='enrolled'")->execute([$roomId,$offerId]);
+        $lecturerId=(int)$row['lecturer_id'];
+        if($lecturerId>0){
+            $lecturer=$db->prepare("INSERT IGNORE INTO sl_conversation_members(conversation_id,user_id,member_role)
+                SELECT ?,o.lecturer_id,'moderator' FROM course_offerings o JOIN users u ON u.id=o.lecturer_id
+                WHERE o.id=? AND o.status='open' AND u.account_status='active' AND u.role='lecturer'");
+            $lecturer->execute([$roomId,$offerId]);
+        }
+    }
+    if($role==='lecturer'){
+        $teaching=$db->prepare("SELECT o.id,c.code,c.title,o.section_code,t.name AS term_name FROM course_offerings o
+          JOIN academic_courses c ON c.id=o.course_id JOIN academic_terms t ON t.id=o.term_id
+          WHERE o.lecturer_id=? AND o.status='open' ORDER BY c.code,o.section_code");
+        $teaching->execute([$userId]);
+        foreach($teaching as $row){
+            $offerId=(int)$row['id'];$title=trim($row['code'].' · '.$row['title'].' · '.$row['term_name'].' · Section '.$row['section_code']);
+            $roomId=sl_comms_room_by_key($db,'class','offering:'.$offerId,$title,$userId,$offerId);
+            sl_comms_add_member($db,$roomId,$userId,'moderator');
+            $db->prepare("INSERT IGNORE INTO sl_conversation_members(conversation_id,user_id,member_role)
+              SELECT ?,e.student_id,'member' FROM course_enrolments e JOIN users u ON u.id=e.student_id AND u.account_status='active'
+              WHERE e.offering_id=? AND e.status='enrolled'")->execute([$roomId,$offerId]);
+        }
+    }
+    // Reconcile access on every visit. A dropped enrolment or removed group member
+    // must lose access to the conversation and its history immediately.
+    $db->prepare("DELETE cm FROM sl_conversation_members cm JOIN sl_conversations c ON c.id=cm.conversation_id
+        WHERE cm.user_id=? AND c.room_type='class' AND NOT EXISTS (
+          SELECT 1 FROM course_enrolments e JOIN course_offerings o ON o.id=e.offering_id
+          WHERE o.id=c.source_id AND o.status='open' AND e.status='enrolled' AND e.student_id=cm.user_id
+        ) AND NOT EXISTS (SELECT 1 FROM course_offerings o WHERE o.id=c.source_id AND o.lecturer_id=cm.user_id AND o.status='open')")->execute([$userId]);
+    $db->prepare("DELETE cm FROM sl_conversation_members cm JOIN sl_conversations c ON c.id=cm.conversation_id
+        WHERE cm.user_id=? AND c.room_type='group' AND NOT EXISTS (
+          SELECT 1 FROM study_group_members gm JOIN users u ON u.id=gm.user_id AND u.account_status='active'
+          WHERE gm.group_id=c.source_id AND gm.user_id=cm.user_id
+        )")->execute([$userId]);
+    $directRooms=$db->prepare("SELECT c.id FROM sl_conversations c JOIN sl_conversation_members m ON m.conversation_id=c.id
+        WHERE m.user_id=? AND c.room_type='direct'");
+    $directRooms->execute([$userId]);
+    foreach($directRooms->fetchAll(PDO::FETCH_COLUMN) as $directRoomId){
+        $partner=$db->prepare('SELECT user_id FROM sl_conversation_members WHERE conversation_id=? AND user_id<>? LIMIT 1');
+        $partner->execute([(int)$directRoomId,$userId]);$partnerId=(int)$partner->fetchColumn();
+        if(!$partnerId||!sl_comms_can_direct($db,$userId,$partnerId)){
+            $db->prepare('DELETE FROM sl_conversation_members WHERE conversation_id=? AND user_id=?')->execute([(int)$directRoomId,$userId]);
+        }
     }
     $groups=$db->prepare("SELECT g.id,g.title,g.owner_id,m.joined_at
         FROM study_groups g JOIN study_group_members m ON m.group_id=g.id
@@ -177,14 +283,14 @@ function sl_comms_sync_student(PDO $db, int $userId): void
 
 function sl_comms_dispatch(PDO $db, string $action): void
 {
-    $userId=sl_comms_require_student();
+    $userId=sl_comms_require_user();
     $conversationId=(int)($_POST['conversation_id']??0);
     if($action==='communication_start_direct'){
         $recipient=(int)($_POST['recipient_id']??0);
-        if($recipient<1||$recipient===$userId){$_SESSION['err']='Choose another active student.';sl_comms_redirect();}
-        $q=$db->prepare("SELECT id,name FROM users WHERE id=? AND role='student' AND account_status='active'");
+        if($recipient<1||$recipient===$userId){$_SESSION['err']='Choose another permitted university contact.';sl_comms_redirect();}
+        $q=$db->prepare("SELECT id,name,role FROM users WHERE id=? AND role IN ('student','lecturer','administrator') AND account_status='active'");
         $q->execute([$recipient]);$target=$q->fetch();
-        if(!$target){$_SESSION['err']='That student is not available for messaging.';sl_comms_redirect();}
+        if(!$target||!sl_comms_can_direct($db,$userId,$recipient)){$_SESSION['err']='That account is not available for direct messaging under your course permissions.';sl_comms_redirect();}
         $low=min($userId,$recipient);$high=max($userId,$recipient);$key='direct:'.$low.':'.$high;
         $roomId=sl_comms_room_by_key($db,'direct',$key,'Direct message',$userId);
         sl_comms_add_member($db,$roomId,$low);sl_comms_add_member($db,$roomId,$high);
@@ -290,7 +396,7 @@ function sl_comms_dispatch(PDO $db, string $action): void
 function sl_comms_download(PDO $db, array $user): never
 {
     $userId=(int)($user['id']??0);$attachmentId=(int)($_GET['comms_attachment']??0);
-    if(($user['role']??'')!=='student'||$attachmentId<1){http_response_code(404);exit('Attachment not found.');}
+    if(!in_array(($user['role']??''),['student','lecturer','administrator'],true)||$attachmentId<1){http_response_code(404);exit('Attachment not found.');}
     $q=$db->prepare("SELECT a.* FROM sl_message_attachments a
         JOIN sl_conversation_members m ON m.conversation_id=a.conversation_id AND m.user_id=?
         WHERE a.id=?");
@@ -300,12 +406,12 @@ function sl_comms_download(PDO $db, array $user): never
     if(!is_file($path)){http_response_code(404);exit('Attachment not found.');}
     header('Content-Type: '.$attachment['mime_type']);header('Content-Length: '.(int)$attachment['file_size']);
     header('Content-Disposition: attachment; filename="'.rawurlencode($attachment['original_name']).'"');
-    header('X-Content-Type-Options: nosniff');readfile($path);exit;
+    header('Cache-Control: private, no-store');header('X-Content-Type-Options: nosniff');readfile($path);exit;
 }
 
 function sl_comms_render(PDO $db, array $user): void
 {
-    $userId=sl_comms_require_student();sl_comms_sync_student($db,$userId);
+    $userId=sl_comms_require_user();sl_comms_sync_student($db,$userId);
     $conversationId=(int)($_GET['conversation_id']??0);$room=$conversationId?sl_comms_room($db,$conversationId,$userId):null;
     if($conversationId&&!$room){http_response_code(404);exit('Conversation not found.');}
     $q=$db->prepare("SELECT c.id,c.room_type,c.title,c.updated_at,
@@ -336,7 +442,8 @@ function sl_comms_render(PDO $db, array $user): void
         $mq=$db->prepare($sql);$mq->execute($params);$messages=array_reverse($mq->fetchAll());
     }
     $unreadQ=$db->prepare("SELECT COUNT(*) FROM sl_notifications WHERE user_id=? AND read_at IS NULL");$unreadQ->execute([$userId]);$unreadCount=(int)$unreadQ->fetchColumn();
-    $students=$db->prepare("SELECT id,name FROM users WHERE role='student' AND account_status='active' AND id<>? ORDER BY name LIMIT 200");$students->execute([$userId]);$studentList=$students->fetchAll();
+    $contactsQuery=sl_comms_contact_query($db,$userId);
+    $contactsQuery->execute(array_fill(0,substr_count($contactsQuery->queryString,'?'),$userId));$studentList=$contactsQuery->fetchAll();
     $activeClass=$room&&$room['room_type']==='class';
     ?>
     <style>
@@ -370,6 +477,7 @@ function sl_comms_render(PDO $db, array $user): void
     #slCommunication .sc-message-meta b{color:#477a6b}
     #slCommunication .sc-message-meta small{color:#718078;text-align:right;font-size:.7rem}
     #slCommunication .sc-message-body{margin:4px 22px 2px 0;white-space:pre-wrap;line-height:1.45}
+    #slCommunication .sc-reply-context,#slCommunication .sc-replying-label{margin:4px 0;padding:5px 8px;border-left:3px solid var(--sc-gold);background:#f8f5ec;color:#53647a;font-size:.82rem}
     #slCommunication .sc-message.sc-own .sc-message-body{margin-right:0}
     #slCommunication .sc-attachment{display:inline-flex;align-items:center;gap:6px;margin:5px 0;padding:7px 10px;border-radius:9px;background:#ffffffc9;color:var(--sc-navy);text-decoration:none;overflow-wrap:anywhere}
     #slCommunication .sc-message-options{position:absolute;top:5px;right:6px}
@@ -418,12 +526,13 @@ function sl_comms_render(PDO $db, array $user): void
     }
     </style>
     <div id="slCommunication" class="<?=$room?'sc-active':''?>">
-      <div class="sc-head"><div><div class="eyebrow"><?=h(sl_t("communication.kicker"))?></div><h1><?=h(sl_t("communication.page_title"))?></h1><p class="sc-muted"><?=h(sl_t("communication.subtitle"))?></p></div><span class="sc-badge"><?=$unreadCount?> unread</span></div>
+      <div class="sc-head"><div><div class="eyebrow"><?=h(sl_t("communication.kicker"))?></div><h1><?=h(sl_t("communication.page_title"))?></h1><p class="sc-muted"><?=h(sl_t("communication.subtitle"))?></p></div><span class="sc-badge"><?=$unreadCount?> <?=h(sl_t('communication.unread_short'))?></span></div>
+      <div class="notice" role="note"><?=h(sl_t('communication.privacy_notice'))?></div>
       <?php if(!empty($_SESSION['notice'])):?><div class="notice success-notice"><?=h($_SESSION['notice'])?></div><?php unset($_SESSION['notice']);endif;?>
       <?php if(!empty($_SESSION['err'])):?><div class="notice"><?=h($_SESSION['err'])?></div><?php unset($_SESSION['err']);endif;?>
       <div class="sc-layout">
         <aside class="sc-panel sc-side"><div class="sc-side-top">
-          <form method="post" class="sc-toolbar"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_start_direct"><label class="sr-only" for="scRecipient">Message a student</label><select id="scRecipient" name="recipient_id" required><option value=""><?=h(sl_t("communication.new_chat"))?></option><?php foreach($studentList as $student):?><option value="<?=(int)$student['id']?>"><?=h($student['name'])?></option><?php endforeach;?></select><button class="sc-btn primary"><?=h(sl_t("communication.open"))?></button></form>
+          <form method="post" class="sc-toolbar"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_start_direct"><label class="sr-only" for="scRecipient"><?=h(sl_t('communication.new_message'))?></label><select id="scRecipient" name="recipient_id" required><option value=""><?=h(sl_t("communication.new_message"))?></option><?php foreach($studentList as $student):?><option value="<?=(int)$student['id']?>"><?=h($student['name'])?> · <?=h(ucfirst((string)$student['role']))?></option><?php endforeach;?></select><button class="sc-btn primary"><?=h(sl_t("communication.open"))?></button></form>
           <p class="sc-muted"><a href="?page=study_groups"><?=h(sl_t("communication.groups_link"))?></a></p>
           <form class="sc-search" method="get"><input type="hidden" name="page" value="communication"><label class="sr-only" for="scSearch">Search this conversation</label><input id="scSearch" type="search" name="q" value="<?=h($query)?>" placeholder="<?=h(sl_t("communication.search_placeholder"))?>"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><button class="sc-btn"><?=h(sl_t("communication.search"))?></button></form>
         </div><nav class="sc-room-list" aria-label="<?=h(sl_t("communication.conversations"))?>">
@@ -440,24 +549,26 @@ function sl_comms_render(PDO $db, array $user): void
             <?php foreach($messages as $message):?>
               <article class="sc-message <?=(int)$message['sender_id']===$userId?'sc-own':''?>" id="msg-<?=(int)$message['id']?>">
                 <div class="sc-message-meta"><?php if((int)$message['sender_id']!==$userId):?><b><?=h($message['sender'])?></b><?php endif;?><small><?=h($message['created_at'])?><?=!empty($message['edited_at'])?' · edited':''?></small></div>
+                <?php if(!empty($message['parent_message_id'])):?><div class="sc-reply-context"><?=h(sl_t('communication.replying_to'))?> <?=h($message['parent_sender']?:'')?></div><?php endif;?>
                 <?php if($message['deleted_at']):?><p class="sc-muted"><em><?=h(sl_t("communication.removed"))?></em></p><?php else:?><p class="sc-message-body"><?=nl2br(h($message['body']))?></p>
                   <?php $aq=$db->prepare("SELECT id,original_name,file_size FROM sl_message_attachments WHERE message_id=?");$aq->execute([(int)$message['id']]);foreach($aq as $att):?><a class="sc-attachment" href="?page=communication&comms_attachment=<?=(int)$att['id']?>">📎 <?=h($att['original_name'])?> · <?=number_format((int)$att['file_size']/1024,0)?> KB</a><?php endforeach;?>
                   <details class="sc-message-options"><summary aria-label="Message options">⋯</summary><div class="sc-options-popover">
                     <div class="sc-reactions">
                       <?php foreach(['like'=>'👍','love'=>'❤️','helpful'=>'✅','celebrate'=>'🎉','laugh'=>'😂'] as $reactionKey=>$emoji):?><form method="post"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_react"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="message_id" value="<?=(int)$message['id']?>"><input type="hidden" name="reaction" value="<?=h($reactionKey)?>"><button class="sc-btn" title="Toggle <?=$reactionKey?> reaction"><?=$emoji?> <span><?= (int)$message[$reactionKey.'_count']?></span></button></form><?php endforeach;?>
                     </div>
-                    <form method="post" class="sc-actions"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_report"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="message_id" value="<?=(int)$message['id']?>"><select name="reason" aria-label="Report reason"><option value="harassment">Harassment</option><option value="spam">Spam</option><option value="threat">Threat</option><option value="private_information">Private information</option><option value="other">Other</option></select><button class="sc-btn"><?=h(sl_t("communication.report"))?></button></form>
+                      <form method="post" class="sc-actions"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_report"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="message_id" value="<?=(int)$message['id']?>"><select name="reason" aria-label="Report reason"><option value="harassment">Harassment</option><option value="spam">Spam</option><option value="threat">Threat</option><option value="private_information">Private information</option><option value="other">Other</option></select><button class="sc-btn"><?=h(sl_t("communication.report"))?></button></form>
+                      <button type="button" class="sc-btn sc-reply-button" data-reply-id="<?=(int)$message['id']?>" data-reply-sender="<?=h($message['sender'])?>"><?=h(sl_t('communication.reply'))?></button>
                     <?php if((int)$message['sender_id']===$userId):?><form method="post" class="sc-actions"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_edit"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="message_id" value="<?=(int)$message['id']?>"><input name="body" value="<?=h($message['body'])?>" maxlength="4000" aria-label="Edit message"><button class="sc-btn"><?=h(sl_t("communication.edit"))?></button></form><form method="post"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_delete"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="message_id" value="<?=(int)$message['id']?>"><button class="sc-btn"><?=h(sl_t("communication.remove"))?></button></form><?php endif;?>
                   </div></details>
                 <?php endif;?>
               </article>
             <?php endforeach;?>
           </div>
-          <form method="post" enctype="multipart/form-data" class="sc-compose"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_send"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="parent_message_id" value="0"><input type="hidden" name="client_nonce" value="<?=h(bin2hex(random_bytes(16)))?>"><div class="sc-form"><label class="sc-attach" for="scAttachment" title="<?=h(sl_t("communication.attach"))?>" aria-label="<?=h(sl_t("communication.attach"))?>">＋</label><label class="sr-only" for="scBody">Message</label><textarea id="scBody" name="body" rows="1" maxlength="4000" placeholder="<?=h(sl_t("communication.type_message"))?>"></textarea><label class="sr-only" for="scAttachment">Attach an academic file</label><input id="scAttachment" type="file" name="attachment" accept=".pdf,.txt,.docx,.pptx,.png,.jpg,.jpeg,.webp"><button class="sc-btn primary icon" aria-label="Send message" title="Send">➤</button></div><small class="sc-muted"><?=h(sl_t("communication.attach_help"))?></small></form>
+          <form method="post" enctype="multipart/form-data" class="sc-compose"><input type="hidden" name="csrf" value="<?=h(token())?>"><input type="hidden" name="action" value="communication_send"><input type="hidden" name="conversation_id" value="<?=$conversationId?>"><input type="hidden" name="parent_message_id" id="scParentMessage" value="0"><input type="hidden" name="client_nonce" value="<?=h(bin2hex(random_bytes(16)))?>"><p class="sc-replying-label" id="scReplyingLabel" hidden></p><div class="sc-form"><label class="sc-attach" for="scAttachment" title="<?=h(sl_t("communication.attach"))?>" aria-label="<?=h(sl_t("communication.attach"))?>">＋</label><label class="sr-only" for="scBody">Message</label><textarea id="scBody" name="body" rows="1" maxlength="4000" placeholder="<?=h(sl_t("communication.type_message"))?>"></textarea><label class="sr-only" for="scAttachment">Attach an academic file</label><input id="scAttachment" type="file" name="attachment" accept=".pdf,.txt,.docx,.pptx,.png,.jpg,.jpeg,.webp"><button class="sc-btn primary icon" aria-label="Send message" title="Send">➤</button></div><small class="sc-muted"><?=h(sl_t("communication.attach_help"))?></small></form>
           <?php endif;?>
         </section>
       </div>
     </div>
-    <script>document.addEventListener("DOMContentLoaded",function(){var box=document.getElementById("scMessages");if(box)box.scrollTop=box.scrollHeight;});</script>
+    <script>document.addEventListener("DOMContentLoaded",function(){var box=document.getElementById("scMessages");if(box)box.scrollTop=box.scrollHeight;document.querySelectorAll(".sc-reply-button").forEach(function(button){button.addEventListener("click",function(){var parent=document.getElementById("scParentMessage"),label=document.getElementById("scReplyingLabel"),body=document.getElementById("scBody");if(parent)parent.value=button.dataset.replyId||"0";if(label){label.hidden=false;label.textContent=<?=json_encode(sl_t('communication.replying_to'),JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT)?>+" "+(button.dataset.replySender||"");}if(body)body.focus();});});});</script>
     <?php
 }
