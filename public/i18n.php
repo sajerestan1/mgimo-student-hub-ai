@@ -633,7 +633,13 @@ function sl_i18n_translate_html(string $html): string
             $isVoid=isset($void[$name])||preg_match('/\\/\\s*>$/',$part)===1;
             if(!$isVoid)$stack[]=['name'=>$name,'blocked'=>$blocked];
             if(!$blocked){
-                $part=preg_replace_callback('/\\b(placeholder|aria-label|title|alt)=["\\\']([^"\\\']*)["\\\']/i',function($m)use($map){$v=html_entity_decode($m[2],ENT_QUOTES|ENT_HTML5,'UTF-8');$translated=$map[$v]??$v;return $m[1].'="'.htmlspecialchars($translated,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'"';},$part)??$part;
+                // Translate visible and accessible interface attributes as well as text nodes.
+                $part=preg_replace_callback('/\\b(placeholder|aria-label|aria-description|title|alt)=["\\\']([^"\\\']*)["\\\']/i',function($m)use($map){$v=html_entity_decode($m[2],ENT_QUOTES|ENT_HTML5,'UTF-8');$translated=$map[$v]??$v;return $m[1].'="'.htmlspecialchars($translated,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'"';},$part)??$part;
+                // Button-like input values are interface labels; ordinary input values may be user data.
+                $isButtonValue=$name==='button'||($name==='input'&&preg_match('/\\btype=["\\\'](?:submit|button|reset)["\\\']/i',$part)===1);
+                if($isButtonValue){
+                    $part=preg_replace_callback('/\\bvalue=["\\\']([^"\\\']*)["\\\']/i',function($m)use($map){$v=html_entity_decode($m[1],ENT_QUOTES|ENT_HTML5,'UTF-8');$translated=$map[$v]??$v;return 'value="'.htmlspecialchars($translated,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'"';},$part)??$part;
+                }
             }
         }else{
             $blocked=false;foreach($stack as $entry)if($entry['blocked']){$blocked=true;break;}
