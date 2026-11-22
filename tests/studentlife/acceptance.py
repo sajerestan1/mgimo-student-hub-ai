@@ -677,6 +677,10 @@ def main():
     check(class_message_id and db_count("SELECT COUNT(*) AS n FROM sl_messages WHERE id=%s AND body=%s",
                                         (class_message_id, "CI class chat message")) == 1,
           "student message persists in the authorized course-section chat")
+    ci_group_id = db_execute(
+        "INSERT INTO study_groups(owner_id,course_code,title,purpose) VALUES(3,'CIT101','CI Shared Study Group','Direct message permission fixture')")
+    db_execute("INSERT INTO study_group_members(group_id,user_id) VALUES(%s,3)", (ci_group_id,))
+    db_execute("INSERT INTO study_group_members(group_id,user_id) VALUES(%s,4)", (ci_group_id,))
     post_action(student_token, "communication_start_direct", recipient_id="4")
     direct_id = db_count("SELECT MAX(id) AS id FROM sl_conversations WHERE room_type='direct'")
     post_action(student_token, "communication_send", conversation_id=str(direct_id),
