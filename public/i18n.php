@@ -252,6 +252,47 @@ function sl_i18n_phrase_map(): array
         'High risk'=>'Высокий риск','Critical risk'=>'Критический риск','Message a student'=>'Написать студенту','Search this conversation'=>'Поиск в этой беседе',
         'Harassment'=>'Оскорбления и преследование','Spam'=>'Спам','Threat'=>'Угрозы','Private information'=>'Личные данные','Other'=>'Другое',
         'Attach an academic file'=>'Прикрепить учебный файл',
+        'Optional course description'=>'Необязательное описание курса',
+        'International Relations'=>'Международные отношения','Economics'=>'Экономика','Law'=>'Юриспруденция',
+        'Created Nov 17, 2026'=>'Создано 17.11.2026','Created Nov 22, 2026'=>'Создано 22.11.2026',
+        'ADMINISTRATION · ACCESS CONTROL'=>'АДМИНИСТРИРОВАНИЕ · УПРАВЛЕНИЕ ДОСТУПОМ',
+        'ADMINISTRATION · SHARED ACADEMIC DATA'=>'АДМИНИСТРИРОВАНИЕ · ОБЩИЕ УЧЕБНЫЕ ДАННЫЕ',
+        'Create a new account'=>'Создать новую учётную запись','Admin only'=>'Только администратор',
+        'Full name'=>'Полное имя','Enter full name'=>'Введите полное имя','Workspace role'=>'Роль в системе',
+        'Temporary password (12+ characters)'=>'Временный пароль (не менее 12 символов)',
+        'Create account'=>'Создать учётную запись','All registered accounts'=>'Все учётные записи',
+        'Administrator actions'=>'Действия администратора','Account'=>'Учётная запись','Role & status'=>'Роль и статус',
+        'Created'=>'Создано','Active'=>'Активна','Suspended'=>'Приостановлена','Deactivated'=>'Деактивирована',
+        'Email verified'=>'Электронная почта подтверждена','Email not verified'=>'Электронная почта не подтверждена',
+        'Needs verification'=>'Требуется подтверждение','Mark verified by administrator'=>'Подтвердить от имени администратора',
+        'Optional password reset'=>'Сброс пароля (необязательно)','Leave blank to keep current password'=>'Оставьте поле пустым, чтобы сохранить текущий пароль',
+        'Save account changes'=>'Сохранить изменения учётной записи','Administrator audit trail'=>'Журнал действий администратора',
+        'Latest 15 actions'=>'Последние 15 действий','Administrator'=>'Администратор','Action'=>'Действие',
+        'Details'=>'Подробности','Date'=>'Дата','No administrator actions recorded yet.'=>'Действия администратора пока не зарегистрированы.',
+        'Demo data setup'=>'Настройка демонстрационных данных','Seed demo data'=>'Добавить демонстрационные данные',
+        'ADMINISTRATION · SHARED ACADEMIC DATA'=>'АДМИНИСТРИРОВАНИЕ · ОБЩИЕ УЧЕБНЫЕ ДАННЫЕ',
+        'Departments'=>'Факультеты','Academic terms'=>'Учебные периоды','Course catalogue'=>'Каталог курсов',
+        'Course sections'=>'Учебные группы','Create department'=>'Создать кафедру','Department name'=>'Название кафедры',
+        'Department code'=>'Код кафедры','Save department'=>'Сохранить кафедру','Create academic term'=>'Создать учебный период',
+        'Term name'=>'Название периода','Start date'=>'Дата начала','End date'=>'Дата окончания','Save term'=>'Сохранить период',
+        'Add course to catalogue'=>'Добавить курс в каталог','Course code'=>'Код курса','Course title'=>'Название курса',
+        'Credits'=>'Зачётные единицы','Department'=>'Кафедра','No department assigned'=>'Кафедра не назначена',
+        'Description'=>'Описание','Add catalogue course'=>'Добавить курс в каталог','Open a course section'=>'Открыть учебную группу',
+        'Course'=>'Курс','Academic term'=>'Учебный период','Lecturer'=>'Преподаватель','Not assigned'=>'Не назначено',
+        'Section'=>'Группа','Maximum students'=>'Максимальное число студентов','Create course section'=>'Создать учебную группу',
+        'Enrol a student'=>'Зачислить студента','Course section'=>'Учебная группа','Student account'=>'Учётная запись студента',
+        'Enrol student'=>'Зачислить студента','Current enrolments'=>'Текущие зачисления',
+        'Student registrations across all shared course sections.'=>'Записи о зачислении студентов во все общие учебные группы.',
+        'Shared course catalogue'=>'Общий каталог курсов','Code'=>'Код','Enrolled'=>'Зачислено','Capacity'=>'Вместимость',
+        'The shared catalogue is empty. Add the first course above.'=>'Общий каталог пуст. Добавьте первый курс выше.',
+        'Course sections & lecturer assignments'=>'Учебные группы и назначения преподавателей','Term / Section'=>'Период / группа',
+        'Schedule class sessions'=>'Запланировать занятия','Create a single session or repeat it weekly through the selected end date (maximum 60 sessions).'=>'Создайте одно занятие или повторяйте его еженедельно до выбранной даты (не более 60 занятий).',
+        'First class date'=>'Дата первого занятия','Repeat weekly until (same date for one-off)'=>'Повторять еженедельно до (для разового занятия укажите ту же дату)',
+        'Start time'=>'Время начала','End time'=>'Время окончания','Room / location'=>'Аудитория / место','Class topic'=>'Тема занятия',
+        'Save class schedule'=>'Сохранить расписание занятий','No course sections have been created yet.'=>'Учебные группы ещё не созданы.',
+        'Add at least one catalogue course and one academic term first.'=>'Сначала добавьте хотя бы один курс в каталог и один учебный период.',
+        'No — normal account'=>'Нет — обычная учётная запись','Yes — demo account'=>'Да — демонстрационная учётная запись',
+        'Seed demo data'=>'Добавить демонстрационные данные',
         'English'=>'Английский','🇬🇧 English'=>'🇬🇧 Английский','Courses'=>'Курсы','Course'=>'Курс','Topic'=>'Тема','Communication Inbox'=>'Входящие сообщения',
         'Sample course catalogue for the student dashboard. All instructors and addresses below are fictional.'=>'Пример каталога курсов для панели студента. Все преподаватели и адреса вымышлены.',
         'Create departments, academic terms, course catalogue entries, course sections and student enrolments.'=>'Создавайте кафедры, учебные периоды, курсы, учебные группы и записи о зачислении студентов.',
@@ -604,7 +645,161 @@ function sl_i18n_phrase_map(): array
         'Use a public economic dataset to describe recent food-price inflation in one country. Include a small table or chart, explain two possible causes, and distinguish observed data from your interpretation. Cite the dataset and any additional sources.'=>'Используйте открытый экономический набор данных, чтобы описать недавнюю инфляцию цен на продукты в одной стране. Добавьте небольшую таблицу или диаграмму, объясните две возможные причины и отделите наблюдаемые данные от собственной интерпретации. Укажите источник набора данных и другие использованные материалы.',
         '4 cr'=>'4 зачётные единицы','6 cr'=>'6 зачётных единиц',
     ];
-    $extraMore = array_merge($extraMore ?? [], $coverage);
+    // Additional interface coverage for the complete student, lecturer and administrator workspaces.
+    $workspaceCoverage = [
+        'Manage users, academic activity and the StudentLife platform.'=>'Управляйте пользователями, учебной деятельностью и платформой StudentLife.',
+        'students'=>'студенты','lecturers'=>'преподаватели','admins'=>'администраторы',
+        'Reports & Analytics'=>'Отчёты и аналитика','Welcome,'=>'Добро пожаловать,',
+        'present of'=>'присутствует из','open · overdue'=>'активные · просроченные',
+        'Add sample academic records and fill student and lecturer workspaces with clearly marked demo tasks, courses, grades, timetable events, announcements and resources. Existing records are retained.'=>'Добавьте демонстрационные учебные данные: задания, курсы, оценки, расписание, объявления и материалы для студентов и преподавателей. Существующие записи сохраняются.',
+        'Present, late and absent entries reflect what has been recorded for your classes. “Not recorded” means there is no entry yet. If a record looks wrong or is missing, note the course and date and contact the lecturer.'=>'Статусы «присутствовал», «опоздал» и «отсутствовал» отражают внесённые данные о занятиях. «Не отмечено» означает, что запись ещё не внесена. Если запись неверна или отсутствует, укажите курс и дату и обратитесь к преподавателю.',
+        'Check announcements for dates, room changes and instructions. If a notice changes a deadline, confirm the details with the lecturer and update your task list.'=>'Проверяйте объявления: в них могут быть указаны даты, изменения аудиторий и инструкции. Если объявление меняет срок сдачи, уточните детали у преподавателя и обновите список задач.',
+        'Choose a new password you do not use on other sites. Administrators can also reset another account’s password under User & Role Management.'=>'Выберите новый пароль, который вы не используете на других сайтах. Администратор также может сбросить пароль другой учётной записи в разделе «Пользователи и роли».',
+        'Keep tasks current, record assessment results when returned, and check attendance after class. These records only help when they are kept up to date.'=>'Обновляйте задачи, вносите результаты после получения работ и проверяйте посещаемость после занятий. Эти записи полезны, только если они актуальны.',
+        'Before class, skim the previous notes and write one question. After class, spend ten minutes summarising the main idea in your own words.'=>'Перед занятием просмотрите предыдущие заметки и запишите один вопрос. После занятия уделите десять минут краткому изложению основной идеи своими словами.',
+        'Set aside one short review block per course. Revisit difficult concepts within a day or two instead of waiting until an assessment.'=>'Выделите отдельное короткое время для повторения по каждому курсу. Возвращайтесь к сложным понятиям через день или два, не дожидаясь контрольной работы.',
+        'For every returned assessment, write down one strength, one area to improve and one action for the next assignment.'=>'После каждой проверенной работы запишите одно своё преимущество, одну область для улучшения и одно действие для следующего задания.',
+        'The average shown here uses scores you entered in this account. It may not include every assessment or match the institution’s official grade calculation.'=>'Средний балл рассчитан по оценкам, внесённым в эту учётную запись. Он может не учитывать все работы и отличаться от официального расчёта университета.',
+        'These figures are based on entries saved in this account. Check official results and attendance with your institution.'=>'Эти показатели основаны на записях в вашей учётной записи. Уточняйте официальные оценки и посещаемость в университете.',
+        'Save the author, title, publication, date and page or link while reading. Mark quotations as quotations immediately.'=>'Во время чтения записывайте автора, название, издание, дату и страницу или ссылку. Сразу отмечайте прямые цитаты.',
+        'Read the source, set it aside, explain the idea in your own structure, then cite the source. Changing a few words is not enough.'=>'Прочитайте источник, отложите его, изложите идею в собственной структуре и укажите источник. Простая замена нескольких слов не считается перефразированием.',
+        'Use sources to support your argument. Make clear which ideas come from your reading and which conclusions are yours.'=>'Используйте источники для обоснования аргументов. Чётко отделяйте идеи из литературы от собственных выводов.',
+        'Confirm the document type, the name and programme details it should show, and any deadline or collection instructions.'=>'Уточните тип документа, имя и сведения о программе обучения, которые должны быть указаны, а также срок и порядок получения.',
+        'Include the opportunity or process name, the deadline and the specific guidance you need. Do not send passwords or payment card details.'=>'Укажите название программы или процедуры, срок и конкретную помощь, которая вам нужна. Не отправляйте пароли и данные банковских карт.',
+        'Requests are sent as internal StudentLife messages. This preview does not issue official certificates.'=>'Запросы отправляются как внутренние сообщения StudentLife. В демонстрационной версии официальные справки не выдаются.',
+        'Use the resource description to decide how it fits your course. Follow any access and citation instructions provided by the lecturer.'=>'Ознакомьтесь с описанием материала и решите, как он связан с вашим курсом. Соблюдайте инструкции преподавателя по доступу и цитированию.',
+        'Build a focused study session from a course topic. This free tool runs in your browser and does not send your notes to an AI service.'=>'Составьте план самостоятельного занятия по теме курса. Этот бесплатный инструмент работает в браузере и не отправляет ваши заметки в ИИ-сервис.',
+        'Take a published quiz or exam practice set. Your lecturers and administrators publish assessments; students answer them here.'=>'Выполняйте опубликованные тесты и тренировочные экзамены. Преподаватели и администраторы публикуют задания, а студенты проходят их здесь.',
+        'You can take and review assessments. Creating or publishing quizzes and exams is restricted to lecturers and administrators. These are clearly marked demo assessments, not official examinations.'=>'Вы можете проходить тесты и просматривать результаты. Создавать и публиковать тесты и экзамены могут только преподаватели и администраторы. Демонстрационные задания помечены соответствующим образом и не являются официальными экзаменами.',
+        'Write your response and use the rubric to review it. Written responses do not receive an automatic score.'=>'Напишите ответ и проверьте его по критериям оценивания. Развёрнутые ответы не оцениваются автоматически.',
+        'You have open task with a past due date. Check the instructions and contact your lecturer if you need help agreeing on next steps.'=>'У вас есть невыполненная задача с истёкшим сроком. Проверьте инструкции и обратитесь к преподавателю, если нужна помощь с дальнейшими действиями.',
+        'Add each official due date when it is announced. Break larger assignments into reading, outline, drafting and review.'=>'Добавляйте официальные сроки сразу после объявления. Разделяйте большие задания на чтение, составление плана, написание черновика и проверку.',
+        'Review the feedback and choose one concrete action for your next assessment.'=>'Изучите комментарии преподавателя и выберите одно конкретное действие для следующей работы.',
+        'Check recent sessions and contact your lecturer about anything missing.'=>'Проверьте последние занятия и обратитесь к преподавателю, если какие-либо записи отсутствуют.',
+        'Recommendations use only StudentLife entries. They are reminders, not an official academic assessment.'=>'Рекомендации основаны только на данных StudentLife. Это напоминания, а не официальная оценка успеваемости.',
+        'A transparent early-warning view based on active enrolments and recorded attendance. Alerts support staff review; they are not academic decisions.'=>'Прозрачная система раннего предупреждения на основе активных зачислений и отмеченной посещаемости. Сигналы помогают сотрудникам проводить проверку и не являются академическими решениями.',
+        'Risk levels use only recorded attendance. Unmarked sessions are not counted as absences. Course-linked grades, official assignment submissions and faculties are not stored; department comparison is shown where departments are configured. Students with too few attendance entries are marked “Insufficient data.”'=>'Уровни риска рассчитываются только по отмеченной посещаемости. Занятия без отметки не считаются пропусками. Оценки по курсам, официальные сдачи заданий и факультеты в этой системе не хранятся. Сравнение кафедр доступно, если они настроены. Для студентов с недостаточным количеством записей отображается статус «Недостаточно данных».',
+        'Faculty-level comparison is unavailable because faculty records are not stored in this StudentLife database.'=>'Сравнение по факультетам недоступно, поскольку сведения о факультетах не хранятся в базе данных StudentLife.',
+        'When you send a question, it and the academic records allowed for your account are sent to the configured AI provider. A selected uploaded document is included too. Only goals you explicitly mark to share are included.'=>'Когда вы отправляете вопрос, он вместе с учебными данными, доступными вашей учётной записи, передаётся настроенному поставщику ИИ. Выбранный загруженный документ также передаётся. Включаются только цели, которыми вы явно разрешили делиться.',
+        'Ask for calculations using your own recorded marks and attendance. Missing entries will be identified.'=>'Попросите рассчитать показатели на основе внесённых вами оценок и посещаемости. Отсутствующие записи будут отмечены.',
+        'No academic data or questions are sent to an external model. To enable chat, an administrator must configure an HTTPS OpenAI-compatible endpoint, model name and API key in the hosting environment or a protected PHP file outside the web root. Do not put API credentials in browser code or the app database.'=>'Учебные данные и вопросы не отправляются внешней модели. Чтобы включить чат, администратор должен настроить HTTPS-адрес совместимого с OpenAI сервиса, название модели и API-ключ в среде хостинга или в защищённом PHP-файле вне корневой веб-папки. Не размещайте ключи API в коде браузера или базе данных приложения.',
+        'Choose a private document above and ask a question or say “create this output.” Practice questions are not official assessments.'=>'Выберите личный документ выше и задайте вопрос или напишите «создай этот материал». Тренировочные вопросы не являются официальными заданиями.',
+        'This summary uses only marks recorded in your StudentLife account. It does not calculate an official GPA or use an institutional grading scale.'=>'Эта сводка использует только оценки, внесённые в вашу учётную запись StudentLife. Она не рассчитывает официальный средний балл и не применяет университетскую шкалу оценивания.',
+        'No personal grade entries are available for comparison. Add or review marks in Grades & Transcript before asking for a performance analysis.'=>'Нет личных оценок для сравнения. Добавьте или проверьте оценки в разделе «Оценки и выписка», прежде чем запрашивать анализ успеваемости.',
+        'A course with no mark or one mark is not labelled weak. Course averages are not comparable when assessment types or scales differ.'=>'Курс без оценок или с одной оценкой не считается слабым. Средние баллы по курсам нельзя сравнивать, если типы работ или шкалы оценивания различаются.',
+        'Memories do not appear automatically from chats. You choose what to save below. Allowed memories may be sent with your question to the configured AI provider to personalize the answer. They are separate from verified course records.'=>'Заметки не сохраняются автоматически из чатов. Ниже вы сами выбираете, что сохранить. Разрешённые заметки могут передаваться поставщику ИИ вместе с вопросом для персонализации ответа. Они не являются подтверждёнными учебными данными.',
+        'Allow approved memories to be used in future AI questions'=>'Разрешить использовать выбранные заметки в будущих запросах к ИИ',
+        'Academic goals and study challenges'=>'Учебные цели и трудности','Learning and explanation preferences'=>'Предпочтения в обучении и объяснении материала',
+        'Personal context I choose to share (sensitive)'=>'Личная информация, которой я решил поделиться (конфиденциально)',
+        'Add one clear fact or preference. Avoid passwords, account details, health records and information about other people.'=>'Добавьте один конкретный факт или предпочтение. Не указывайте пароли, данные учётной записи, медицинские сведения и информацию о других людях.',
+        'I choose to save this information for future AI answers.'=>'Я согласен сохранить эту информацию для будущих ответов ИИ.',
+        'I confirm I still want to keep this information for future AI answers.'=>'Я подтверждаю, что хочу сохранить эту информацию для будущих ответов ИИ.',
+        'After reviewing the AI plan, add one task to your existing personal task list. This does not change official deadlines or your class schedule.'=>'После проверки плана ИИ добавьте задачу в свой личный список. Это не меняет официальные сроки сдачи или расписание занятий.',
+        'I reviewed these details and want to add this personal task.'=>'Я проверил эти сведения и хочу добавить личную задачу.',
+        'Ask the assistant for a realistic course improvement plan, review its suggestions, then save the plan here. Plans are personal guidance, not official deadlines or grade commitments. Active plans may be included in your future AI questions.'=>'Попросите помощника составить реалистичный план улучшения результатов по курсу, проверьте рекомендации и сохраните план здесь. Это личные рекомендации, а не официальные сроки или обязательства по оценкам. Активные планы могут включаться в ваши будущие запросы к ИИ.',
+        'I reviewed this plan and want to save it to my account.'=>'Я проверил этот план и хочу сохранить его в своей учётной записи.',
+        'I reviewed these changes and want to save them.'=>'Я проверил изменения и хочу сохранить их.',
+        'Track study habits, career steps, or personal development. Save only what you want. Goals stay private unless you check Share with AI; shared, unfinished goals may be sent with future questions to the configured AI provider. Do not save passwords, account details, health records, or private information about another person.'=>'Отслеживайте учебные привычки, карьерные шаги и личное развитие. Сохраняйте только нужную информацию. Цели остаются личными, если вы не отметите пункт «Делиться с ИИ». Отмеченные незавершённые цели могут передаваться поставщику ИИ вместе с будущими вопросами. Не сохраняйте пароли, данные учётной записи, медицинские сведения или личную информацию о других людях.',
+        'Share this goal with the AI in future questions'=>'Делиться этой целью с ИИ в будущих запросах',
+        'I understand that a checked goal will be sent with future questions to the AI provider'=>'Я понимаю, что отмеченная цель будет передаваться поставщику ИИ вместе с будущими вопросами',
+        'I reviewed this goal and want to save it to my account'=>'Я проверил эту цель и хочу сохранить её в своей учётной записи',
+        'I understand a shared goal will be sent with future AI questions'=>'Я понимаю, что цель, которой я делюсь, будет передаваться вместе с будущими запросами к ИИ',
+        'I confirm I want to save these changes'=>'Я подтверждаю, что хочу сохранить эти изменения',
+        'Supported: selectable-text PDF, DOCX, PPTX and UTF-8 TXT, up to 10 MB each and 25 MB total. Scanned PDF OCR is unavailable. The extracted text is private to your account; when selected for a question, it is sent to the configured AI provider.'=>'Поддерживаются PDF с выделяемым текстом, DOCX, PPTX и TXT в кодировке UTF-8: до 10 МБ на файл и до 25 МБ суммарно. Распознавание текста на сканированных PDF не поддерживается. Извлечённый текст доступен только вашей учётной записи; при выборе документа для вопроса он отправляется настроенному поставщику ИИ.',
+        'StudentLife · Academic Companion'=>'StudentLife · Академический помощник',
+        'Email address'=>'Адрес электронной почты','Password'=>'Пароль','Remember me'=>'Запомнить меня',
+        'Forgot password? Contact your administrator.'=>'Забыли пароль? Обратитесь к администратору.',
+        'Sign In'=>'Войти','Secure access to your academic workspace'=>'Защищённый доступ к вашему учебному кабинету',
+        'ACADEMIC COMPANION'=>'АКАДЕМИЧЕСКИЙ ПОМОЩНИК','ADMINISTRATOR WORKSPACE'=>'РАБОЧЕЕ ПРОСТРАНСТВО АДМИНИСТРАТОРА',
+        'Student'=>'Студент','Lecturer / Professor'=>'Преподаватель','Administrator'=>'Администратор',
+        'Preview demo data'=>'Демонстрационные данные','No — normal account'=>'Нет — обычная учётная запись','Yes — demo account'=>'Да — демонстрационная учётная запись',
+        'Search results for “ ”'=>'Результаты поиска: « »','Notifications'=>'Уведомления','Study Companion'=>'Учебный помощник',
+        'Dashboard'=>'Главная','My Courses'=>'Мои курсы','Academic Intelligence'=>'Академическая аналитика',
+        'present'=>'присутствовал','late'=>'опоздал','absent'=>'отсутствовал','overdue'=>'просрочено',
+        'saved'=>'сохранено','credits'=>'зачётные единицы','cr'=>'зачёт. ед.','No — normal account'=>'Нет — обычная учётная запись',
+        'Create account'=>'Создать учётную запись','Save account changes'=>'Сохранить изменения учётной записи',
+        'Seed demo data'=>'Добавить демонстрационные данные','Create department'=>'Создать кафедру','Department name'=>'Название кафедры',
+        'Department code'=>'Код кафедры','Save department'=>'Сохранить кафедру','Create academic term'=>'Создать учебный период',
+        'Term name'=>'Название периода','Start date'=>'Дата начала','End date'=>'Дата окончания','Save term'=>'Сохранить период',
+        'Add course to catalogue'=>'Добавить курс в каталог','Course code'=>'Код курса','Course title'=>'Название курса',
+        'Credits'=>'Зачётные единицы','No department assigned'=>'Кафедра не назначена','Add catalogue course'=>'Добавить курс в каталог',
+        'Open a course section'=>'Открыть учебную группу','Academic term'=>'Учебный период','Not assigned'=>'Не назначено',
+        'Create course section'=>'Создать учебную группу','Enrol a student'=>'Зачислить студента','Course section'=>'Учебная группа',
+        'Student account'=>'Учётная запись студента','Enrol student'=>'Зачислить студента','Current enrolments'=>'Текущие зачисления',
+        'Shared course catalogue'=>'Общий каталог курсов','The shared catalogue is empty. Add the first course above.'=>'Общий каталог пуст. Добавьте первый курс выше.',
+        'Schedule class sessions'=>'Запланировать занятия','Save class schedule'=>'Сохранить расписание занятий',
+        'Attendance insights'=>'Аналитика посещаемости','Attendance Reports'=>'Отчёты о посещаемости',
+        'Attendance records are visible according to your account role.'=>'Записи о посещаемости доступны в соответствии с ролью вашей учётной записи.',
+        'How to read this report'=>'Как читать этот отчёт','Not recorded'=>'Не отмечено','Present'=>'Присутствовал',
+        'Absent'=>'Отсутствовал','Late'=>'Опоздал','Recorded sessions'=>'Отмеченные занятия',
+        'Reports & Analytics'=>'Отчёты и аналитика','Workspace activity by account'=>'Активность рабочих пространств по учётным записям',
+        'No active accounts were found.'=>'Активные учётные записи не найдены.','Account'=>'Учётная запись',
+        'Enrolled sections'=>'Группы, в которых учится','Teaching sections'=>'Преподаваемые группы',
+        'Personal courses'=>'Личные курсы','Course activity'=>'Активность по курсам',
+        'Announcements'=>'Объявления','Campus updates and notices for your account.'=>'Новости кампуса и объявления для вашей учётной записи.',
+        'Keep up with course updates'=>'Следите за обновлениями курсов','Write an announcement'=>'Создать объявление',
+        'Title'=>'Название','Message'=>'Сообщение','Audience'=>'Аудитория','Everyone'=>'Все','Publish now'=>'Опубликовать',
+        'Save draft'=>'Сохранить черновик','Save announcement'=>'Сохранить объявление','No announcements are available for your account yet.'=>'Для вашей учётной записи пока нет объявлений.',
+        'Learning resources'=>'Учебные материалы','Shared reading and study links for your courses.'=>'Общие материалы для чтения и ссылки для учёбы по вашим курсам.',
+        'Read an academic article'=>'Прочитайте научную статью','Plan an essay'=>'Составьте план эссе','Use sources carefully'=>'Внимательно работайте с источниками',
+        'Add a resource'=>'Добавить материал','Link (optional)'=>'Ссылка (необязательно)','No resources are available yet.'=>'Материалы пока недоступны.',
+        'Institution details'=>'Сведения об учебном заведении','Institution name'=>'Название учебного заведения','Academic year'=>'Учебный год',
+        'Support email'=>'Электронная почта поддержки','Save settings'=>'Сохранить настройки','Account security'=>'Безопасность учётной записи',
+        'Language selection applies to the current browser session.'=>'Выбор языка применяется к текущему сеансу браузера.',
+        'Your account'=>'Ваша учётная запись','My Profile'=>'Мой профиль','Review your account details and update your display name.'=>'Просмотрите данные учётной записи и измените отображаемое имя.',
+        'Display name'=>'Отображаемое имя','Role'=>'Роль','Save profile'=>'Сохранить профиль','Change password'=>'Изменить пароль',
+        'Current password'=>'Текущий пароль','New password'=>'Новый пароль','Confirm new password'=>'Подтвердите новый пароль','Update password'=>'Обновить пароль',
+        'Sign out on shared devices and avoid saving your password in a public computer browser.'=>'Выходите из учётной записи на общих устройствах и не сохраняйте пароль в браузере общественного компьютера.',
+        'Academic Progress'=>'Учебный прогресс','A summary of your current courses, assignments and attendance.'=>'Сводка по вашим текущим курсам, заданиям и посещаемости.',
+        'A weekly study rhythm'=>'Еженедельный ритм учёбы','Make progress visible'=>'Отслеживайте прогресс',
+        'Your assigned institutional courses, sections and enrolled students.'=>'Назначенные вам учебные курсы, группы и зачисленные студенты.',
+        'A simple assignment workflow'=>'Простой порядок работы с заданиями','Your task list'=>'Ваш список задач',
+        'Your institutional enrolments and personal course notes.'=>'Ваши учебные зачисления и личные заметки по курсам.',
+        'Personal course notes'=>'Личные заметки по курсам','Record assessments and follow your academic progress.'=>'Записывайте результаты оценивания и следите за учебным прогрессом.',
+        'Record an assessment'=>'Записать результат оценивания','Assessment record'=>'Записи об оценивании',
+        'Your institutional classes, sessions and attendance.'=>'Ваши университетские занятия, пары и посещаемость.',
+        'Prepare the day before'=>'Подготовьтесь накануне','After class'=>'После занятия','Save or share timetable'=>'Сохранить или отправить расписание',
+        'Save as PDF'=>'Сохранить в PDF','Download image'=>'Скачать изображение','Share'=>'Поделиться','Download calendar'=>'Скачать календарь',
+        'A practical checklist for submitting work that is clearly your own and properly sourced.'=>'Практический список проверки самостоятельной работы и правильного оформления источников.',
+        'Before you submit'=>'Перед отправкой','Your course instructions and institutional policy take priority over this general guide.'=>'Инструкции преподавателя и правила университета имеют приоритет над этим общим руководством.',
+        'Applications & Certificates'=>'Заявки и справки','Send an application or certificate request to the StudentLife administrator.'=>'Отправьте заявку или запрос справки администратору StudentLife.',
+        'Before requesting a document'=>'Перед запросом документа','For an application'=>'Для подачи заявки','Send a request'=>'Отправить запрос',
+        'Request type'=>'Тип запроса','Choose a request'=>'Выберите тип запроса','Application guidance'=>'Помощь с заявкой',
+        'Certificate request'=>'Запрос справки','Transcript request'=>'Запрос выписки оценок','Other student support'=>'Другая помощь студенту',
+        'Details'=>'Подробности','Study Groups'=>'Учебные группы','Create a focused group for a course or join a group already started by a student.'=>'Создайте учебную группу по курсу или присоединитесь к уже созданной студентом группе.',
+        'Start a study group'=>'Создать учебную группу','Group name'=>'Название группы','Study goal'=>'Цель занятий','Create group'=>'Создать группу',
+        'No study groups yet. Start one above and invite classmates to join.'=>'Учебных групп пока нет. Создайте группу выше и пригласите однокурсников.',
+        'Open study groups'=>'Открытые учебные группы','Join group'=>'Присоединиться к группе',
+        'Recent announcements, due tasks and upcoming classes linked to your account.'=>'Последние объявления, задания со сроками и предстоящие занятия, связанные с вашей учётной записью.',
+        'Tasks coming up'=>'Предстоящие задачи','No open tasks have been added.'=>'Открытых задач пока нет.',
+        'No published announcements.'=>'Опубликованных объявлений нет.','No sessions have been published for your enrolled courses.'=>'Для ваших курсов пока не опубликовано расписание занятий.',
+        'The answer is correct only when the full set matches.'=>'Ответ засчитывается, только если выбран весь правильный набор.',
+        'No image upload or image-question section is used on this page.'=>'На этой странице нет загрузки изображений и вопросов с изображениями.',
+        'Written responses do not receive an automatic score.'=>'Развёрнутые ответы не оцениваются автоматически.',
+        'Available demo assessments'=>'Доступные демонстрационные тесты','My results'=>'Мои результаты',
+        'How these question formats work'=>'Как работают эти типы вопросов','Single choice'=>'Один вариант ответа',
+        'True or false'=>'Верно или неверно','Select all that apply'=>'Выберите все подходящие варианты',
+        'Short answer'=>'Краткий ответ','Matching'=>'Сопоставление','Written response'=>'Развёрнутый ответ',
+        'Completed by you'=>'Выполнено вами','Saved on this device'=>'Сохранено на этом устройстве',
+        'FIRST PRIORITY'=>'ПЕРВООЧЕРЕДНАЯ ЗАДАЧА','Review overdue tasks'=>'Проверьте просроченные задачи',
+        'Plan the next deadline'=>'Запланируйте следующий срок','COURSE REVIEW'=>'АНАЛИЗ КУРСА',
+        'Revisit a course result'=>'Повторно изучите результаты курса','Record assessment feedback'=>'Запишите комментарии к оцениванию',
+        'Check your class records'=>'Проверьте записи о занятиях','Compose message'=>'Написать сообщение',
+        'Send to'=>'Кому','Choose an active StudentLife account'=>'Выберите активную учётную запись StudentLife',
+        'Recent messages'=>'Последние сообщения','No messages yet. Use the form to contact a lecturer or administrator.'=>'Сообщений пока нет. Используйте форму, чтобы связаться с преподавателем или администратором.',
+        'Messages stay inside this StudentLife preview. They do not send email or create notifications outside the app.'=>'Сообщения остаются внутри предварительной версии StudentLife. Они не отправляются по электронной почте и не создают уведомления за пределами приложения.',
+        'Alerts support staff review'=>'Сигналы помогают сотрудникам проводить проверку',
+        'Students monitored'=>'Отслеживаемые студенты','Students requiring review'=>'Студенты, требующие проверки',
+        'Print risk report'=>'Распечатать отчёт о рисках','Insufficient data'=>'Недостаточно данных',
+        'Attendance thresholds'=>'Пороговые значения посещаемости','Save risk rules'=>'Сохранить правила оценки рисков',
+        'Attendance by department'=>'Посещаемость по кафедрам','Attendance by course'=>'Посещаемость по курсам',
+        'Recorded attendance over time'=>'Посещаемость за период','Marked sessions'=>'Отмеченные занятия',
+        'Academic Intelligence'=>'Академическая аналитика','Academic Risk Radar'=>'Индикатор академических рисков',
+        'The AI service is not configured.'=>'Сервис ИИ не настроен.',
+        'The AI service could not answer right now. No academic decision was made.'=>'Сервис ИИ не смог ответить в данный момент. Академическое решение не принималось.',
+        'The AI service returned no answer.'=>'Сервис ИИ не вернул ответ.',
+    ];
+    $extraMore = array_merge($extraMore ?? [], $workspaceCoverage, $coverage);
     /* STUDENTLIFE_RUSSIAN_DEMO_NAMES_V2 */
     /* STUDENTLIFE_RUSSIAN_COVERAGE_V1 */
     $extra=array_merge($extra,$extraMore);
@@ -685,7 +880,56 @@ function sl_i18n_translate_html(string $html): string
             if($translated!==$decoded)$part=preg_replace_callback('/^(\\s*)(.*?)(\\s*)$/s',function($m)use($translated){return $m[1].htmlspecialchars($translated,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').$m[3];},$part)??$part;
         }
     }unset($part);
-    return implode('',$parts);
+    $html=implode('',$parts);
+    // Translate interface strings created later by client-side JavaScript as well.
+    // User-authored messages, names, descriptions and code/content areas are excluded.
+    $json=json_encode($map,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT);
+    if(is_string($json)){
+        $runtime=<<<HTML
+<script>
+(function(){
+  const map={$json};
+  const keys=Object.keys(map).sort((a,b)=>b.length-a.length);
+  const escapeRegExp=s=>Array.from(s).map(ch=>'\\^$.*+?()[]{}|'.includes(ch)?'\\'+ch:ch).join('');
+  const pattern=keys.length?new RegExp('(?<![\\\\p{L}\\\\p{N}])(?:'+keys.map(escapeRegExp).join('|')+')(?![\\\\p{L}\\\\p{N}])','gu'):null;
+  const blocked='.sc-message-body,.ai-message-content,.ai-bubble,.message-item,.resource-description,.resource-content,.user-content,.student-name,[data-user-content],script,style,textarea,pre,code';
+  function translate(value){
+    if(Object.prototype.hasOwnProperty.call(map,value))return map[value];
+    return pattern?value.replace(pattern,match=>map[match]||match):value;
+  }
+  function excluded(node){
+    const element=node.nodeType===1?node:node.parentElement;
+    return !element||element.closest(blocked)||element.isContentEditable;
+  }
+  function translateAttributes(el){
+    if(excluded(el))return;
+    for(const attr of ['placeholder','aria-label','aria-description','title','alt']){
+      if(el.hasAttribute(attr)){const old=el.getAttribute(attr),next=translate(old);if(next!==old)el.setAttribute(attr,next);}
+    }
+    if((el.tagName==='BUTTON'||(el.tagName==='INPUT'&&/^(submit|button|reset)$/i.test(el.type)))&&el.hasAttribute('value')){
+      const old=el.value,next=translate(old);if(next!==old)el.value=next;
+    }
+  }
+  function visit(root){
+    if(!root)return;
+    if(root.nodeType===3){if(!excluded(root)){const old=root.nodeValue||'',next=translate(old);if(next!==old)root.nodeValue=next;}return;}
+    if(root.nodeType!==1&&root!==document)return;
+    if(root.nodeType===1&&excluded(root))return;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    let node;while((node=walker.nextNode())){if(!excluded(node)){const old=node.nodeValue||'',next=translate(old);if(next!==old)node.nodeValue=next;}}
+    if(root.nodeType===1)translateAttributes(root);
+    if(root.querySelectorAll)root.querySelectorAll('*').forEach(translateAttributes);
+  }
+  visit(document.documentElement);
+  const observer=new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(visit)));
+  observer.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+HTML;
+        if(stripos($html,'</body>')!==false)$html=preg_replace('~</body>~i',$runtime.'</body>',$html,1)??($html.$runtime);
+        else $html.=$runtime;
+    }
+    return $html;
 }
 
 function sl_plural_ru(int $count, string $one, string $few, string $many): string

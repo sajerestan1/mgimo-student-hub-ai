@@ -11,6 +11,7 @@ on:
       - "public/academic-intelligence.php"
       - "public/communication-hub.php"
       - "public/i18n.php"
+      - "public/demo-seed-expansion.php"
       - ".github/deploy/**"
       - "tests/studentlife/**"
       - "docs/ADMIN_PHASE_1.md"
@@ -72,6 +73,7 @@ jobs:
           php -l public/academic-intelligence.php
           php -l public/communication-hub.php
           php -l public/i18n.php
+          php -l public/demo-seed-expansion.php
           php -l public/install.php
           php -l tests/studentlife/seed.php
 
@@ -165,7 +167,7 @@ jobs:
         run: |
           mkdir -p studentlife-preview
           mkdir -p .github/deploy
-          cp public/index.php public/install.php public/studentlife-sw.js public/academic-intelligence.php public/communication-hub.php public/i18n.php studentlife-preview/
+          cp public/index.php public/install.php public/studentlife-sw.js public/academic-intelligence.php public/communication-hub.php public/i18n.php public/demo-seed-expansion.php studentlife-preview/
           cp public/.htaccess studentlife-preview/.htaccess
           cat .github/deploy/preview-cpanel-php-config.htaccess >> studentlife-preview/.htaccess
           test -s studentlife-preview/index.php
@@ -175,6 +177,7 @@ jobs:
           test -s studentlife-preview/academic-intelligence.php
           test -s studentlife-preview/communication-hub.php
           test -s studentlife-preview/i18n.php
+          test -s studentlife-preview/demo-seed-expansion.php
 
       - name: Publish PHP app to the isolated preview document root
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
