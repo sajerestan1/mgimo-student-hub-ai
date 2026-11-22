@@ -149,50 +149,14 @@ function sl_comms_can_direct(PDO $db, int $senderId, int $recipientId): bool
     $q->execute([$senderId,$recipientId]);$accounts=[];
     foreach($q->fetchAll() as $account)$accounts[(int)$account['id']]=$account['role'];
     if(!isset($accounts[$senderId],$accounts[$recipientId]))return false;
-    $senderRole=$accounts[$senderId];$recipientRole=$accounts[$recipientId];
-    if($senderRole==='administrator')return true;
-    if($recipientRole==='administrator')return true;
-    if($senderRole==='student'&&$recipientRole==='lecturer'){
-        $check=$db->prepare("SELECT 1 FROM course_enrolments e JOIN course_offerings o ON o.id=e.offering_id
-          WHERE e.student_id=? AND e.status='enrolled' AND o.status='open' AND o.lecturer_id=? LIMIT 1");
-    }elseif($senderRole==='lecturer'&&$recipientRole==='student'){
-        $check=$db->prepare("SELECT 1 FROM course_enrolments e JOIN course_offerings o ON o.id=e.offering_id
-          WHERE e.student_id=? AND e.status='enrolled' AND o.status='open' AND o.lecturer_id=? LIMIT 1");
-        $check->execute([$recipientId,$senderId]);return (bool)$check->fetchColumn();
-    }elseif($senderRole==='student'&&$recipientRole==='student'){
-        $check=$db->prepare("SELECT 1 FROM course_enrolments a JOIN course_enrolments b ON b.offering_id=a.offering_id
-          JOIN course_offerings o ON o.id=a.offering_id WHERE a.student_id=? AND b.student_id=?
-          AND a.status='enrolled' AND b.status='enrolled' AND o.status='open'
-          UNION SELECT 1 FROM study_group_members a JOIN study_group_members b ON b.group_id=a.group_id
-          WHERE a.user_id=? AND b.user_id=? LIMIT 1");
-        $check->execute([$senderId,$recipientId,$senderId,$recipientId]);return (bool)$check->fetchColumn();
-    }else{return false;}
-    $check->execute([$senderId,$recipientId]);return (bool)$check->fetchColumn();
+    return in_array($accounts[$senderId],['student','lecturer','administrator'],true)
+        && in_array($accounts[$recipientId],['student','lecturer','administrator'],true);
 }
 
 function sl_comms_contact_query(PDO $db, int $userId): PDOStatement
 {
-    $roleQ=$db->prepare('SELECT role FROM users WHERE id=?');$roleQ->execute([$userId]);$role=(string)$roleQ->fetchColumn();
-    if($role==='administrator'){
-        return $db->prepare("SELECT id,name,role FROM users WHERE account_status='active' AND id<>? ORDER BY role,name LIMIT 300");
-    }
-    if($role==='lecturer'){
-        return $db->prepare("SELECT DISTINCT u.id,u.name,u.role FROM users u WHERE u.account_status='active' AND u.id<>?
-          AND (u.role='administrator' OR (u.role='student' AND EXISTS (
-            SELECT 1 FROM course_enrolments e JOIN course_offerings o ON o.id=e.offering_id
-            WHERE e.student_id=u.id AND e.status='enrolled' AND o.status='open' AND o.lecturer_id=?
-          ))) ORDER BY u.role,u.name LIMIT 300");
-    }
-    return $db->prepare("SELECT DISTINCT u.id,u.name,u.role FROM users u WHERE u.account_status='active' AND u.id<>?
-      AND (u.role='administrator' OR (u.role='lecturer' AND EXISTS (
-        SELECT 1 FROM course_enrolments e JOIN course_offerings o ON o.id=e.offering_id
-        WHERE e.student_id=? AND e.status='enrolled' AND o.status='open' AND o.lecturer_id=u.id
-      )) OR (u.role='student' AND (EXISTS (
-        SELECT 1 FROM course_enrolments a JOIN course_enrolments b ON b.offering_id=a.offering_id
-        JOIN course_offerings o ON o.id=a.offering_id WHERE a.student_id=? AND b.student_id=u.id
-          AND a.status='enrolled' AND b.status='enrolled' AND o.status='open'
-      ) OR EXISTS (SELECT 1 FROM study_group_members a JOIN study_group_members b ON b.group_id=a.group_id WHERE a.user_id=? AND b.user_id=u.id))))
-      ORDER BY u.role,u.name LIMIT 300");
+    return $db->prepare("SELECT id,name,role FROM users WHERE account_status='active'
+        AND role IN ('student','lecturer','administrator') AND id<>? ORDER BY role,name LIMIT 300");
 }
 
 function sl_comms_room_by_key(PDO $db, string $type, string $key, string $title, int $creator, ?int $sourceId = null): int
@@ -290,7 +254,7 @@ function sl_comms_dispatch(PDO $db, string $action): void
         if($recipient<1||$recipient===$userId){$_SESSION['err']='Choose another permitted university contact.';sl_comms_redirect();}
         $q=$db->prepare("SELECT id,name,role FROM users WHERE id=? AND role IN ('student','lecturer','administrator') AND account_status='active'");
         $q->execute([$recipient]);$target=$q->fetch();
-        if(!$target||!sl_comms_can_direct($db,$userId,$recipient)){$_SESSION['err']='That account is not available for direct messaging under your course permissions.';sl_comms_redirect();}
+        if(!$target||!sl_comms_can_direct($db,$userId,$recipient)){$_SESSION['err']='That university account is not available for direct messaging.';sl_comms_redirect();}
         $low=min($userId,$recipient);$high=max($userId,$recipient);$key='direct:'.$low.':'.$high;
         $roomId=sl_comms_room_by_key($db,'direct',$key,'Direct message',$userId);
         sl_comms_add_member($db,$roomId,$low);sl_comms_add_member($db,$roomId,$high);

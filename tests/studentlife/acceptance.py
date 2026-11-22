@@ -677,10 +677,6 @@ def main():
     check(class_message_id and db_count("SELECT COUNT(*) AS n FROM sl_messages WHERE id=%s AND body=%s",
                                         (class_message_id, "CI class chat message")) == 1,
           "student message persists in the authorized course-section chat")
-    ci_group_id = db_execute(
-        "INSERT INTO study_groups(owner_id,course_code,title,purpose) VALUES(3,'CIT101','CI Shared Study Group','Direct message permission fixture')")
-    db_execute("INSERT INTO study_group_members(group_id,user_id) VALUES(%s,3)", (ci_group_id,))
-    db_execute("INSERT INTO study_group_members(group_id,user_id) VALUES(%s,4)", (ci_group_id,))
     post_action(student_token, "communication_start_direct", recipient_id="4")
     direct_id = db_count("SELECT MAX(id) AS id FROM sl_conversations WHERE room_type='direct'")
     post_action(student_token, "communication_send", conversation_id=str(direct_id),
@@ -689,7 +685,7 @@ def main():
                                  (direct_id,))
     check(db_count("SELECT COUNT(*) AS n FROM sl_conversation_members WHERE conversation_id=%s", (direct_id,)) == 2 and
           db_count("SELECT COUNT(*) AS n FROM sl_notifications WHERE user_id=4 AND conversation_id=%s AND read_at IS NULL", (direct_id,)) == 1,
-          "direct conversation is private to its two participants and notifies the recipient")
+          "active students can message without shared enrolment and only conversation members can access it")
     post_action(student_token, "communication_send", conversation_id=str(direct_id),
                 body="CI reply", parent_message_id=str(direct_message_id), client_nonce="c"*32)
     reply_id = db_count("SELECT MAX(id) AS id FROM sl_messages WHERE conversation_id=%s", (direct_id,))

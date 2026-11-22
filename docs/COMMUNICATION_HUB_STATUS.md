@@ -4,9 +4,9 @@
 
 The existing PHP/MySQL messaging tables are reused. Course and study-group conversations continue to use `sl_conversations`, `sl_conversation_members`, `sl_messages`, attachment, reaction, notification, and report tables. The legacy `student_messages` records remain in place.
 
-The current code changes allow students, lecturers, and administrators to open the Communication Hub. Students can contact students who share an active course or study group, and lecturers can contact students in their active course offerings. Students and lecturers can contact administrators. Administrators can initiate messages with active accounts. Server-side checks apply to the hub and legacy Inbox send action. Class and group chat memberships are reconciled when a user opens the hub, including removing stale membership after an enrolment or group membership ends.
+The current code changes allow students, lecturers, and administrators to open the Communication Hub. Any active university account can start a direct conversation with another active university account. Conversation history and attachment downloads remain restricted to conversation members by server-side checks. The legacy Inbox send action uses the same active-account rule. Class and group chat memberships are reconciled when a user opens the hub, including removing stale membership after an enrolment or group membership ends.
 
-Messages can be replied to. The hub displays an English or Russian notice explaining that messages and files are stored on the university server and are not end-to-end encrypted.
+Messages can be replied to. The hub displays an English or Russian notice explaining that content is available only to conversation members through the app, while authorised system operators can read messages and files stored on the server. The notice says end-to-end encryption is not enabled.
 
 ## Encryption status
 
