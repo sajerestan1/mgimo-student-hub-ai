@@ -69,6 +69,7 @@ require_once __DIR__.'/academic-intelligence.php';
 require_once __DIR__.'/communication-hub.php';
 require_once __DIR__.'/i18n.php';
 sl_comms_bootstrap($db);
+require_once __DIR__.'/demo-seed-expansion.php';
 function h($s){return htmlspecialchars((string)$s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');}
 function sl_ai_markdown_inline(string $text): string
 {
@@ -718,7 +719,8 @@ if($_SERVER['REQUEST_METHOD']==='POST'){verify();$a=$_POST['action']??'';
      }
     }
    }
-   $db->commit();$_SESSION['notice']='Demo workspace data is ready for active students and lecturers. Shared academic records, tasks, courses, grades, timetable events, announcements and resources were added without duplicating existing demo records.';
+   sl_seed_demo_workspace_expansion($db,$uid,$lecturer,array_map('intval',$allDemoStudents),$offeringIds);
+   $db->commit();$_SESSION['notice']='Demo workspace data is ready for active students, lecturers and administrators. Shared academic records, tasks, courses, grades, timetable events, announcements, resources, study groups, inbox messages, academic plans, sample AI conversations and admin activity were added without duplicating existing demo records.';
   }catch(Throwable $ex){if($db->inTransaction())$db->rollBack();$_SESSION['err']=$ex instanceof RuntimeException?$ex->getMessage():'Could not seed demo data.';}
   jump('academic');
  }
