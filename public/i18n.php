@@ -87,6 +87,40 @@ function sl_i18n_catalogue(): array
     return $catalogue;
 }
 
+
+/**
+ * Render Latin-script personal names in Cyrillic when the Russian interface is selected.
+ * This is display-only: stored account names are never changed. Transliteration is
+ * approximate because personal names do not have one universal Latin-to-Russian spelling.
+ */
+function sl_display_name(mixed $name): string
+{
+    $name = trim((string)$name);
+    if ($name === '' || ($GLOBALS['sl_language'] ?? 'en') !== 'ru') return $name;
+
+    $digraphs = [
+        'shch'=>'щ','sch'=>'щ','zh'=>'ж','kh'=>'х','ts'=>'ц','ch'=>'ч','sh'=>'ш',
+        'yu'=>'ю','ya'=>'я','yo'=>'ё','ph'=>'ф','th'=>'т','qu'=>'кв','ng'=>'нг',
+        'ee'=>'и','oo'=>'у','ou'=>'у','ai'=>'ай','ay'=>'эй','ey'=>'ей',
+    ];
+    $letters = [
+        'a'=>'а','b'=>'б','c'=>'к','d'=>'д','e'=>'е','f'=>'ф','g'=>'г','h'=>'х',
+        'i'=>'и','j'=>'дж','k'=>'к','l'=>'л','m'=>'м','n'=>'н','o'=>'о','p'=>'п',
+        'q'=>'к','r'=>'р','s'=>'с','t'=>'т','u'=>'у','v'=>'в','w'=>'в','x'=>'кс',
+        'y'=>'й','z'=>'з',
+    ];
+    return preg_replace_callback('/[A-Za-z]+/u', static function ($match) use ($digraphs, $letters): string {
+        $source = $match[0];
+        $lower = strtolower($source);
+        $converted = strtr($lower, $digraphs + $letters);
+        if (strtoupper($source) === $source) return mb_strtoupper($converted, 'UTF-8');
+        if (preg_match('/^[A-Z]/', $source)) {
+            return mb_strtoupper(mb_substr($converted, 0, 1, 'UTF-8'), 'UTF-8') . mb_substr($converted, 1, null, 'UTF-8');
+        }
+        return $converted;
+    }, $name) ?? $name;
+}
+
 function sl_t(string $key, array $vars = []): string
 {
     $lang = $GLOBALS['sl_language'] ?? 'en';
