@@ -302,15 +302,34 @@ def main():
     required_ai_tools = ["AI Homework Assistant", "AI Study Planner", "AI Grade Evaluator",
                          "AI Plagiarism Checker", "AI Study Companion", "AI Lecture Summariser",
                          "AI Study Roadmap", "AI Exam Preparation", "AI Chat"]
-    check(all(tool in html for tool in required_ai_tools) and html.count("AI POWERED") >= 10,
+    check("AI Tools" in html and "AI Learning Centre" in html and
+          all(tool in html for tool in required_ai_tools) and html.count("AI POWERED") >= 10,
           "student AI Learning Centre exposes all nine labeled tools")
     status, hub_html = request("/?page=ai_learning_centre")
     check(status == 200 and "id=\"ai-study-roadmap\"" in hub_html and
           "id=\"ai-exam-preparation\"" in hub_html and "AI Chat — Chat with AI" in hub_html,
           "AI Learning Centre routes to planner, exam preparation and permanent chat")
+    check('id="ai-library"' in hub_html and "My AI Library" in hub_html and
+          "AI Settings · Memory and Personalization" in hub_html,
+          "AI Learning Centre exposes the private library and student-controlled AI settings")
+    feature_routes = [
+        ("homework", "AI Homework Assistant"), ("planner", "AI Study Planner"),
+        ("grades", "AI Grade Evaluator"), ("plagiarism", "AI Plagiarism Checker"),
+        ("companion", "AI Study Companion"), ("lecture", "AI Lecture Summariser"),
+        ("roadmap", "AI Study Roadmap"), ("exam", "AI Exam Preparation"),
+        ("chat", "AI Chat — Chat with AI"),
+    ]
+    for tool, title in feature_routes:
+        route_status, feature_html = request(f"/?page=ai_study&tool={tool}")
+        check(route_status == 200 and title in feature_html and "AI POWERED" in feature_html,
+              f"{title} opens its labeled feature page")
     status, russian_html = request("/?page=ai_learning_centre&lang=ru")
-    check(status == 200 and "ИИ-планировщик занятий" in russian_html and
-          "ИИ-подготовка к экзаменам" in russian_html,
+    russian_ai_titles = ["Инструменты ИИ", "ИИ-помощник по домашним заданиям",
+                         "ИИ-планировщик занятий", "ИИ-анализ оценок",
+                         "ИИ-проверка оригинальности", "Учебный помощник с ИИ",
+                         "ИИ-конспект лекции", "ИИ-маршрут обучения",
+                         "ИИ-подготовка к экзаменам", "ИИ-чат"]
+    check(status == 200 and all(title in russian_html for title in russian_ai_titles),
           "student AI tools have Russian labels")
     request("/?page=ai_learning_centre&lang=en")
     check("1 enrolled course sections" in html and "3 upcoming class sessions" in html,
@@ -325,6 +344,12 @@ def main():
           "grade review calculates the recorded course average")
     check("AI Grade Evaluator" in html and "ai-grade-calculator-form" in html,
           "AI Grade Evaluator offers a weight-based, non-official score estimate")
+    estimate_status, estimate_html = post_action(student_token, "calculate_ai_grade_estimate",
+                                                 course_code="PERS101", completed_weight="50",
+                                                 target_score="85")
+    check(estimate_status == 200 and "90.0%" in estimate_html and
+          "not an official grade calculation" in estimate_html,
+          "AI Grade Evaluator calculates a non-official target on the server from the student's own marks")
     check("Foreign course row" not in html,
           "grade review excludes a mark belonging to another student's course")
     check(db_count("SELECT COUNT(*) AS n FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name IN ('student_ai_roadmaps','student_ai_roadmap_tasks','student_ai_exam_sets','student_ai_exam_attempts')") == 4,
@@ -371,6 +396,18 @@ def main():
     status, roadmap_html = request(f"/?page=ai_study&roadmap_id={roadmap_id}")
     check(status == 200 and "Policy models" in roadmap_html and "100%" in roadmap_html,
           "saved roadmap shows its next topic and task progress")
+    reminder_exam_date = (date.today() + timedelta(days=6)).isoformat()
+    reminder_task_date = (date.today() + timedelta(days=1)).isoformat()
+    reminder_roadmap_id = db_execute(
+        "INSERT INTO student_ai_roadmaps(owner_id,course_code,title,objective,target_date,input_json,sequence_json) VALUES(3,'PERS101','CI Reminder Roadmap','Review before the exam',%s,'{}','{}')",
+        (reminder_exam_date,))
+    db_execute(
+        "INSERT INTO student_ai_roadmap_tasks(roadmap_id,owner_id,task_date,title,details,topic,task_type,duration_minutes) VALUES(%s,3,%s,'CI AI reminder task','Review the selected notes','Policy models','revision',30)",
+        (reminder_roadmap_id, reminder_task_date))
+    reminder_status, reminder_html = request("/?page=notifications")
+    check(reminder_status == 200 and "AI Study Reminders" in reminder_html and
+          "CI AI reminder task" in reminder_html and "CI Reminder Roadmap" in reminder_html,
+          "notification centre displays owner-scoped AI roadmap task and student-entered exam reminders")
     own_exam_questions = [
         {"type": "multiple_choice", "prompt": "Which option is correct?", "topic": "Policy models",
          "difficulty": "easy", "options": ["A", "B"], "correct_index": 0, "correct_answer": "A",
@@ -469,6 +506,15 @@ def main():
           "CI improvement plan" not in other_student_html and "CI career goal" not in other_student_html and
           "CI private goal" not in other_student_html,
           "another student cannot view saved memory, plan or personal goals")
+    status, other_notifications = request("/?page=notifications")
+    check(status == 200 and "CI AI reminder task" not in other_notifications and
+          "CI Reminder Roadmap" not in other_notifications,
+          "AI study reminders are private to their roadmap owner")
+    foreign_grade_status, _ = post_action(student2_token, "calculate_ai_grade_estimate",
+                                          course_code="PERS101", completed_weight="50",
+                                          target_score="85")
+    check(foreign_grade_status == 403,
+          "AI Grade Evaluator rejects another student's course and marks")
     post_action(student2_token, "update_personal_goal", goal_id=str(shared_goal_id),
                 category="career", title="Unauthorized goal edit", details="Change another student's goal.",
                 review_date="", status="completed", confirm_goal="1")
