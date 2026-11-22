@@ -306,12 +306,21 @@ def main():
           all(tool in html for tool in required_ai_tools) and html.count("AI POWERED") >= 10,
           "student AI Learning Centre exposes all nine labeled tools")
     status, hub_html = request("/?page=ai_learning_centre")
-    check(status == 200 and "id=\"ai-study-roadmap\"" in hub_html and
-          "id=\"ai-exam-preparation\"" in hub_html and "AI Chat — Chat with AI" in hub_html,
-          "AI Learning Centre routes to planner, exam preparation and permanent chat")
-    check('id="ai-library"' in hub_html and "My AI Library" in hub_html and
-          "AI Settings · Memory and Personalization" in hub_html,
-          "AI Learning Centre exposes the private library and student-controlled AI settings")
+    check(status == 200 and "AI Learning Centre" in hub_html and
+          "AI Study Planner" in hub_html and "AI Exam Preparation" in hub_html and
+          "AI Chat — Chat with AI" in hub_html and 'id="ai-study-roadmap"' not in hub_html and
+          'id="ai-exam-preparation"' not in hub_html and 'id="ai-library"' not in hub_html,
+          "AI Overview shows shortcuts without stacking tool workspaces")
+    for route, title, marker in [
+        ("workspace=roadmap&tool=planner", "AI Study Planner", 'id="ai-study-roadmap"'),
+        ("workspace=roadmap&tool=roadmap", "AI Study Roadmap", 'id="ai-study-roadmap"'),
+        ("workspace=exam", "AI Exam Preparation", 'id="ai-exam-preparation"'),
+        ("workspace=chat", "AI Chat — Chat with AI", 'id="ai-chat"'),
+        ("workspace=library", "My AI Library", 'id="ai-library"'),
+    ]:
+        route_status, workspace_html = request(f"/?page=ai_study&{route}")
+        check(route_status == 200 and title in workspace_html and marker in workspace_html,
+              f"{title} opens its dedicated workspace")
     feature_routes = [
         ("homework", "AI Homework Assistant"), ("planner", "AI Study Planner"),
         ("grades", "AI Grade Evaluator"), ("plagiarism", "AI Plagiarism Checker"),
