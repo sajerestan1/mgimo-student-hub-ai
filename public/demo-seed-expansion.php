@@ -145,20 +145,22 @@ function sl_seed_demo_workspace_expansion(PDO $db, int $adminId, int $lecturerId
         $assigned=$db->prepare("SELECT u.id FROM course_offerings o JOIN users u ON u.id=o.lecturer_id WHERE o.id=? AND u.role='lecturer' AND u.account_status='active' AND u.is_demo=1");
         $assigned->execute([$offeringId]);
         $assignedLecturer=(int)$assigned->fetchColumn();
-        if ($assignedLecturer) sl_comms_add_member($db,$roomId,$assignedLecturer,'lecturer');
-        foreach ($studentIds as $studentId) sl_comms_add_member($db,$roomId,(int)$studentId,'member');
-        $nonce=substr(hash('sha256','studentlife-demo-ir101-welcome'),0,32);
-        $q=$db->prepare('SELECT id FROM sl_messages WHERE sender_id=? AND client_nonce=?');
-        $q->execute([$lecturerId,$nonce]);
-        $messageId=(int)$q->fetchColumn();
-        if (!$messageId) {
-            $q=$db->prepare('INSERT INTO sl_messages(conversation_id,sender_id,body,client_nonce) VALUES(?,?,?,?)');
-            $q->execute([$roomId,$lecturerId,'[DEMO] Welcome to the IR101 discussion. Use this sample thread to explore course communication.',$nonce]);
-            $messageId=(int)$db->lastInsertId();
-        }
-        foreach ($studentIds as $studentId) {
-            $q=$db->prepare('INSERT IGNORE INTO sl_notifications(user_id,conversation_id,message_id) VALUES(?,?,?)');
-            $q->execute([(int)$studentId,$roomId,$messageId]);
+        if ($assignedLecturer) {
+            sl_comms_add_member($db,$roomId,$assignedLecturer,'lecturer');
+            foreach ($studentIds as $studentId) sl_comms_add_member($db,$roomId,(int)$studentId,'member');
+            $nonce=substr(hash('sha256','studentlife-demo-ir101-welcome'),0,32);
+            $q=$db->prepare('SELECT id FROM sl_messages WHERE sender_id=? AND client_nonce=?');
+            $q->execute([$assignedLecturer,$nonce]);
+            $messageId=(int)$q->fetchColumn();
+            if (!$messageId) {
+                $q=$db->prepare('INSERT INTO sl_messages(conversation_id,sender_id,body,client_nonce) VALUES(?,?,?,?)');
+                $q->execute([$roomId,$assignedLecturer,'[DEMO] Welcome to the IR101 discussion. Use this sample thread to explore course communication.',$nonce]);
+                $messageId=(int)$db->lastInsertId();
+            }
+            foreach ($studentIds as $studentId) {
+                $q=$db->prepare('INSERT IGNORE INTO sl_notifications(user_id,conversation_id,message_id) VALUES(?,?,?)');
+                $q->execute([(int)$studentId,$roomId,$messageId]);
+            }
         }
     }
 }
